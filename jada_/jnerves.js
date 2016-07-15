@@ -1,6 +1,5 @@
 var jbrain = require('./jbrain');
 
-
 exports.getDataResponse = function dataResponse(response, fullPhrase) {
   var finalResponse = { "todo":"", "jresponse": "I have nothing for you sorry"};
   switch(response.response){
@@ -8,6 +7,18 @@ exports.getDataResponse = function dataResponse(response, fullPhrase) {
       break;
     case "greetings":
       finalResponse = greetings(response.action, response.additional_phrases, fullPhrase);
+      break;
+    case "getLocalTime":
+      finalResponse = getLocalDateTime("time");
+      break;
+    case "getLocalDate":
+      finalResponse = getLocalDateTime("date");
+      break;
+    case "getTimeZoneTime":
+      break;
+    case "getTimeZoneDate":
+      break;
+    case "getTastekidResults":
       break;
     default:
       finalResponse.jresponse = response.action
@@ -17,7 +28,7 @@ exports.getDataResponse = function dataResponse(response, fullPhrase) {
 }
 
 
-/*Response Functions*/
+/*****Response Functions*****/
 
 /*Greetings Function*/
 function greetings(main, additional, phrase) {
@@ -44,6 +55,52 @@ function greetings(main, additional, phrase) {
   }
 
   var finalResponse = "Hello Kris how are things treating you: " + actionResponse.jresponse;
+  return { "todo":"", "jresponse": finalResponse }
+
+}
+
+/*Get Time Function*/
+function getLocalDateTime(type) {
+  var finalResponse = "";
+  var date = new Date();
+
+  switch(type){
+    case "time":
+      var h = (date.getHours() > 12 ? date.getHours() - 12 : date.getHours());
+      var m = (date.getMinutes() < 10 ? "0"+ date.getMinutes() : date.getMinutes());
+      var timeDelim = (date.getHours() > 12 ? "pm" : "am");
+      finalResponse = "The time according to this machine is " + h + ":" + m +" " + timeDelim;
+      break;
+    case "hour":
+      var h = date.getHours();
+      finalResponse = "It is hour number " + h + " of the day";
+      break;
+    case "minutes":
+      var h = date.getHours();
+      var m = date.getMinutes();
+      finalResponse = "It is minutue number " + m + " in hour number " + h;
+      break;
+    case "date":
+      var mon_str =['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+      var day = date.getDate();
+      var mon = date.getMonth();
+      var yr = date.getFullYear();
+      finalResponse = "The date acording to this machine is " + mon_str[mon] + " " + day + " " + yr;
+      break;
+    case "month":
+      var mon_str =['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+      var mon = date.getMonth();
+      finalResponse = "The month is " + mon_str[mon];
+      break;
+    case "day":
+      var weekday = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" ]
+      var name = weekday[d.getDay()];
+      finalResponse = "Today is " + name;
+      break;
+    default:
+      break;
+  }
+
   return { "todo":"", "jresponse": finalResponse }
 
 }

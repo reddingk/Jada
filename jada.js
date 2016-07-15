@@ -13,8 +13,8 @@ rl.prompt();
 
 rl.on('line', (input) => {
   //console.log(brain.talk(input.trim()));
-  console.log(JSON.stringify(brain.talk(input.trim())));
-  
+  console.log(JSON.stringify(brain.talk( brain.clean(input.trim()) )));
+
   if(input == "exit"){
     console.log("Bye");
     rl.close();

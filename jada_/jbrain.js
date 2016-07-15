@@ -1,14 +1,5 @@
 var func = require('./jnerves');
 
-/*module.exports = {
-  parrot: function (phrase) {
-    console.log("You entered in " + phrase);
-    //return "You entered in " + phrase;
-  },
-  talk: function (phrase) {
-    return jconvo(phrase);
-  }
-}*/
 exports.parrot = function polly(phrase) { console.log("You entered in " + phrase); };
 
 /*Main convo function*/
@@ -34,6 +25,8 @@ exports.talk = function jconvo(phrase) {
   }
 
 };
+
+/***** PARSING FUNCTIONS *****/
 
 /*Get the Response Action based action call and the rest of the phrase*/
 function getActionResponse(actionCall, phrase) {
@@ -113,6 +106,14 @@ function checkAllPhrases(arr1, arr2) {
 
   return (ret > -1);
 }
+
+/**/
+exports.clean = function cleanPhrase(phrase) {
+  //var tmpPhrase = phrase;
+  var tmpPhrase = phrase.toLowerCase();
+
+  return tmpPhrase;
+}
 /*
   PHRASE LIBRARY
   action: ACTION WORD
@@ -123,6 +124,7 @@ function checkAllPhrases(arr1, arr2) {
 var phraseLibrary = [
   {"action": "hello", "level":0, "response":"greetings", "additional_phrases":["hi", "hey"]},
   {"action": "time", "level":1, "response":"getLocalTime", "subactions":[ {"action":"in", "response":"getTimeZoneTime"}]},
+  {"action": "date", "level":1, "response":"getLocalDate", "subactions":[ {"action":"in", "response":"getTimeZoneDate"}]},
   {"action": "similar", "subactions":[ {"action":"media",  "level":1, "response":"getTastekidResults"} ]},
   {"action": "media", "subactions":[ {"action":"similar", "level":1, "response":"getTastekidResults"} ]}
 ];
