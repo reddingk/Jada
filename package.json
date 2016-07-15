@@ -1,0 +1,15 @@
+{
+  "name": "jada",
+  "version": "1.0.0",
+  "description": "The brain behind the Jaden personal assistant",
+  "main": "index.js",
+  "scripts": {
+    "start-jaden": "node server.js",
+    "start": "node jada.js"
+  },
+  "author": "Kris Redding",
+  "license": "ISC",
+  "dependencies": {
+    "readline": "^1.3.0"
+  }
+}
