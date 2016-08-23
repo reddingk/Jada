@@ -1,4 +1,5 @@
 var jbrain = require('./jbrain');
+var apiLib = require('./apiLib');
 
 exports.getDataResponse = function dataResponse(response, fullPhrase) {
   var finalResponse = { "todo":"", "jresponse": "I have nothing for you sorry"};
@@ -19,6 +20,8 @@ exports.getDataResponse = function dataResponse(response, fullPhrase) {
     case "getTimeZoneDate":
       break;
     case "getTastekidResults":
+      console.log("Here 0")
+      finalResponse = getTastekidResults();
       break;
     default:
       finalResponse.jresponse = response.action
@@ -27,6 +30,15 @@ exports.getDataResponse = function dataResponse(response, fullPhrase) {
   return finalResponse;
 }
 
+exports.stringFormat = function stringFormat(str, args) {
+   var content = str;
+   for (var i=0; i < args.length; i++)
+   {
+        var replacement = '{' + i + '}';
+        content = content.replace(replacement, args[i]);
+   }
+   return content;
+}
 
 /*****Response Functions*****/
 
@@ -102,5 +114,15 @@ function getLocalDateTime(type) {
   }
 
   return { "todo":"", "jresponse": finalResponse }
+}
 
+/*Get Media Values based on Taste kid API*/
+function getTastekidResults() {
+  var finalResponse = "";
+  console.log("Here 01");
+
+  var tasteResponse = apiLib.tastekid("The+Best+Man", "all", 0, 10);
+  finalResponse = (tasteResponse == null ? "Nothing" : tasteResponse);
+
+  return { "todo":"", "jresponse": finalResponse }
 }
