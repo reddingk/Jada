@@ -125,6 +125,5 @@ var phraseLibrary = [
   {"action": "hello", "level":0, "response":"greetings", "additional_phrases":["hi", "hey"]},
   {"action": "time", "level":1, "response":"getLocalTime", "subactions":[ {"action":"in", "response":"getTimeZoneTime"}]},
   {"action": "date", "level":1, "response":"getLocalDate", "subactions":[ {"action":"in", "response":"getTimeZoneDate"}]},
-  {"action": "similar", "subactions":[ {"action":"media",  "level":1, "response":"getTastekidResults"} ]},
-  {"action": "media", "subactions":[ {"action":"similar", "level":1, "response":"getTastekidResults"} ]}
+  {"action": "media", "level":1, "additional_phrases":["books", "music","shows","games","authors"], "subactions":[ {"action":"similar", "level":1, "response":"getTastekidResults"} ]}
 ];

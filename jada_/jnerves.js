@@ -1,5 +1,6 @@
 var jbrain = require('./jbrain');
 var apiLib = require('./apiLib');
+var q = require('q');
 
 exports.getDataResponse = function dataResponse(response, fullPhrase) {
   var finalResponse = { "todo":"", "jresponse": "I have nothing for you sorry"};
@@ -20,8 +21,7 @@ exports.getDataResponse = function dataResponse(response, fullPhrase) {
     case "getTimeZoneDate":
       break;
     case "getTastekidResults":
-      console.log("Here 0")
-      finalResponse = getTastekidResults();
+      finalResponse = getTastekidResults(fullPhrase);
       break;
     default:
       finalResponse.jresponse = response.action
@@ -117,11 +117,50 @@ function getLocalDateTime(type) {
 }
 
 /*Get Media Values based on Taste kid API*/
-function getTastekidResults() {
+function getTastekidResults(phrase) {
+  var objectList = ["media","books","movies","music","shows","games","authors"];
   var finalResponse = "";
-  console.log("Here 01");
+  var mediaCompare = "";
+  var object = "";
+  var limit = 10;
 
-  var tasteResponse = apiLib.tastekid("The+Best+Man", "all", 0, 10);
+  // Parse phrase
+  console.log(phrase);
+  for(var i=0; i < objectList.length; i++)
+  {
+    var objectPos = phrase.indexOf(objectList[i]);
+    var simPos = phrase.indexOf("similar to");
+    if((objectPos >= 0 && simPos > 0) && objectPos < simPos)
+    {
+      var tmpStr = phrase.substring(simPos + 11).split(" ");
+      // Set Parameteres
+      mediaCompare = tmpStr.join('+');
+      object = objectList[i];
+      if(objectPos > 0)
+      {
+        var preObject = phrase.substring(0,objectPos).split(" ");
+        for(var j=0; j < preObject.length ; j++)
+        {
+            if(!isNaN(parseInt(preObject[j])))
+            {
+              limit = parseInt(preObject[j]);
+              break;
+            }
+        }
+      }
+      //console.log(" O: " + object + " |M: " + mediaCompare + " |L: " + limit);
+      break;
+    }
+  }
+
+  //var tasteResponse = apiLib.tastekid(mediaCompare, object, 0, limit);
+  var def = q.defer();
+  var tasteResponse = apiLib.tastekid(mediaCompare, object, 0, limit).then(function(results){
+    //console.log(results);
+    def.resolve(results);
+    return def.promise;
+  });
+
   finalResponse = (tasteResponse == null ? "Nothing" : tasteResponse);
 
   return { "todo":"", "jresponse": finalResponse }
