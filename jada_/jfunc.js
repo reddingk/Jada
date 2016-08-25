@@ -1,6 +1,7 @@
 var jbrain = require('./jbrain');
 var apiLib = require('./apiLib');
 var q = require('q');
+var data = require('./jdata');
 
 /*****Response Functions*****/
 
@@ -11,6 +12,7 @@ exports.greetings = function greetings(main, additional, phrase, callback) {
   var removables = additional;
   removables.push(main);
   removables.push("Jada");
+  var num = Math.floor((Math.random() * (data.greetings.length-1)));
 
   for(var i =0 ; i < removables.length; i++){
     var index = tmpStr.indexOf(removables[i]);
@@ -20,26 +22,24 @@ exports.greetings = function greetings(main, additional, phrase, callback) {
   }
   if(tmpStr.length == 0) {
     //actionResponse = { "todo":"", "jresponse":""};
-    callback({ "todo":"", "jresponse": "Hello Kris how are things treating you: " });
+    callback({ "todo":"", "jresponse": data.greetings[num] });
   }
   else if(tmpStr == 1) {
     //actionResponse = jbrain.talk(tmpStr[0]);
     jbrain.Extalk(tmpStr[0], function(res){
-      var finalResponse = "Hello Kris how are things treating you: " + res.jresponse;
+      var finalResponse = data.greetings[0] + ": " + res.jresponse;
       callback({ "todo":"", "jresponse": finalResponse });
     });
   }
   else {
     //actionResponse = jbrain.talk(tmpStr.join(" "));
     jbrain.Extalk(tmpStr.join(" "), function(res){
-      var finalResponse = "Hello Kris how are things treating you: " + res.jresponse;
+      var finalResponse = data.greetings[0] + ": " + res.jresponse;
       callback({ "todo":"", "jresponse": finalResponse });
     });
   }
-
-  //var finalResponse = "Hello Kris how are things treating you: " + actionResponse.jresponse;
-  //return { "todo":"", "jresponse": finalResponse }
 }
+
 
 /*Get Time Function*/
 exports.getLocalDateTime = function getLocalDateTime(type) {

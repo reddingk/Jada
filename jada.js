@@ -16,7 +16,6 @@ rl.on('line', (input) => {
   brain.Extalk( brain.clean(input.trim()), function(res) {
     console.log(JSON.stringify(res));
 
-    console.log("i] " + input);
     if(input == "exit"){
       console.log("Bye");
       rl.close();

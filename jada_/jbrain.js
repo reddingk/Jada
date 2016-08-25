@@ -1,4 +1,5 @@
 var func = require('./jnerves');
+var data = require('./jdata');
 
 exports.parrot = function polly(phrase) { console.log("You entered in " + phrase); };
 
@@ -7,11 +8,11 @@ exports.talk = function jconvo(phrase) {
   var tmpStr = phrase.split(" ");
   var actionCall = null;
 
-  for(var i=0; i < phraseLibrary.length; i++){
-    if(tmpStr.indexOf(phraseLibrary[i].action) > -1 || (phraseLibrary[i].additional_phrases != undefined && checkAllPhrases(tmpStr, phraseLibrary[i].additional_phrases)) )
+  for(var i=0; i < data.phraseLibrary.length; i++){
+    if(tmpStr.indexOf(data.phraseLibrary[i].action) > -1 || (data.phraseLibrary[i].additional_phrases != undefined && checkAllPhrases(tmpStr, data.phraseLibrary[i].additional_phrases)) )
     {
-      if(actionCall == null || actionCall.level > phraseLibrary[i].level)
-        actionCall = phraseLibrary[i];
+      if(actionCall == null || actionCall.level > data.phraseLibrary[i].level)
+        actionCall = data.phraseLibrary[i];
     }
   }
 
@@ -31,11 +32,11 @@ exports.Extalk = function jconvo(phrase, callback) {
   var tmpStr = phrase.split(" ");
   var actionCall = null;
 
-  for(var i=0; i < phraseLibrary.length; i++){
-    if(tmpStr.indexOf(phraseLibrary[i].action) > -1 || (phraseLibrary[i].additional_phrases != undefined && checkAllPhrases(tmpStr, phraseLibrary[i].additional_phrases)) )
+  for(var i=0; i < data.phraseLibrary.length; i++){
+    if(tmpStr.indexOf(data.phraseLibrary[i].action) > -1 || (data.phraseLibrary[i].additional_phrases != undefined && checkAllPhrases(tmpStr, data.phraseLibrary[i].additional_phrases)) )
     {
-      if(actionCall == null || actionCall.level > phraseLibrary[i].level)
-        actionCall = phraseLibrary[i];
+      if(actionCall == null || actionCall.level > data.phraseLibrary[i].level)
+        actionCall = data.phraseLibrary[i];
     }
   }
 
@@ -44,7 +45,7 @@ exports.Extalk = function jconvo(phrase, callback) {
     func.getDataResponse(response, phrase, function(res){ callback(res); });
   }
   else {
-    var response = {"response":"N/A"}    
+    var response = {"response":"N/A"}
     func.getDataResponse(response, "", function(res){ callback(res); });
   }
 
@@ -139,16 +140,3 @@ exports.clean = function cleanPhrase(phrase) {
 
   return tmpPhrase;
 }
-/*
-  PHRASE LIBRARY
-  action: ACTION WORD
-  response: RESPONSE FUNCTION
-  additional_phrases: ADDITIONAL PHRASEING FOR SAME ACTION
-  subactions: SUB ACTIONS UNDER SAME CATEGORY
-*/
-var phraseLibrary = [
-  {"action": "hello", "level":0, "response":"greetings", "additional_phrases":["hi", "hey"]},
-  {"action": "time", "level":1, "response":"getLocalTime", "subactions":[ {"action":"in", "response":"getTimeZoneTime"}]},
-  {"action": "date", "level":1, "response":"getLocalDate", "subactions":[ {"action":"in", "response":"getTimeZoneDate"}]},
-  {"action": "media", "level":1, "additional_phrases":["books", "music","movies","shows","games","authors"], "subactions":[ {"action":"similar", "level":1, "response":"getTastekidResults"} ]}
-];
