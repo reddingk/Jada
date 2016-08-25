@@ -12,15 +12,19 @@ rl.setPrompt('jada> ');
 rl.prompt();
 
 rl.on('line', (input) => {
-  //console.log(brain.talk(input.trim()));
-  console.log(JSON.stringify(brain.talk( brain.clean(input.trim()) )));
-  if(input == "exit"){
-    console.log("Bye");
-    rl.close();
-  }
-  else {
-    rl.prompt();
-  }
+  //console.log(JSON.stringify(brain.talk( brain.clean(input.trim()) )));
+  brain.Extalk( brain.clean(input.trim()), function(res) {
+    console.log(JSON.stringify(res));
+
+    console.log("i] " + input);
+    if(input == "exit"){
+      console.log("Bye");
+      rl.close();
+    }
+    else {
+      rl.prompt();
+    }
+  });
 
 }).on('close', () => {
   console.log('Have a great day!');

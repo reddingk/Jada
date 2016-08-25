@@ -17,7 +17,7 @@ function getApiItem(name){
     return item;
 }
 
-exports.tastekid = function tatekid(query, type, info, limit) {
+exports.tastekid = function tatekid(query, type, info, limit, callback) {
   var api = getApiItem("tasteKid");
   var results = "??";
   if(api != null){
@@ -25,35 +25,18 @@ exports.tastekid = function tatekid(query, type, info, limit) {
       //callback=JSON_CALLBACK
       var url = func.stringFormat(api.link + "similar?q={0}&k={1}&type={2}&info={3}&limit={4}",[query, api.key, type, info, limit]);
 
-      // Get values from api
-      console.log("U: " + url);
-      //request
-      /*request(url, function (error,response,body) {
-        console.log(body);
-      });*/
-
-      //request-promise
-      var def = q.defer();
-      rp(url)
-        .then(function(data){
-          def.resolve(data);
-          //console.log("LIB: " + data);
-        })
-        .catch(function(err){
-          console.log("Catch error");
-          //return "ERR - NO DATA";
+      request({ url: url, json: true},
+        function (error, response, body){
+          if(!error && response.statusCode ===200){
+            callback(body);
+          }
         });
-
-        return def.promise;
-      //return url;
     }
     catch(err) {
       console.log("Err 2" + err);
-      //return err;
     }
   }
   else {
-    console.log("Else null");
-    //return null;
+    console.log("Else null");    
   }
 };

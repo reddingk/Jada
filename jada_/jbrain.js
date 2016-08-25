@@ -26,6 +26,31 @@ exports.talk = function jconvo(phrase) {
 
 };
 
+// Experimemtal Talk
+exports.Extalk = function jconvo(phrase, callback) {
+  var tmpStr = phrase.split(" ");
+  var actionCall = null;
+
+  for(var i=0; i < phraseLibrary.length; i++){
+    if(tmpStr.indexOf(phraseLibrary[i].action) > -1 || (phraseLibrary[i].additional_phrases != undefined && checkAllPhrases(tmpStr, phraseLibrary[i].additional_phrases)) )
+    {
+      if(actionCall == null || actionCall.level > phraseLibrary[i].level)
+        actionCall = phraseLibrary[i];
+    }
+  }
+
+  if(actionCall != null){
+    var response = getActionResponse(actionCall, chopPhrase(actionCall.action, tmpStr));
+    func.getDataResponse(response, phrase, function(res){ callback(res); });
+  }
+  else {
+    var response = {"response":"N/A"}    
+    func.getDataResponse(response, "", function(res){ callback(res); });
+  }
+
+};
+
+
 /***** PARSING FUNCTIONS *****/
 
 /*Get the Response Action based action call and the rest of the phrase*/
@@ -125,5 +150,5 @@ var phraseLibrary = [
   {"action": "hello", "level":0, "response":"greetings", "additional_phrases":["hi", "hey"]},
   {"action": "time", "level":1, "response":"getLocalTime", "subactions":[ {"action":"in", "response":"getTimeZoneTime"}]},
   {"action": "date", "level":1, "response":"getLocalDate", "subactions":[ {"action":"in", "response":"getTimeZoneDate"}]},
-  {"action": "media", "level":1, "additional_phrases":["books", "music","shows","games","authors"], "subactions":[ {"action":"similar", "level":1, "response":"getTastekidResults"} ]}
+  {"action": "media", "level":1, "additional_phrases":["books", "music","movies","shows","games","authors"], "subactions":[ {"action":"similar", "level":1, "response":"getTastekidResults"} ]}
 ];
