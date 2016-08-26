@@ -1,4 +1,3 @@
-//var index = require('./index');
 var brain = require('./jada_/jbrain');
 
 const readline = require('readline');
@@ -14,7 +13,9 @@ rl.prompt();
 rl.on('line', (input) => {
   //console.log(JSON.stringify(brain.talk( brain.clean(input.trim()) )));
   brain.Extalk( brain.clean(input.trim()), function(res) {
-    console.log(JSON.stringify(res));
+    //console.log(JSON.stringify(res));
+    var output = res.jresponse;
+    console.log(output);
 
     if(input == "exit"){
       console.log("Bye");

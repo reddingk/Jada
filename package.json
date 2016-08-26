@@ -3,8 +3,7 @@
   "version": "1.0.0",
   "description": "The brain behind the Jaden personal assistant",
   "main": "index.js",
-  "scripts": {
-    "start-jaden": "node server.js",
+  "scripts": {  
     "start": "node jada.js"
   },
   "author": "Kris Redding",

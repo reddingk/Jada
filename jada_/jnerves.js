@@ -10,7 +10,6 @@ exports.getDataResponse = function dataResponse(response, fullPhrase, callback) 
       callback(finalResponse);
       break;
     case "greetings":
-      //finalResponse = jfunc.greetings(response.action, response.additional_phrases, fullPhrase, function(res){ callback(finalResponse);});
       jfunc.greetings(response.action, response.additional_phrases, fullPhrase, function(res){ callback(res);});
       break;
     case "getLocalTime":
@@ -26,8 +25,13 @@ exports.getDataResponse = function dataResponse(response, fullPhrase, callback) 
     case "getTimeZoneDate":
       break;
     case "getTastekidResults":
-      //finalResponse = jfunc.getTastekidResults(fullPhrase);
       jfunc.getTastekidResults(fullPhrase, function(finalRes){ callback(finalRes); });
+      break;
+    case "getWeatherCurrent":
+      jfunc.getWeatherCurrent(fullPhrase, function(finalRes){ callback(finalRes); });
+      break;
+    case "getWeatherForecast":
+      jfunc.getWeatherForecast(fullPhrase, function(finalRes){ callback(finalRes); });
       break;
     default:
       finalResponse.jresponse = response.action

@@ -1,5 +1,6 @@
 var jbrain = require('./jbrain');
 var apiLib = require('./apiLib');
+var nerves = require('./jnerves');
 var q = require('q');
 var data = require('./jdata');
 
@@ -150,4 +151,81 @@ exports.getTastekidResults = function getTastekidResults(phrase, callback) {
 
       callback({"todo":"", "jresponse": resPhrase});
     });
+}
+
+/*getWeatherCurrent*/
+exports.getWeatherCurrent = function getWeatherCurrent(phrase, callback){
+  var tmpPhrase = phrase.split(" ");
+  var postPhrase = tmpPhrase.slice(tmpPhrase.indexOf("weather"));
+  var forIndex = postPhrase.indexOf("for");
+
+  if(forIndex >= 0)
+  {
+      var location = postPhrase.slice(forIndex+1).join(" ");
+      apiLib.openweathermap("find", location,
+        function(res)
+        {
+          var resPhrase = "";
+          if(res.count > 0)
+          {
+            resPhrase =nerves.stringFormat("The current weather accourding to OpenWeather.com for {0} is: Tempurature of {1}, Humidity of {2}%, with a description of '{3}'", [res.list[0].name, res.list[0].main.temp, res.list[0].main.humidity, res.list[0].weather[0].description ]);
+          }
+          else {
+            resPhrase = nerves.stringFormat("Sorry we could not find: {0} maybe you spelled it wrong?", [location]);
+          }
+
+          callback({"todo":"", "jresponse": resPhrase});
+        });
+  }
+  else{
+    // return null
+    callback({"todo":"", "jresponse": "Im not sure where you would like me to look"});
+  }
+}
+
+/*getWeatherForecast*/
+exports.getWeatherForecast = function getWeatherForecast(phrase, callback){
+  var tmpPhrase = phrase.split(" ");
+  var postPhrase = tmpPhrase.slice(tmpPhrase.indexOf("forecast"));
+  var forIndex = postPhrase.indexOf("for");
+
+  if(forIndex >= 0)
+  {
+      var location = postPhrase.slice(forIndex+1).join(" ");
+
+      apiLib.openweathermap("forecast", location,
+        function(res)
+        {
+          var resPhrase = "";
+          if(res.cnt > 0)
+          {
+            var dateString = "";
+
+            resPhrase = nerves.stringFormat("The weather forecast for the next few days accourding to OpenWeather.com for {0}: ",[res.city.name]);
+            for(var i =0; i < res.list.length; i++)
+            {
+                var item = res.list[i];
+                var newDate = new Date(item.dt_txt);
+                if(newDate.toDateString() != dateString )
+                {
+                  dateString = newDate.toDateString();
+                  resPhrase += nerves.stringFormat("\n\n|{0}\n [{1}]: {2} degrees and '{3}' ", [dateString, newDate.toLocaleTimeString(), item.main.temp_max, item.weather[0].description]);
+                }
+                else {
+                  resPhrase += nerves.stringFormat("\n [{0}]: {1} degrees and '{2}' ", [newDate.toLocaleTimeString(), item.main.temp_max, item.weather[0].description]);
+                }
+            }
+            resPhrase += "\n";
+          }
+          else {
+            resPhrase = nerves.stringFormat("Sorry we could not find: {0} maybe you spelled it wrong?", [location]);
+          }
+
+          callback({"todo":"", "jresponse": resPhrase});
+        });
+  }
+  else{
+    // return null
+    callback({"todo":"", "jresponse": "Im not sure where you would like me to look"});
+  }
 }
