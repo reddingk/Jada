@@ -1,41 +1,46 @@
 var jbrain = require('./jbrain');
 var apiLib = require('./apiLib');
 var nerves = require('./jnerves');
-var q = require('q');
 var data = require('./jdata');
+//
+var fs = require('fs');
 
 /*****Response Functions*****/
 
 /*Greetings Function*/
 exports.greetings = function greetings(main, additional, phrase, callback) {
+  var obj = JSON.parse(fs.readFileSync(data.userSettingsFile,'utf8'));
   var tmpStr = phrase.split(" ");
   var actionResponse = null;
   var removables = additional;
   removables.push(main);
   removables.push("Jada");
   var num = Math.floor((Math.random() * (data.greetings.length-1)));
+  var persGreeting = nerves.stringFormat(data.greetings[num], [obj.name.nickname]);
 
+  // Remove Greetings from phrase
   for(var i =0 ; i < removables.length; i++){
     var index = tmpStr.indexOf(removables[i]);
     if(index > -1) {
       tmpStr.splice(index,1).join(" ");
     }
   }
+
   if(tmpStr.length == 0) {
     //actionResponse = { "todo":"", "jresponse":""};
-    callback({ "todo":"", "jresponse": data.greetings[num] });
+    callback({ "todo":"", "jresponse": persGreeting });
   }
   else if(tmpStr == 1) {
     //actionResponse = jbrain.talk(tmpStr[0]);
     jbrain.Extalk(tmpStr[0], function(res){
-      var finalResponse = data.greetings[0] + ": " + res.jresponse;
+      var finalResponse = persGreeting + ": " + res.jresponse;
       callback({ "todo":"", "jresponse": finalResponse });
     });
   }
   else {
     //actionResponse = jbrain.talk(tmpStr.join(" "));
     jbrain.Extalk(tmpStr.join(" "), function(res){
-      var finalResponse = data.greetings[0] + ": " + res.jresponse;
+      var finalResponse = persGreeting + ": " + res.jresponse;
       callback({ "todo":"", "jresponse": finalResponse });
     });
   }
@@ -183,8 +188,8 @@ exports.getWeatherCurrent = function getWeatherCurrent(phrase, callback){
   }
 }
 
-/*getWeatherForecast*/
-exports.getWeatherForecast = function getWeatherForecast(phrase, callback){
+/*getWeatherDetailedForecast*/
+exports.getWeatherDetailedForecast = function getWeatherDetailedForecast(phrase, callback){
   var tmpPhrase = phrase.split(" ");
   var postPhrase = tmpPhrase.slice(tmpPhrase.indexOf("forecast"));
   var forIndex = postPhrase.indexOf("for");
@@ -228,4 +233,121 @@ exports.getWeatherForecast = function getWeatherForecast(phrase, callback){
     // return null
     callback({"todo":"", "jresponse": "Im not sure where you would like me to look"});
   }
+}
+
+/*getWeatherForecast*/
+exports.getWeatherForecast = function getWeatherForecast(phrase, callback){
+  var tmpPhrase = phrase.split(" ");
+  var postPhrase = tmpPhrase.slice(tmpPhrase.indexOf("forecast"));
+  var forIndex = postPhrase.indexOf("for");
+
+  if(forIndex >= 0)
+  {
+      var location = postPhrase.slice(forIndex+1).join(" ");
+
+      apiLib.openweathermap("forecast", location,
+        function(res)
+        {
+          var resPhrase = "";
+          if(res.cnt > 0)
+          {
+            // Set initial parameters
+            var dateString = (new Date(res.list[0].dt_txt)).toDateString();
+            var dateNum = 0;
+            var avgTemp = 0;
+            var avgStatus = [];
+
+            resPhrase = nerves.stringFormat("The weather forecast for the next few days accourding to OpenWeather.com for {0}: ",[res.city.name]);
+            for(var i =0; i < res.list.length; i++)
+            {
+                var item = res.list[i];
+                var newDate = (new Date(item.dt_txt)).toDateString();
+                if(newDate != dateString )
+                {
+                  var dateStatus = {"name":"", "count":0 };
+                  for(var k=0; k < avgStatus.length; k++){
+                    if(avgStatus[k].count >= dateStatus.count)
+                    { dateStatus = avgStatus[k]; }
+                  }
+                  resPhrase += nerves.stringFormat("\n |{0} : {1} degrees and '{2}' ", [dateString, (avgTemp / dateNum).toFixed(2), dateStatus.name]);
+
+                  //Reset tmp Values
+                  dateString = newDate;
+                  avgTemp = 0;
+                  avgStatus = [];
+                  dateNum = 0;
+                }
+                else {
+                  dateNum +=1.0;
+                  avgTemp += parseFloat(item.main.temp_max);
+
+                  if(avgStatus.length == 0){
+                    avgStatus.push({"name":item.weather[0].main, "count": 1 });
+                  }
+                  else {
+                    for(var j =0; j < avgStatus.length; j ++){
+                      if(avgStatus[j].name == item.weather[0].main)
+                      {
+                        avgStatus[j].count += 1;
+                        break;
+                      }
+                      else if( (j+1) >= avgStatus.length)
+                      { avgStatus.push( {"name":item.weather[0].main, "count": 1 }); break;  }
+                    }
+                  }
+                }
+            }
+            resPhrase += "\n";
+          }
+          else {
+            resPhrase = nerves.stringFormat("Sorry we could not find: {0} maybe you spelled it wrong?", [location]);
+          }
+
+          callback({"todo":"", "jresponse": resPhrase});
+        });
+  }
+  else{
+    // return null
+    callback({"todo":"", "jresponse": "Im not sure where you would like me to look"});
+  }
+}
+
+/* Change Settings in data file and return */
+exports.getChangedSetting = function getChangedSetting(item, phrase, callback)
+{
+  var tmpPhrase = phrase.split(" ");
+  var postPhrase = tmpPhrase.slice(tmpPhrase.indexOf("my"));
+  var forIndex = postPhrase.indexOf("to");
+  var retPhrase = "";
+
+  try {
+    if(forIndex >= 0)
+    {
+        var newitem = postPhrase.slice(forIndex+1).join(" ");
+
+        // Change Item
+        var obj = JSON.parse(fs.readFileSync(data.userSettingsFile,'utf8'));
+
+        switch(item){
+          case "fullname":
+            obj.name.fullname = newitem;
+            break;
+          case "nickname":
+            obj.name.nickname = newitem;
+            break;
+          case "voice":
+            obj.voice = (newitem == "on" ? "on": "off");
+            break;
+          default:
+            break;
+        }
+        fs.writeFileSync(data.userSettingsFile, JSON.stringify(obj), {"encoding":'utf8'});
+        retPhrase = nerves.stringFormat("'{0}' setting was updated to '{1}' smoothly", [item, newitem]);
+    }
+  }
+  catch(ex){
+    retPhrase = "You did not update your settings, Somthing went wrong sorry";
+  }
+
+  callback({"todo":"", "jresponse": retPhrase});
 }

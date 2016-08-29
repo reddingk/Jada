@@ -41,7 +41,7 @@ exports.Extalk = function jconvo(phrase, callback) {
   }
 
   if(actionCall != null){
-    var response = getActionResponse(actionCall, chopPhrase(actionCall.action, tmpStr));
+    var response = getActionResponse(actionCall, chopPhrase(actionCall.action, tmpStr));      
     func.getDataResponse(response, phrase, function(res){ callback(res); });
   }
   else {
@@ -83,23 +83,32 @@ function getActionResponse(actionCall, phrase) {
 /*Get the Sub Action based on the phrase*/
 function getSubActionResponse(subactions, phrase) {
   var tmpStr = phrase.split(" ");
+  var tmpResponse = null;
   for(var i =0; i < subactions.length; i++) {
     if(tmpStr.indexOf(subactions[i].action) > -1) {
-      if(subactions[i].subactions == undefined) {
-        if(subactions[i].additional_phrases != undefined) {
-          return {"response":subactions[i].response, "action": subactions[i].action, "additional_phrases": subactions[i].additional_phrases};
-        }
-        else {
-          return {"response":subactions[i].response, "action": subactions[i].action};
-        }
-      }
-      else {
-        return getSubActionResponse(subactions[i].subactions, chopPhrase(subactions[i].action, tmpStr));
+      if(tmpResponse == null || tmpResponse.level > subactions[i].level ){
+        tmpResponse = subactions[i];
       }
     }
   }
 
-  return null;
+  // Return
+  if(tmpResponse != null) {
+    if(tmpResponse.subactions == undefined) {
+      if(tmpResponse.additional_phrases != undefined) {
+        return {"response":tmpResponse.response, "action": tmpResponse.action, "level": tmpResponse.level, "additional_phrases": tmpResponse.additional_phrases};
+      }
+      else {
+        return {"response":tmpResponse.response, "action": tmpResponse.action, "level": tmpResponse.level};
+      }
+    }
+    else {
+      return getSubActionResponse(tmpResponse.subactions, chopPhrase(tmpResponse.action, tmpStr));
+    }
+  }
+  else
+  { return null; }
+
 };
 
 /*Return the phrase that remains after the action*/

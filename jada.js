@@ -1,4 +1,8 @@
 var brain = require('./jada_/jbrain');
+var data = require('./jada_/jdata');
+
+var say = require('say');
+var fs = require('fs');
 
 const readline = require('readline');
 const rl = readline.createInterface({
@@ -11,11 +15,20 @@ rl.setPrompt('jada> ');
 rl.prompt();
 
 rl.on('line', (input) => {
-  //console.log(JSON.stringify(brain.talk( brain.clean(input.trim()) )));
+
   brain.Extalk( brain.clean(input.trim()), function(res) {
-    //console.log(JSON.stringify(res));
+
     var output = res.jresponse;
-    console.log(output);
+    if(output != "")
+    {
+      console.log(output);
+      var settings = JSON.parse(fs.readFileSync(data.userSettingsFile,'utf8'));
+
+      if(settings.voice == "on") {
+        var speechout = output.replace(/\n/g, " ");
+        say.speak(speechout);
+      }
+    }
 
     if(input == "exit"){
       console.log("Bye");
