@@ -47,6 +47,27 @@ exports.getDataResponse = function dataResponse(response, fullPhrase, callback) 
       case "changeVoice":
         jfunc.getChangedSetting("voice", fullPhrase, function(finalRes){ callback(finalRes); });
         break;
+      case "testCode":
+        jfunc.testCode(fullPhrase, function(finalRes){ callback(finalRes); });
+        break;
+      case "getCpuArch":
+        jfunc.getOSInfo("arch", function(finalRes){ callback(finalRes); });
+        break;
+      case "getCpuInfo":
+        jfunc.getOSInfo("info", function(finalRes){ callback(finalRes); });
+        break;
+      case "getComputerHostname":
+        jfunc.getOSInfo("hostname", function(finalRes){ callback(finalRes); });
+        break;
+      case "getNetworkInterface":
+        jfunc.getOSInfo("networkinterface", function(finalRes){ callback(finalRes); });
+        break;
+      case "getSystemRelease":
+        jfunc.getOSInfo("systemrelease", function(finalRes){ callback(finalRes); });
+        break;
+      case "getSystemMemory":
+        jfunc.getOSInfo("systemmemory", function(finalRes){ callback(finalRes); });
+        break;
       default:
         finalResponse.jresponse = response.action
         callback(finalResponse);

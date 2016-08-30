@@ -4,6 +4,7 @@ var nerves = require('./jnerves');
 var data = require('./jdata');
 //
 var fs = require('fs');
+var os = require('os');
 
 /*****Response Functions*****/
 
@@ -143,15 +144,15 @@ exports.getTastekidResults = function getTastekidResults(phrase, callback) {
         var compList = "";
         for(var j =0; j < results.Similar.Info.length; j++)
         {
-          compList += results.Similar.Info[j].Name +" (" + results.Similar.Info[j].Type +")";
+          compList += nerves.stringFormat("{0} ({1})",[results.Similar.Info[j].Name, results.Similar.Info[j].Type]);
           compList += (j+1 < results.Similar.Info.length ? " & " : "");
         }
         for(var j =0; j < results.Similar.Results.length; j++)
         {
-          itemList += results.Similar.Results[j].Name +" (" + results.Similar.Results[j].Type +")";
+          itemList += nerves.stringFormat("\n {0} ({1})", [results.Similar.Results[j].Name, results.Similar.Results[j].Type]);
           itemList += (j+1 < results.Similar.Results.length ? ", " : ".");
         }
-        resPhrase = "According to Tastekid for " + compList +".  The following are sugguested that you checkout: " + itemList;
+        resPhrase = nerves.stringFormat("According to Tastekid for {0}. The following are sugguested that you checkout: {1}", [compList, itemList]);
       }
 
       callback({"todo":"", "jresponse": resPhrase});
@@ -350,4 +351,86 @@ exports.getChangedSetting = function getChangedSetting(item, phrase, callback)
   }
 
   callback({"todo":"", "jresponse": retPhrase});
+}
+
+exports.testCode = function testCode(phrase,callback)
+{
+  console.log("arch} ");
+  console.log(os.arch());
+
+  console.log("cpu} ");
+  console.log(os.cpus());
+
+  console.log("homedir} ");
+  console.log(os.homedir());
+
+  console.log("hostname} ");
+  console.log(os.hostname());
+
+  console.log("net interface} ");
+  console.log(os.networkInterfaces());
+
+  console.log("release} ");
+  console.log(os.release());
+
+  console.log("total mem} ");
+  console.log(os.totalmem());
+
+  callback({"todo":"", "jresponse":"FINISHED TEST"});
+}
+
+exports.getOSInfo = function testCode(type, callback)
+{
+  var retPhrase = "";
+  switch(type){
+    case "arch":
+      retPhrase = nerves.stringFormat("the cpu architecture is {0}",[os.arch()]);
+      break;
+    case "info":
+      var cores = os.cpus();
+      retPhrase = nerves.stringFormat("You have {0} cores on this machine, they are the following: ", [cores.length]);
+      for(var i =0; i < cores.length; i++)
+      { retPhrase += nerves.stringFormat("\n core {0}: {1}", [i, cores[i].model]);  }
+
+      break;
+    case "hostname":
+      retPhrase = nerves.stringFormat("the computers hostname is {0}",[os.hostname()]);
+      break;
+    case "networkinterface":
+      var network = os.networkInterfaces();
+      var info = null;
+
+      for(var i in network) {
+        for(var j in network[i])
+        {
+          var iface = network[i][j];
+          if(iface.family == "IPv4" && !iface.internal)
+          {
+            info = iface;
+            break;
+          }
+        }
+      }
+
+      retPhrase = (info != null ? nerves.stringFormat("network information address: {0}, netmask: {1}, mac: {2}", [info.address, info.netmask, info.mac]) : "Sorry no network information");
+      break;
+    case "systemrelease":
+      retPhrase = nerves.stringFormat("the operating system release is {0}",[os.release()]);
+      break;
+    case "systemmemory":
+      var memory = os.totalmem();
+      var memPhrase  = "";
+
+      if(memory > 1073741824) { memPhrase = nerves.stringFormat("{0} GB", [(memory/1073741824).toFixed(3) ]); }
+      else if(memory > 1048576) { memPhrase = nerves.stringFormat("{0} MB", [(memory/1048576).toFixed(3) ]);  }
+      else if(memory > 1024) { memPhrase = nerves.stringFormat("{0} KB", [(memory/1024).toFixed(3) ]) }
+      else { memPhrase = nerves.stringFormat("{0} B",[memory]); }
+
+      retPhrase = nerves.stringFormat("the amount of avaliable memory for the system is {0}",[memPhrase]);
+      break;
+    default:
+      break;
+  }
+
+  callback({"todo":"", "jresponse":retPhrase});
 }

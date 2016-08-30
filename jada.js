@@ -9,32 +9,39 @@ const rl = readline.createInterface({
   input: process.stdin,
   output: process.stdout
 });
-rl.setPrompt('jada> ');
-/*JADA implementation*/
 
+var settings = JSON.parse(fs.readFileSync(data.userSettingsFile,'utf8'));
+if(settings.voice == "on") {rl.setPrompt('|jada| -v- > '); }
+else {rl.setPrompt('|jada| --- > '); }
+
+/*JADA implementation*/
 rl.prompt();
 
 rl.on('line', (input) => {
 
   brain.Extalk( brain.clean(input.trim()), function(res) {
 
-    var output = res.jresponse;
+    var output = res.jresponse + "\n";
     if(output != "")
     {
       console.log(output);
-      var settings = JSON.parse(fs.readFileSync(data.userSettingsFile,'utf8'));
-
+      settings = JSON.parse(fs.readFileSync(data.userSettingsFile,'utf8'));
+      // check voice setting to read to user
       if(settings.voice == "on") {
         var speechout = output.replace(/\n/g, " ");
         say.speak(speechout);
       }
     }
 
+    // Exit or continue with command line utility
     if(input == "exit"){
       console.log("Bye");
       rl.close();
     }
     else {
+      if(settings.voice == "on") {rl.setPrompt('|jada| -v- > '); }
+      else {rl.setPrompt('|jada| --- > '); }
+
       rl.prompt();
     }
   });

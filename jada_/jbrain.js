@@ -3,31 +3,8 @@ var data = require('./jdata');
 
 exports.parrot = function polly(phrase) { console.log("You entered in " + phrase); };
 
-/*Main convo function*/
-exports.talk = function jconvo(phrase) {
-  var tmpStr = phrase.split(" ");
-  var actionCall = null;
 
-  for(var i=0; i < data.phraseLibrary.length; i++){
-    if(tmpStr.indexOf(data.phraseLibrary[i].action) > -1 || (data.phraseLibrary[i].additional_phrases != undefined && checkAllPhrases(tmpStr, data.phraseLibrary[i].additional_phrases)) )
-    {
-      if(actionCall == null || actionCall.level > data.phraseLibrary[i].level)
-        actionCall = data.phraseLibrary[i];
-    }
-  }
-
-  if(actionCall != null){
-    var response = getActionResponse(actionCall, chopPhrase(actionCall.action, tmpStr));
-    return func.getDataResponse(response, phrase);
-  }
-  else {
-    var response = {"response":"N/A"}
-    return func.getDataResponse(response, "");
-  }
-
-};
-
-// Experimemtal Talk
+// Main Talk function
 exports.Extalk = function jconvo(phrase, callback) {
   var tmpStr = phrase.split(" ");
   var actionCall = null;
@@ -41,7 +18,7 @@ exports.Extalk = function jconvo(phrase, callback) {
   }
 
   if(actionCall != null){
-    var response = getActionResponse(actionCall, chopPhrase(actionCall.action, tmpStr));      
+    var response = getActionResponse(actionCall, chopPhrase(actionCall.action, tmpStr));
     func.getDataResponse(response, phrase, function(res){ callback(res); });
   }
   else {
@@ -84,8 +61,9 @@ function getActionResponse(actionCall, phrase) {
 function getSubActionResponse(subactions, phrase) {
   var tmpStr = phrase.split(" ");
   var tmpResponse = null;
+
   for(var i =0; i < subactions.length; i++) {
-    if(tmpStr.indexOf(subactions[i].action) > -1) {
+    if(tmpStr.indexOf(subactions[i].action) > -1 || (subactions[i].additional_phrases != undefined && checkAllPhrases(tmpStr, subactions[i].additional_phrases))) {
       if(tmpResponse == null || tmpResponse.level > subactions[i].level ){
         tmpResponse = subactions[i];
       }

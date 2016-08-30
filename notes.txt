@@ -1,1 +1,57 @@
 Look into Tracking.js
+
+Phrases:
+/*SETINGS*/
+
+[Change] [my] {fullname} [to] ****
+    : Change user fullname
+
+[Change] [my] {nickname} [to] ****
+    : Change user nickname
+
+[Change] [my] {voice} [to] ****
+    : Change Text to speech voice to (on) or (off)
+
+/*GREETINGS*/
+{hello, hi, hey}
+    : Greetings
+
+/*TIME / DATE*/
+{time}
+    : Get the server machine time
+
+{date}
+    : Get the server machine date
+
+/*MEDIA*/
+[number] {media, books, movies, music, authors, shows, games} [similar] [to] ****
+    : Get similar media items to a specific media item
+
+/*WEATHER*/
+{weather} [for] ****
+    : Get weather for specific location
+
+[weather] {forecast} [for] ****
+    : Get weather forecast for specific location
+
+[weather] {details} [for] ****
+    : Get full weather details for every 3hours for specific location
+
+/*COMPUTER INFORMATION*/
+[cpu] {information, info}
+    : Get CPU core information
+
+[cpu] {architecture, arch}
+    : Get CPU architecture information
+
+[computers] {hostname}
+    : Get computers hostname
+
+[network] {interface}
+    : Get networks interface
+
+[system] {release}
+    : Get Operating systems release number
+
+[system] {memory}
+    : Get the amount of free memory space
