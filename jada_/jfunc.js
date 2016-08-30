@@ -5,6 +5,13 @@ var data = require('./jdata');
 //
 var fs = require('fs');
 var os = require('os');
+var http = require('http');
+var opn = require('opn');
+
+var express = require('express');
+var app = express();
+var bodyParser = require('body-parser');
+var methodOverride = require('method-override');
 
 /*****Response Functions*****/
 
@@ -355,26 +362,17 @@ exports.getChangedSetting = function getChangedSetting(item, phrase, callback)
 
 exports.testCode = function testCode(phrase,callback)
 {
-  console.log("arch} ");
-  console.log(os.arch());
+  var url = 'jada_/brows/index.html';
 
-  console.log("cpu} ");
-  console.log(os.cpus());
+  // set ports
+  var port = process.env.PORT || 8000;  
+  app.use(bodyParser.urlencoded({ extended: true }));
+  app.use(methodOverride('X-HTTP-Method-Override'));
+  app.use(express.static(__dirname + '/public'));
+  // start app
+  var server = app.listen(port);
 
-  console.log("homedir} ");
-  console.log(os.homedir());
-
-  console.log("hostname} ");
-  console.log(os.hostname());
-
-  console.log("net interface} ");
-  console.log(os.networkInterfaces());
-
-  console.log("release} ");
-  console.log(os.release());
-
-  console.log("total mem} ");
-  console.log(os.totalmem());
+  opn('http://localhost:8000').then(function(cp){ server.close(); });
 
   callback({"todo":"", "jresponse":"FINISHED TEST"});
 }

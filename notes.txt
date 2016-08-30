@@ -1,10 +1,11 @@
+/***** NOTES *****/
 Look into Tracking.js
 
-Phrases:
+/***** PHRASES *****/
 /*SETINGS*/
 
 [Change] [my] {fullname} [to] ****
-    : Change user fullname
+    : Change user full name
 
 [Change] [my] {nickname} [to] ****
     : Change user nickname
