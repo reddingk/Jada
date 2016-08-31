@@ -56,3 +56,8 @@ Look into Tracking.js
 
 [system] {memory}
     : Get the amount of free memory space
+
+
+/*TRACKING MEDIA*/
+[image] [facial] {tracking}
+    : Do a Facial Track on images using default browser as a UI

@@ -68,6 +68,9 @@ exports.getDataResponse = function dataResponse(response, fullPhrase, callback) 
       case "getSystemMemory":
         jfunc.getOSInfo("systemmemory", function(finalRes){ callback(finalRes); });
         break;
+      case "imageFacialTracking":
+        jfunc.openTrackingView("ifr", fullPhrase, function(finalRes){ callback(finalRes); });
+        break;
       default:
         finalResponse.jresponse = response.action
         callback(finalResponse);
