@@ -365,15 +365,18 @@ exports.testCode = function testCode(phrase,callback)
   var url = 'jada_/brows/index.html';
 
   // set ports
-  var port = process.env.PORT || 8000;  
+  var port = process.env.PORT || 1111;
   app.use(bodyParser.urlencoded({ extended: true }));
   app.use(methodOverride('X-HTTP-Method-Override'));
-  app.use(express.static(__dirname + '/public'));
+  app.use(express.static(__dirname + '/jviews/public'));
   // start app
-  var server = app.listen(port);
+  var server = app.listen(port)
+  .on('error', function(e){ /*Server is in use*/ })
+  .on('listening', function(e) { /*Server is Open*/ });
 
-  opn('http://localhost:8000').then(function(cp){ server.close(); });
-
+  // Open URL
+  opn('http://localhost:8000/#/ifr').then(function(cp){ /*server.close();*/ });
+  
   callback({"todo":"", "jresponse":"FINISHED TEST"});
 }
 
