@@ -362,7 +362,62 @@ exports.getChangedSetting = function getChangedSetting(item, phrase, callback)
 
 exports.testCode = function testCode(phrase,callback)
 {
-  callback({"todo":"", "jresponse":"FINISHED TEST"});
+  getIanaCode("english", "french", function(res) { console.log(res); callback({"todo":"", "jresponse":"FINISHED TEST"}); });
+}
+
+function getIanaCode(src, trg, callback) {
+  var tags = require('language-tags');
+  var codes = ["en","en"];
+
+  var srcCmp = src.charAt(0).toUpperCase()+src.slice(1);
+  var trgCmp = trg.charAt(0).toUpperCase()+trg.slice(1);
+
+  apiLib.itranslate4(null, null, null,
+    function(res) {
+        var srcs = res.src;
+        var trgs = res.trg;
+        var loopParams = [(srcs.length > trgs.length? srcs.length : trgs.length), false, false]
+
+        for(var i=0; i < loopParams[0]; i++) {
+          // SRC
+          if(i < srcs.length && !loopParams[1] && tags.language(srcs[i]).descriptions().indexOf(srcCmp) >= 0)
+          {
+            codes[0] = srcs[i];
+            loopParams[1] = true;
+          }
+          // TRG
+          if(i < trgs.length && !loopParams[2] && tags.language(trgs[i]).descriptions().indexOf(trgCmp) >= 0)
+          {
+            codes[1] = trgs[i];
+            loopParams[2] = true;
+          }
+        }
+        callback(codes);
+  });
+}
+exports.getTranslation = function getTranslation(phrase, callback)
+{
+  var returnTanslation = "Sorry I was not able to translate that for you";
+  var tmpPhrase = phrase.split(" ");
+  var postPhrase = tmpPhrase.slice(tmpPhrase.indexOf("translate"));
+
+  var fromIndex = postPhrase.indexOf("from") + 1;
+  var toIndex = postPhrase.indexOf("to") + 1;
+
+  if(fromIndex > -1 || toIndex > -1){
+    var fromWord = (fromIndex > 0 ? postPhrase[fromIndex] : "english");
+    var toWord = (toIndex > 0 ? postPhrase[toIndex] : "english");
+    var translatePhrase = postPhrase.slice((toIndex > -1 ? toIndex : fromIndex) + 1).join("+");
+
+    getIanaCode(fromWord, toWord, function(res) {
+      apiLib.itranslate4(res[0], res[1], translatePhrase,
+        function(res) {
+          returnTanslation = nerves.stringFormat("The phrase \n {0} \nTranslated in {2} to: \n {1}",[translatePhrase.replace(/[+]/g, " "), res.dat[0].text[0], toWord]);
+          callback({"todo":"", "jresponse":returnTanslation});
+      });
+    });
+  }
+  else { callback({"todo":"", "jresponse":returnTanslation}); }
 }
 
 exports.getOSInfo = function testCode(type, callback)

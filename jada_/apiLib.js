@@ -58,3 +58,27 @@ exports.openweathermap = function openweathermap(type, location, callback){
   }
 
 }
+
+exports.itranslate4 = function itranslate4(src, target, phrase, callback){
+  var api = getApiItem("iTranslate4");
+
+  if(api != null){
+    try {
+
+      var url = (src == null && target == null ? func.stringFormat(api.link +"GetLanguages?auth={0}", [api.key]) : func.stringFormat(api.link +"Translate?auth={0}&src={1}&trg={2}&dat={3}", [api.key, src, target, phrase]));
+      
+      request(url,
+        function (error, response, body){
+          if(!error && response.statusCode ===200){
+            callback(JSON.parse(body));
+          }
+        });
+    }
+    catch(err) {
+      console.log("Err 2" + err);
+    }
+  }
+  else {
+    console.log("Else null");
+  }
+}
