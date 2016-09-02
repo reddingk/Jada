@@ -54,9 +54,13 @@
 [system] {memory}
     : Get the amount of free memory space
 
-/*Translation*/
+/*TRANSLATION*/
 {translate} [from] **** [to] **** [**phrase to translate**]
     : Translates phrase from one language to another
+
+/*DIRECTIONS*/
+[type] {directions} [from] **** [to] ****
+
 
 /*TRACKING MEDIA*/
 [image] [facial] {tracking}

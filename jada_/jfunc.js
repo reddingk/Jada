@@ -199,7 +199,7 @@ exports.getWeatherCurrent = function getWeatherCurrent(phrase, callback){
 /*getWeatherDetailedForecast*/
 exports.getWeatherDetailedForecast = function getWeatherDetailedForecast(phrase, callback){
   var tmpPhrase = phrase.split(" ");
-  var postPhrase = tmpPhrase.slice(tmpPhrase.indexOf("forecast"));
+  var postPhrase = tmpPhrase.slice(tmpPhrase.indexOf("details"));
   var forIndex = postPhrase.indexOf("for");
 
   if(forIndex >= 0)
@@ -395,6 +395,7 @@ function getIanaCode(src, trg, callback) {
         callback(codes);
   });
 }
+
 exports.getTranslation = function getTranslation(phrase, callback)
 {
   var returnTanslation = "Sorry I was not able to translate that for you";
@@ -419,6 +420,45 @@ exports.getTranslation = function getTranslation(phrase, callback)
   }
   else { callback({"todo":"", "jresponse":returnTanslation}); }
 }
+
+exports.getDirections = function getDirections(phrase, callback)
+{
+  var returnTanslation = "Sorry I was not able to get the directions for you";
+  var tmpPhrase = phrase.split(" ");
+  var dircIndex = tmpPhrase.indexOf("directions");
+  var type = ( dircIndex > 0 ? tmpPhrase[dircIndex - 1] : "driving");
+  var postPhrase = tmpPhrase.slice(dircIndex);
+  var fromIndex = postPhrase.indexOf("from") + 1;
+  var toIndex = postPhrase.indexOf("to") + 1;
+
+  if(fromIndex > -1 && toIndex > -1){
+    var fromLoc = (fromIndex < toIndex ? postPhrase.slice(fromIndex, toIndex-1) : postPhrase.slice(fromIndex));
+    var toLoc = (fromIndex < toIndex ? postPhrase.slice(toIndex) : postPhrase.slice(toIndex, fromIndex-1));
+    var obj = JSON.parse(fs.readFileSync(data.userSettingsFile,'utf8'));
+
+    for(var j in obj.locations)
+    {
+      var savedLoc = obj.locations[j];
+      fromLoc = (fromLoc == savedLoc.name ? savedLoc.address.split(" ") : fromLoc);
+      toLoc = (toLoc == savedLoc.name ? savedLoc.address.split(" ") : toLoc);
+    }
+    type = (type == "transit" ? "transit" :"driving");
+
+    apiLib.googleDirections(type, fromLoc.join("+"), toLoc.join("+"), function(res) {
+          if(res.status == "OK"){
+              var legs = res.routes[0].legs[0];
+              returnTanslation = nerves.stringFormat("It will take approximately {0} and {1} from '{2}' to '{3}': ", [legs.duration.text, legs.distance.text, legs.start_address, legs.end_address]);
+              for(var i in legs.steps){
+                var step = legs.steps[i];
+                returnTanslation += nerves.stringFormat("\n\n ({0} : {1}) {2}",[step.distance.text, step.duration.text, step.html_instructions.replace(/<(.|\n)*?>/g, '')]);
+              }
+          }
+          callback({"todo":"", "jresponse":returnTanslation});
+    });
+  }
+  else { callback({"todo":"", "jresponse":returnTanslation}); }
+}
+
 
 exports.getOSInfo = function testCode(type, callback)
 {

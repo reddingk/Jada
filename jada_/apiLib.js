@@ -66,7 +66,30 @@ exports.itranslate4 = function itranslate4(src, target, phrase, callback){
     try {
 
       var url = (src == null && target == null ? func.stringFormat(api.link +"GetLanguages?auth={0}", [api.key]) : func.stringFormat(api.link +"Translate?auth={0}&src={1}&trg={2}&dat={3}", [api.key, src, target, phrase]));
-      
+
+      request(url,
+        function (error, response, body){
+          if(!error && response.statusCode ===200){
+            callback(JSON.parse(body));
+          }
+        });
+    }
+    catch(err) {
+      console.log("Err 2" + err);
+    }
+  }
+  else {
+    console.log("Else null");
+  }
+}
+
+exports.googleDirections = function googleDirections(type, fromLoc, toLoc, callback){
+  var api = getApiItem("googleMapsDirections");
+
+  if(api != null){
+    try {
+      var url = func.stringFormat(api.link +"?key={0}&origin={1}&destination={2}&mode={3}", [api.key, fromLoc, toLoc, type]);
+
       request(url,
         function (error, response, body){
           if(!error && response.statusCode ===200){

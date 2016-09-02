@@ -53,6 +53,9 @@ exports.getDataResponse = function dataResponse(response, fullPhrase, callback) 
       case "translatePhrase":
         jfunc.getTranslation(fullPhrase, function(finalRes){ callback(finalRes); });
         break;
+      case "getDirections":
+        jfunc.getDirections(fullPhrase, function(finalRes){ callback(finalRes); });
+        break;
       case "getCpuArch":
         jfunc.getOSInfo("arch", function(finalRes){ callback(finalRes); });
         break;

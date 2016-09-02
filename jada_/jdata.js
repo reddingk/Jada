@@ -6,7 +6,8 @@ exports.greetings = ["Hey", "Hello {0} how are things treating you", "I hope you
 exports.app_apis = [
     {"name":"tasteKid", "link":"http://www.tastekid.com/api/","key":"228198-JadenPer-P426AN1R"},
     {"name":"openWeather", "link":"http://api.openweathermap.org/data/2.5/", "key":"90c2be179d4c18b392e3e11efa2ee5c1"},
-    {"name":"iTranslate4", "link":"http://itranslate4.eu/api/", "key":"76b7b3b3-d336-4b0d-bf11-a51ac5a2fcdd"}
+    {"name":"iTranslate4", "link":"http://itranslate4.eu/api/", "key":"76b7b3b3-d336-4b0d-bf11-a51ac5a2fcdd"},
+    {"name":"googleMapsDirections", "link":"https://maps.googleapis.com/maps/api/directions/json", "key":"AIzaSyDmVwV-ugBBFPH9QxtFEPubd2X5ojRAH3o"}
 ];
 /*
   PHRASE LIBRARY
@@ -25,6 +26,7 @@ exports.phraseLibrary = [
   {"action": "weather", "level":2, "response":"getWeatherCurrent", "subactions":[{"action":"forecast", "level":2, "response":"getWeatherForecast"}, {"action":"details", "level":1, "response":"getWeatherDetailedForecast"} ]},
   {"action": "image", "level":2, "subactions":[{"action":"facial", "level":1, "subactions":[{"action":"tracking", "level":1, "response":"imageFacialTracking"}]}]},
   {"action": "translate", "level":2, "response":"translatePhrase"},
+  {"action": "directions", "level":2, "response":"getDirections"},
   {"action": "cpu", "level":10, "subactions":[{"action": "architecture", "level":10, "response":"getCpuArch", "additional_phrases":["arch"]}, {"action": "information", "level":10, "response":"getCpuInfo", "additional_phrases":["info"]}]},
   {"action": "computers", "level":10, "subactions":[ {"action":"hostname", "level":10, "response":"getComputerHostname"}]},
   {"action": "network", "level":10, "subactions":[ {"action":"interface", "level":10, "response":"getNetworkInterface"}]},
