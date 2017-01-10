@@ -1,4 +1,4 @@
-var func = require('./jnerves');
+var nerves = require('./jnerves');
 var data = require('./jdata');
 
 exports.parrot = function polly(phrase) { console.log("You entered in " + phrase); };
@@ -8,24 +8,28 @@ exports.parrot = function polly(phrase) { console.log("You entered in " + phrase
 exports.Extalk = function jconvo(phrase, callback) {
   var tmpStr = phrase.split(" ");
   var actionCall = null;
+  var phraseLibrary = null;
 
-  for(var i=0; i < data.phraseLibrary.length; i++){
-    if(tmpStr.indexOf(data.phraseLibrary[i].action) > -1 || (data.phraseLibrary[i].additional_phrases != undefined && checkAllPhrases(tmpStr, data.phraseLibrary[i].additional_phrases)) )
-    {
-      if(actionCall == null || actionCall.level > data.phraseLibrary[i].level)
-        actionCall = data.phraseLibrary[i];
+  data.getPhrases( function(res) {
+    phraseLibrary = res;
+
+    for(var i=0; i < phraseLibrary.length; i++){
+      if(tmpStr.indexOf(phraseLibrary[i].action) > -1 || (phraseLibrary[i].additional_phrases != undefined && checkAllPhrases(tmpStr, phraseLibrary[i].additional_phrases)) )
+      {
+        if(actionCall == null || actionCall.level > phraseLibrary[i].level)
+          actionCall = phraseLibrary[i];
+      }
     }
-  }
 
-  if(actionCall != null){
-    var response = getActionResponse(actionCall, chopPhrase(actionCall.action, tmpStr));
-    func.getDataResponse(response, phrase, function(res){ callback(res); });
-  }
-  else {
-    var response = {"response":"N/A"}
-    func.getDataResponse(response, "", function(res){ callback(res); });
-  }
-
+    if(actionCall != null){
+      var response = getActionResponse(actionCall, chopPhrase(actionCall.action, tmpStr));
+      nerves.getDataResponse(response, phrase, function(res){ callback(res); });
+    }
+    else {
+      var response = {"response":"N/A"}
+      nerves.getDataResponse(response, "", function(res){ callback(res); });
+    }
+  });
 };
 
 
