@@ -7,6 +7,7 @@ var fs = require('fs');
 var os = require('os');
 var http = require('http');
 var opn = require('opn');
+var underscore = require('underscore');
 
 var express = require('express');
 var app = express();
@@ -25,7 +26,7 @@ exports.greetings = function greetings(main, additional, phrase, callback) {
   var removables = additional;
   removables.push(main);
   removables.push("Jada");
-  var num = Math.floor((Math.random() * (data.greetings.length-1)));
+  var num = Math.floor((Math.random() * (data.greetings.length)));
   var persGreeting = nerves.stringFormat(data.greetings[num], [obj.name.nickname]);
 
   // Remove Greetings from phrase
@@ -37,18 +38,18 @@ exports.greetings = function greetings(main, additional, phrase, callback) {
   }
 
   if(tmpStr.length == 0) {
-    callback({ "todo":"", "jresponse": persGreeting });
+    callback({ "todo":"", "jresponse": persGreeting, "japi": {"results":persGreeting } });
   }
   else if(tmpStr == 1) {
     jbrain.Extalk(tmpStr[0], function(res){
       var finalResponse = persGreeting + ": " + res.jresponse;
-      callback({ "todo":"", "jresponse": finalResponse });
+      callback({ "todo":"", "jresponse": finalResponse, "japi": {"results":res.japi } });
     });
   }
   else {
     jbrain.Extalk(tmpStr.join(" "), function(res){
       var finalResponse = persGreeting + ": " + res.jresponse;
-      callback({ "todo":"", "jresponse": finalResponse });
+      callback({ "todo":"", "jresponse": finalResponse, "japi": {"results":res.japi } });
     });
   }
 }
@@ -488,8 +489,7 @@ exports.getDirections = function getDirections(phrase, callback) {
 }
 
 
-exports.getOSInfo = function testCode(type, callback)
-{
+exports.getOSInfo = function getOSInfo(type, callback) {
   var retPhrase = "";
   var apiResponse = null;
 
@@ -547,6 +547,93 @@ exports.getOSInfo = function testCode(type, callback)
     default:
       apiResponse = {"code":-1};
       break;
+  }
+
+  callback({"todo":"", "jresponse":retPhrase, "japi":apiResponse});
+}
+
+/* Jada Easter Eggs*/
+exports.easterEggs = function easterEggs(action, callback) {
+  var apiResponse = null;
+  var retPhrase = "";
+
+  switch(action){
+    case "do you know the muffin man":
+      retPhrase = "yes, he lives in mulbery lane";
+      apiResponse = { "results": "yes, he lives in mulbery lane"};
+      break;
+    case "how are you":
+      // TODO: perform system diagnostic
+      retPhrase = "great thanks for asking";
+      apiResponse = { "results": "great thanks for asking"};
+      break;
+    default:
+      apiResponse = {"code":-1};
+      break;
+  }
+  callback({"todo":"", "jresponse":retPhrase, "japi":apiResponse});
+}
+
+/* Get Personal Relationship Info*/
+exports.getRelationship = function getRelationship(action, phrase, callback) {
+
+  var obj = JSON.parse(fs.readFileSync(data.userSettingsFile,'utf8'));
+  var tmpPhrase = phrase.split(" ");
+  var postPhrase = tmpPhrase.slice(tmpPhrase.indexOf(action)+1);
+  if(postPhrase.indexOf("my") > -1){
+    postPhrase = postPhrase.slice(postPhrase.indexOf("my")+1);
+  }
+  var userRelationships = obj.relationships;
+
+  var apiResponse = null;
+  var retPhrase = "";
+
+
+    if(action == "am") {
+      retPhrase = nerves.stringFormat("You are {0} aka {1}", [obj.name.fullname, obj.name.nickname]);
+      apiResponse = { "results": {"who": "Me", "relationships": obj.name }};
+    }
+    else if(action == "is" || action == "are"){
+      if (postPhrase.length > 0) {
+        // find relationships
+        var relationships = [];
+        /*Types | 0:name -> title | 1: title -> name*/
+        for(var i =0; i < userRelationships.length; i++){
+
+          if(userRelationships[i].name.indexOf(postPhrase.join(" ")) > -1) {
+            relationships.push({"type":0, "info":userRelationships[i]});
+          }
+          else if(underscore.filter(userRelationships[i].title, function(dt) {  return dt == postPhrase.join(" "); }).length > 0 ){
+            relationships.push({"type":1, "info":userRelationships[i]});
+          }
+        }
+
+        // Build Relationship String
+        if(relationships.length > 0){
+          var relInfo = "";
+          for(var j =0; j < relationships.length; j++){
+            if(relationships[j].type == 0){
+              relInfo += (relInfo == "" ? relationships[j].info.title[0] : ", "+relationships[j].info.title[0] )
+            }
+            else{
+              relInfo += (relInfo == "" ? relationships[j].info.name : ", "+relationships[j].info.name )
+            }
+          }
+          retPhrase = nerves.stringFormat("you told me your {0}{1} '{2}'",[postPhrase.join(" "), (relationships.length > 1 ? "'s are" : " is"), relInfo ]);
+          apiResponse = { "results": {"who":postPhrase.join(" "), "relationships": relationships} };
+        }
+        else {
+          retPhrase = nerves.stringFormat("sorry I don't think you told me about {0}.", [postPhrase.join(" ")]);
+          apiResponse = {"code": -3};
+        }
+      }
+      else {
+        retPhrase = "sorry you didn't give me a name or nickname I could work with.";
+        apiResponse = {"code": -4};
+      }
+    }
+    else {
+      apiResponse = {"code":-1};
   }
 
   callback({"todo":"", "jresponse":retPhrase, "japi":apiResponse});

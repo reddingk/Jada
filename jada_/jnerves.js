@@ -5,10 +5,10 @@ exports.getDataResponse = function dataResponse(response, fullPhrase, callback) 
   var finalResponse = { "todo":"", "jresponse": "I have nothing for you sorry"};
 
   if(response == null) { callback(finalResponse); }
-  else {
+  else {    
     switch(response.response){
       case "N/A":
-        finalResponse.jresponse ="";
+        finalResponse.jresponse ="sorry I am unable to help you with that but I might one day";
         callback(finalResponse);
         break;
       case "greetings":
@@ -73,7 +73,13 @@ exports.getDataResponse = function dataResponse(response, fullPhrase, callback) 
         break;
       case "getSystemMemory":
         jfunc.getOSInfo("systemmemory", function(finalRes){ callback(finalRes); });
-        break;      
+        break;
+      case "easterEggs":
+        jfunc.easterEggs(response.action, function(res){ callback(res);});
+        break;
+      case "relationshipGuide":
+        jfunc.getRelationship(response.action, fullPhrase, function(res){ callback(res);});
+        break;
       default:
         finalResponse.jresponse = response.action
         callback(finalResponse);

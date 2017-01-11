@@ -1,7 +1,7 @@
 exports.userSettingsFile = './settings.json';
 //exports.userSettingsFile = { "name": {"fullname":"Kristopher Redding", "nickname":"Kris"}, "voice":"off"};
 
-exports.greetings = ["Hey", "Hello {0} how are things treating you", "I hope you are having a good day today"];
+exports.greetings = ["Hey", "Hello {0} how are things treating you", "I hope you are having a good day today", "How's life", "How's your day treating you {0}"];
 
 exports.app_apis = [
     {"name":"tasteKid", "link":"http://www.tastekid.com/api/","key":"228198-JadenPer-P426AN1R"},
@@ -22,7 +22,7 @@ function getPhraseLibrary(callback){
 
 exports.getPhrases = function(callback) {
   if(phraseLib.length == 0){
-    console.log("Getting from DB");
+    console.log("Getting Phrases From DB");
     getPhraseLibrary(function(res){
         phraseLib = res;
         callback(phraseLib);
@@ -50,8 +50,14 @@ var phraseLibrary_BackUp = [
   {"action": "time", "level":2, "response":"getLocalTime", "subactions":[ {"action":"in", "response":"getTimeZoneTime"}]},
   {"action": "weather", "level":2, "response":"getWeatherCurrent", "subactions":[{"action":"forecast", "level":2, "response":"getWeatherForecast"}, {"action":"details", "level":1, "response":"getWeatherDetailedForecast"} ]},
   {"action": "directions", "level":2, "response":"getDirections"},
+  {"action": "who", "level":2, "subactions":[{"action": "am", "level":2, "response":"relationshipGuide"}, {"action": "is", "level":2, "response":"relationshipGuide"}]},
   {"action": "cpu", "level":10, "subactions":[{"action": "architecture", "level":10, "response":"getCpuArch", "additional_phrases":["arch"]}, {"action": "information", "level":10, "response":"getCpuInfo", "additional_phrases":["info"]}]},
   {"action": "computers", "level":10, "subactions":[ {"action":"hostname", "level":10, "response":"getComputerHostname"}]},
   {"action": "network", "level":10, "subactions":[ {"action":"interface", "level":10, "response":"getNetworkInterface"}]},
   {"action": "system", "level":10, "subactions":[{"action": "release", "level":10, "response":"getSystemRelease"}, {"action": "memory", "level":10, "response":"getSystemMemory"}]}
+];
+
+var fullPhrase_Backup = [
+  {"type":"phrase", "action":"do you know the muffin man", "level":101, "response":"easterEggs"},
+  {"type":"phrase", "action":"how are you", "level":101, "response":"easterEggs"}
 ];

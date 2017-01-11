@@ -1,3 +1,4 @@
+var underscore = require('underscore');
 var nerves = require('./jnerves');
 var data = require('./jdata');
 
@@ -9,10 +10,19 @@ exports.Extalk = function jconvo(phrase, callback) {
   var tmpStr = phrase.split(" ");
   var actionCall = null;
   var phraseLibrary = null;
+  var fullPhraseLibrary = null;
 
   data.getPhrases( function(res) {
-    phraseLibrary = res;
-
+    
+    // Check Full Phrases
+    fullPhraseLibrary = underscore.filter(res, function(dt){  return dt.type == 'phrase'; });
+    for(var j=0; j < fullPhraseLibrary.length; j++){
+      if(phrase.search(fullPhraseLibrary[j].action) > -1){
+        actionCall = fullPhraseLibrary[j];
+      }
+    }
+    // Check Action Phrases
+    phraseLibrary = underscore.filter(res, function(dt) {  return dt.type != 'phrase'; });
     for(var i=0; i < phraseLibrary.length; i++){
       if(tmpStr.indexOf(phraseLibrary[i].action) > -1 || (phraseLibrary[i].additional_phrases != undefined && checkAllPhrases(tmpStr, phraseLibrary[i].additional_phrases)) )
       {
@@ -44,7 +54,7 @@ function getActionResponse(actionCall, phrase) {
     return getSubActionResponse(actionCall.subactions, chopPhrase(actionCall.action, tmpStr));
   }
   //Check for subaction responses before returning main response
-  else if(actionCall.subactions != undefined )
+  else if(actionCall.subactions != undefined)
   {
     var response = getSubActionResponse(actionCall.subactions, chopPhrase(actionCall.action, tmpStr));
     var res = (response == null? {"response":actionCall.response, "action": actionCall.action } : response);
@@ -57,6 +67,7 @@ function getActionResponse(actionCall, phrase) {
     var res = {"response":actionCall.response, "action": actionCall.action};
     if(actionCall.additional_phrases != undefined)
       res.additional_phrases = actionCall.additional_phrases;
+
     return res;
   }
 };

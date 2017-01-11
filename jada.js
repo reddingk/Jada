@@ -3,6 +3,13 @@ var data = require('./jada_/jdata');
 
 var say = require('say');
 var fs = require('fs');
+// configuration
+
+// database config files
+var mongoose = require('mongoose');
+var database = require('./jada_/config/database');
+mongoose.Promise = global.Promise;
+mongoose.connect(database.remoteUrl);
 
 const readline = require('readline');
 const rl = readline.createInterface({
@@ -22,8 +29,7 @@ rl.on('line', (input) => {
   brain.Extalk( brain.clean(input.trim()), function(res) {
 
     var output = res.jresponse + "\n";
-    if(output != "")
-    {
+    if(output != "") {
       console.log(output);
       settings = JSON.parse(fs.readFileSync(data.userSettingsFile,'utf8'));
       // check voice setting to read to user
