@@ -8,6 +8,7 @@ var os = require('os');
 var http = require('http');
 var opn = require('opn');
 var underscore = require('underscore');
+var md5 = require('md5');
 
 var express = require('express');
 var app = express();
@@ -794,3 +795,40 @@ exports.replaceLastAction = function replaceLast(obj, prevResponse, callback) {
 }
 
 exports.replaceUserSetting = function replaceSetting(action, phrase, callback) {}
+
+/*Search Marvels DB for a specific marvel character*/
+exports.marvelCharacter = function marvelCharacter(phrase, callback) {
+  var tmpPhrase = phrase.split(" ");
+  var searchQuery = tmpPhrase.slice(tmpPhrase.indexOf("characters")+1);
+  if(searchQuery.indexOf("for") > -1){
+    searchQuery = searchQuery.slice(searchQuery.indexOf("for")+1);
+  }
+
+  var resPhrase = "";
+  var apiResponse = null;
+  apiLib.getMarvelCharacter(searchQuery.join(" "), function(res){
+    if(res.data.results.length > 0){
+      resPhrase =  nerves.stringFormat("According to Marvel '{0}': {1}", [res.data.results[0].name, getMarvelBio(res.data.results[0])]);
+      apiResponse = {"results":res.data.results[0]};
+    }
+    else {
+      resPhrase =  nerves.stringFormat("No Data Found for: {0}", [searchQuery.join(" ")]);
+      apiResponse = {"code":-1};
+    }
+    callback({"todo":"", "jresponse": resPhrase, "japi": apiResponse});
+  });
+}
+
+function getMarvelBio(data){
+    var response = "";
+    if(data.description == ""){
+      response = nerves.stringFormat("has no official bio but has been apart of {0} comics, {1} series, & {2} stories according to the marvel universe", [data.comics.available, data.series.available, data.stories.available]);
+      if(data.urls.length > 0){
+        response += nerves.stringFormat(", for more information please checkout the following link: {0}", [data.urls[0].url]);
+      }
+    }
+    else {
+      response = data.description;
+    }
+    return response;
+}

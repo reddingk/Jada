@@ -1,6 +1,7 @@
 var func = require('./jnerves');
 var request = require('request');
 var data = require('./jdata');
+var md5 = require('md5');
 
 function getApiItem(name){
   var item = null;
@@ -92,7 +93,7 @@ exports.googleDirections = function googleDirections(type, fromLoc, toLoc, callb
 
       request(url,
         function (error, response, body){
-          if(!error && response.statusCode ===200){
+          if(!error && response.statusCode === 200){
             callback(JSON.parse(body));
           }
         });
@@ -104,4 +105,29 @@ exports.googleDirections = function googleDirections(type, fromLoc, toLoc, callb
   else {
     console.log("Else null");
   }
+}
+
+exports.getMarvelCharacter = function getMarvelCharacter(search, callback) {
+  var api = getApiItem("marvel");
+  var timestamp = Date.now();
+  var hashstatement = func.stringFormat("{0}{1}{2}",[timestamp,api.privateKey, api.key]);
+  if(api != null){
+    try{
+      var url = func.stringFormat("{0}/v1/public/characters?name={1}&apikey={2}&ts={3}&hash={4}", [api.link, search, api.key, timestamp, md5(hashstatement)]);
+      request(url,
+        function (error, response, body){
+          if(!error && response.statusCode === 200){
+            callback(JSON.parse(body));
+          }
+        });
+    }
+    catch(err){
+      console.log("Err: " + err);
+      callback(null);
+    }
+  }
+  else {
+    callback(null);
+  }
+
 }

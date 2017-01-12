@@ -7,7 +7,8 @@ exports.app_apis = [
     {"name":"tasteKid", "link":"http://www.tastekid.com/api/","key":"228198-JadenPer-P426AN1R"},
     {"name":"openWeather", "link":"http://api.openweathermap.org/data/2.5/", "key":"90c2be179d4c18b392e3e11efa2ee5c1"},
     {"name":"iTranslate4", "link":"http://itranslate4.eu/api/", "key":"76b7b3b3-d336-4b0d-bf11-a51ac5a2fcdd"},
-    {"name":"googleMapsDirections", "link":"https://maps.googleapis.com/maps/api/directions/json", "key":"AIzaSyDmVwV-ugBBFPH9QxtFEPubd2X5ojRAH3o"}
+    {"name":"googleMapsDirections", "link":"https://maps.googleapis.com/maps/api/directions/json", "key":"AIzaSyDmVwV-ugBBFPH9QxtFEPubd2X5ojRAH3o"},
+    {"name":"marvel", "link":"https://gateway.marvel.com/", "key":"360f1fe1e9174b58521e32bb17e567fe", "privateKey":"2b05e2994b069d96faa718ad5ccf890aa13e100f"}
 ];
 /* Return Phrases from Database*/
 var Phrases = require('./config/models/phrases');
@@ -52,9 +53,9 @@ var phraseLibrary_BackUp = [
   {"action": "directions", "level":2, "response":"getDirections"},
   {"action": "who", "level":2, "subactions":[{"action": "am", "level":2, "response":"relationshipGuide"}, {"action": "is", "level":2, "response":"relationshipGuide"}]},
   {"action": "where", "level":2, "subactions":[{"action": "am", "level":2, "response":"locationGuide"}, {"action": "is", "level":2, "response":"locationGuide"}]},
-
   {"action": "remember", "level":3, "subactions":[{"action": "location", "level":3, "response":"addUserSetting"}, {"action": "relationship", "level":3, "response":"addUserSetting"}]},
   {"action": "replace", "level":3, "response":"replaceLastAction", "subactions":[{"action": "location", "level":3, "response":"replaceUserSetting"}, {"action": "relationship", "level":3, "response":"replaceUserSetting"}]},
+  {"action": "marvel", "level":4, "subactions": [{"action": "characters", "level":4, "response":"marvelCharacter"}]},
 
   {"action": "cpu", "level":10, "subactions":[{"action": "architecture", "level":10, "response":"getCpuArch", "additional_phrases":["arch"]}, {"action": "information", "level":10, "response":"getCpuInfo", "additional_phrases":["info"]}]},
   {"action": "computers", "level":10, "subactions":[ {"action":"hostname", "level":10, "response":"getComputerHostname"}]},

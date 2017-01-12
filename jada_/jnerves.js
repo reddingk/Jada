@@ -101,8 +101,11 @@ exports.getDataResponse = function dataResponse(response, fullPhrase, callback) 
       case "replaceUserSetting":
         jfunc.replaceUserSetting(response.action, fullPhrase, function(res){ callback(res);});
         break;
+      case "marvelCharacter":
+        jfunc.marvelCharacter(fullPhrase, function(res){ callback(res);});
+        break;
       default:
-        finalResponse.jresponse = response.action
+        finalResponse.jresponse = "I feel like you were close to asking me something, you may be missing something when you mentioned '" + response.action+"'. ";
         callback(finalResponse);
         break;
     }

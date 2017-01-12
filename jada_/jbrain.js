@@ -23,7 +23,7 @@ exports.Extalk = function jconvo(phrase, callback) {
     }
     // Check Action Phrases
     phraseLibrary = underscore.filter(res, function(dt) {  return dt.type != 'phrase'; });
-    for(var i=0; i < phraseLibrary.length; i++){           
+    for(var i=0; i < phraseLibrary.length; i++){
       if(tmpStr.indexOf(phraseLibrary[i].action) > -1 || (phraseLibrary[i].additional_phrases != undefined && checkAllPhrases(tmpStr, phraseLibrary[i].additional_phrases)) )
       {
         if(actionCall == null || actionCall.level > phraseLibrary[i].level)
@@ -32,7 +32,7 @@ exports.Extalk = function jconvo(phrase, callback) {
     }
 
     if(actionCall != null){
-      var response = getActionResponse(actionCall, chopPhrase(actionCall.action, tmpStr));
+      var response = getActionResponse(actionCall, chopPhrase(actionCall.action, tmpStr));      
       nerves.getDataResponse(response, phrase, function(res){ callback(res); });
     }
     else {
