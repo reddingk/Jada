@@ -13,7 +13,7 @@ exports.Extalk = function jconvo(phrase, callback) {
   var fullPhraseLibrary = null;
 
   data.getPhrases( function(res) {
-    
+
     // Check Full Phrases
     fullPhraseLibrary = underscore.filter(res, function(dt){  return dt.type == 'phrase'; });
     for(var j=0; j < fullPhraseLibrary.length; j++){
@@ -23,7 +23,7 @@ exports.Extalk = function jconvo(phrase, callback) {
     }
     // Check Action Phrases
     phraseLibrary = underscore.filter(res, function(dt) {  return dt.type != 'phrase'; });
-    for(var i=0; i < phraseLibrary.length; i++){
+    for(var i=0; i < phraseLibrary.length; i++){           
       if(tmpStr.indexOf(phraseLibrary[i].action) > -1 || (phraseLibrary[i].additional_phrases != undefined && checkAllPhrases(tmpStr, phraseLibrary[i].additional_phrases)) )
       {
         if(actionCall == null || actionCall.level > phraseLibrary[i].level)
@@ -58,6 +58,10 @@ function getActionResponse(actionCall, phrase) {
   {
     var response = getSubActionResponse(actionCall.subactions, chopPhrase(actionCall.action, tmpStr));
     var res = (response == null? {"response":actionCall.response, "action": actionCall.action } : response);
+    /*console.log("response :");
+    console.log(response);
+    console.log("res: ");
+    console.log(res);*/
     if(response == null && actionCall.additional_phrases != undefined)
       res.additional_phrases = actionCall.additional_phrases;
     return res;

@@ -1,18 +1,27 @@
 var jbrain = require('./jbrain');
 var jfunc = require('./jfunc');
+var data = require('./jdata');
+var fs = require('fs');
+
 
 exports.getDataResponse = function dataResponse(response, fullPhrase, callback) {
   var finalResponse = { "todo":"", "jresponse": "I have nothing for you sorry"};
 
   if(response == null) { callback(finalResponse); }
-  else {    
+  else {
+    // Add last response
+    var obj = JSON.parse(fs.readFileSync(data.userSettingsFile,'utf8'));
+    var prevResponse = obj.lastAction;
+    obj.lastAction = {"response":response, "fullPhrase":fullPhrase};
+    fs.writeFileSync(data.userSettingsFile, JSON.stringify(obj), {"encoding":'utf8'});
+
     switch(response.response){
       case "N/A":
         finalResponse.jresponse ="sorry I am unable to help you with that but I might one day";
         callback(finalResponse);
         break;
       case "greetings":
-        jfunc.greetings(response.action, response.additional_phrases, fullPhrase, function(res){ callback(res);});
+        jfunc.greetings(response.action, response.additional_phrases, fullPhrase, obj, function(res){ callback(res);});
         break;
       case "getLocalTime":
         finalResponse = jfunc.getLocalDateTime("time");
@@ -39,13 +48,13 @@ exports.getDataResponse = function dataResponse(response, fullPhrase, callback) 
         jfunc.getWeatherDetailedForecast(fullPhrase, function(finalRes){ callback(finalRes); });
         break;
       case "changeFullName":
-        jfunc.getChangedSetting("fullname", fullPhrase, function(finalRes){ callback(finalRes); });
+        jfunc.getChangedSetting("fullname", fullPhrase, obj, function(finalRes){ callback(finalRes); });
         break;
       case "changeNickname":
-        jfunc.getChangedSetting("nickname", fullPhrase, function(finalRes){ callback(finalRes); });
+        jfunc.getChangedSetting("nickname", fullPhrase, obj, function(finalRes){ callback(finalRes); });
         break;
       case "changeVoice":
-        jfunc.getChangedSetting("voice", fullPhrase, function(finalRes){ callback(finalRes); });
+        jfunc.getChangedSetting("voice", fullPhrase, obj, function(finalRes){ callback(finalRes); });
         break;
       case "testCode":
         jfunc.testCode(fullPhrase, function(finalRes){ callback(finalRes); });
@@ -78,7 +87,19 @@ exports.getDataResponse = function dataResponse(response, fullPhrase, callback) 
         jfunc.easterEggs(response.action, function(res){ callback(res);});
         break;
       case "relationshipGuide":
-        jfunc.getRelationship(response.action, fullPhrase, function(res){ callback(res);});
+        jfunc.getRelationship(response.action, fullPhrase, obj, function(res){ callback(res);});
+        break;
+      case "locationGuide":
+        jfunc.getLocation(response.action, fullPhrase, obj, function(res){ callback(res);});
+        break;
+      case "addUserSetting":
+        jfunc.addUserSetting(response.action, fullPhrase, obj, function(res){ callback(res);});
+        break;
+      case "replaceLastAction":
+        jfunc.replaceLastAction(obj, prevResponse, function(res){ callback(res);});
+        break;
+      case "replaceUserSetting":
+        jfunc.replaceUserSetting(response.action, fullPhrase, function(res){ callback(res);});
         break;
       default:
         finalResponse.jresponse = response.action

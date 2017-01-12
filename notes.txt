@@ -67,6 +67,24 @@
   {who} [am] I
       : Get's who you are
 
+/*LOCATION INFO*/
+  {where} [am] I
+      : Get current location
+  {where} [is] ****
+      : Get address for specific location
+
+/*REMEMBER THINGS*/
+  {remember} {location} **** [as] ****
+      : Set address of specific location
+  {remember} {relationship} **** [is] [my] ****
+  {remember} {relationship} [my] **** [is] ****
+      : Set relationship name and type
+
+/*REPLACE*/
+  {replace}
+      : Replacement action on last request the current list is
+        -- Remember Location
+
 /*Easter Eggs*/
   {do you know the muffin man}
   {how are you}

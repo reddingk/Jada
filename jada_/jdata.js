@@ -51,6 +51,11 @@ var phraseLibrary_BackUp = [
   {"action": "weather", "level":2, "response":"getWeatherCurrent", "subactions":[{"action":"forecast", "level":2, "response":"getWeatherForecast"}, {"action":"details", "level":1, "response":"getWeatherDetailedForecast"} ]},
   {"action": "directions", "level":2, "response":"getDirections"},
   {"action": "who", "level":2, "subactions":[{"action": "am", "level":2, "response":"relationshipGuide"}, {"action": "is", "level":2, "response":"relationshipGuide"}]},
+  {"action": "where", "level":2, "subactions":[{"action": "am", "level":2, "response":"locationGuide"}, {"action": "is", "level":2, "response":"locationGuide"}]},
+
+  {"action": "remember", "level":3, "subactions":[{"action": "location", "level":3, "response":"addUserSetting"}, {"action": "relationship", "level":3, "response":"addUserSetting"}]},
+  {"action": "replace", "level":3, "response":"replaceLastAction", "subactions":[{"action": "location", "level":3, "response":"replaceUserSetting"}, {"action": "relationship", "level":3, "response":"replaceUserSetting"}]},
+
   {"action": "cpu", "level":10, "subactions":[{"action": "architecture", "level":10, "response":"getCpuArch", "additional_phrases":["arch"]}, {"action": "information", "level":10, "response":"getCpuInfo", "additional_phrases":["info"]}]},
   {"action": "computers", "level":10, "subactions":[ {"action":"hostname", "level":10, "response":"getComputerHostname"}]},
   {"action": "network", "level":10, "subactions":[ {"action":"interface", "level":10, "response":"getNetworkInterface"}]},

@@ -17,9 +17,7 @@ var methodOverride = require('method-override');
 /*****Response Functions*****/
 
 /*Greetings Function*/
-exports.greetings = function greetings(main, additional, phrase, callback) {
-  // Get User Personal Settings
-  var obj = JSON.parse(fs.readFileSync(data.userSettingsFile,'utf8'));
+exports.greetings = function greetings(main, additional, phrase, obj, callback) {
 
   var tmpStr = phrase.split(" ");
   var actionResponse = null;
@@ -341,7 +339,7 @@ exports.getWeatherForecast = function getWeatherForecast(phrase, callback){
 }
 
 /* Change Settings in data file and return */
-exports.getChangedSetting = function getChangedSetting(item, phrase, callback)
+exports.getChangedSetting = function getChangedSetting(item, phrase, obj, callback)
 {
   var tmpPhrase = phrase.split(" ");
   var postPhrase = tmpPhrase.slice(tmpPhrase.indexOf("my"));
@@ -353,9 +351,6 @@ exports.getChangedSetting = function getChangedSetting(item, phrase, callback)
     if(forIndex >= 0)
     {
         var newitem = postPhrase.slice(forIndex+1).join(" ");
-
-        // Change Item
-        var obj = JSON.parse(fs.readFileSync(data.userSettingsFile,'utf8'));
 
         switch(item){
           case "fullname":
@@ -575,9 +570,8 @@ exports.easterEggs = function easterEggs(action, callback) {
 }
 
 /* Get Personal Relationship Info*/
-exports.getRelationship = function getRelationship(action, phrase, callback) {
+exports.getRelationship = function getRelationship(action, phrase, obj, callback) {
 
-  var obj = JSON.parse(fs.readFileSync(data.userSettingsFile,'utf8'));
   var tmpPhrase = phrase.split(" ");
   var postPhrase = tmpPhrase.slice(tmpPhrase.indexOf(action)+1);
   if(postPhrase.indexOf("my") > -1){
@@ -597,13 +591,15 @@ exports.getRelationship = function getRelationship(action, phrase, callback) {
       if (postPhrase.length > 0) {
         // find relationships
         var relationships = [];
+        var searchName = (postPhrase.join(" ").endsWith("'s") ? (postPhrase.join(" ")).substring(0, postPhrase.join(" ").length - 2) : postPhrase.join(" "));
+
         /*Types | 0:name -> title | 1: title -> name*/
         for(var i =0; i < userRelationships.length; i++){
 
-          if(userRelationships[i].name.indexOf(postPhrase.join(" ")) > -1) {
+          if(userRelationships[i].name.indexOf(searchName) > -1) {
             relationships.push({"type":0, "info":userRelationships[i]});
           }
-          else if(underscore.filter(userRelationships[i].title, function(dt) {  return dt == postPhrase.join(" "); }).length > 0 ){
+          else if(underscore.filter(userRelationships[i].title, function(dt) {  return dt == searchName; }).length > 0 ){
             relationships.push({"type":1, "info":userRelationships[i]});
           }
         }
@@ -638,3 +634,163 @@ exports.getRelationship = function getRelationship(action, phrase, callback) {
 
   callback({"todo":"", "jresponse":retPhrase, "japi":apiResponse});
 }
+
+/* Get Personal Location Info*/
+exports.getLocation = function getLocation(action, phrase, obj, callback) {
+
+  var tmpPhrase = phrase.split(" ");
+  var postPhrase = tmpPhrase.slice(tmpPhrase.indexOf(action)+1);
+  if(postPhrase.indexOf("my") > -1){
+    postPhrase = postPhrase.slice(postPhrase.indexOf("my")+1);
+  }
+  var userLocations = obj.locations;
+
+  var apiResponse = null;
+  var retPhrase = "";
+
+
+    if(action == "am") {
+      retPhrase = nerves.stringFormat("You are currently located at {0}", ["n/a"]);
+      apiResponse = { "results": {"where": "Me", "location": "n/a" }};
+    }
+    else if(action == "is"){
+      if (postPhrase.length > 0) {
+        // find location
+        var location = null;
+        var searchName = postPhrase.join(" ");
+
+        /*Types | 0:name -> title | 1: title -> name*/
+        for(var i =0; i < userLocations.length; i++){
+          if(userLocations[i].name.indexOf(searchName) > -1) {
+            location = userLocations[i];
+          }
+        }
+
+        // Build Location String
+        if(location != null){
+          retPhrase = nerves.stringFormat("you told me the address for {0} is '{1}'",[postPhrase.join(" "), location.address]);
+          apiResponse = { "results": location };
+        }
+        else {
+          retPhrase = nerves.stringFormat("sorry I don't think you told where {0} is located.", [postPhrase.join(" ")]);
+          apiResponse = {"code": -3};
+        }
+      }
+      else {
+        retPhrase = "sorry you didn't give me a location name I could work with.";
+        apiResponse = {"code": -4};
+      }
+    }
+    else {
+      apiResponse = {"code":-1};
+  }
+
+  callback({"todo":"", "jresponse":retPhrase, "japi":apiResponse});
+}
+
+
+/* User Setting Data*/
+exports.addUserSetting = function addSetting(action, phrase, obj, callback) {
+  var apiResponse = null;
+  var retPhrase = "";
+
+  var tmpPhrase = phrase.split(" ");
+  var postPhrase = tmpPhrase.slice(tmpPhrase.indexOf(action)+1);
+
+  if(action == "location"){
+    var asPos = postPhrase.indexOf("as");
+    var newName = postPhrase.slice(0, asPos).join(" ");
+    var newAddress = postPhrase.slice(asPos+1).join(" ");
+
+    // Search for existing entry
+    var existingLocation = underscore.filter(obj.locations, function(dt) {  return dt.name == newName; });
+    if(existingLocation.length > 0 ) {
+      retPhrase = nerves.stringFormat("You already have an address for {0} which is {1}, if you would like me to change it just ask me to 'replace'", [newName, existingLocation[0].address]);
+      apiResponse = {"code": -5, "results":{ "newLocation":{"name":newName, "address":newAddress}, "currentLocation": existingLocation[0] }};
+    }
+    else {
+      obj.locations.push( {"name":newName, "address":newAddress});
+      // Add Location in DataFile
+      fs.writeFileSync(data.userSettingsFile, JSON.stringify(obj), {"encoding":'utf8'});
+      retPhrase = nerves.stringFormat("I will remember that location for {0}", [newName]);
+      apiResponse = {"results": {"name":newName, "address":newAddress} };
+    }
+  }
+  else if(action == "relationship") {
+    var myPos = postPhrase.indexOf("my");
+    var isPos = postPhrase.indexOf("is");
+
+    if(isPos > -1 && myPos > -1){
+      var newName = "";
+      var newTitle = "";
+      if(isPos < myPos){
+        newName = postPhrase.slice(0, isPos).join(" ");
+        newTitle = postPhrase.slice(myPos+1).join(" ");
+      }
+      else {
+        newName = postPhrase.slice(isPos+1).join(" ");
+        newTitle = postPhrase.slice(myPos+1, isPos).join(" ");
+      }
+      var existingRelationship = underscore.filter(obj.relationships, function(dt) {  return dt.name == newName; });
+      if(existingRelationship.length > 0){
+        // Update Exsisting Relationship
+        existingTitle = underscore.filter(existingRelationship[0].title, function(dt) {  return dt == newTitle; });
+        if(existingTitle.length > 0){
+          retPhrase = nerves.stringFormat("You already told me that {0} is noted as {1}", [newName, newTitle]);
+          apiResponse = {"code": -15, "results":{ "currentRelationship":existingRelationship[0] }};
+        }
+        else {
+          var updatedRelationship = null;
+          for(var i =0 ; i < obj.relationships.length; i++){
+            if(obj.relationships[i].name == newName){
+              obj.relationships[i].title.push(newTitle);
+              updatedRelationship = obj.relationships[i];
+              break;
+            }
+          }
+          fs.writeFileSync(data.userSettingsFile, JSON.stringify(obj), {"encoding":'utf8'});
+          retPhrase = nerves.stringFormat("I will remember that {0} is also your '{1}'", [newName, newTitle]);
+          apiResponse = {"code": 12, "results":{ "currentRelationship":updatedRelationship }};
+        }
+      }
+      else{
+        // Add New Relationship
+        obj.relationships.push( {"name":newName, "title":[newTitle]});
+        // Add Relationship in DataFile
+        fs.writeFileSync(data.userSettingsFile, JSON.stringify(obj), {"encoding":'utf8'});
+        retPhrase = nerves.stringFormat("I will remember that {0} is your '{1}'", [newName, newTitle]);
+        apiResponse = {"results": {"name":newName, "title":[newTitle]} };
+      }
+    }
+  }
+
+  callback({"todo":"", "jresponse":retPhrase, "japi":apiResponse});
+}
+exports.replaceLastAction = function replaceLast(obj, prevResponse, callback) {
+
+  if(prevResponse.response.action == "location"){
+    var tmpPhrase = prevResponse.fullPhrase.split(" ");
+    var postPhrase = tmpPhrase.slice(tmpPhrase.indexOf(prevResponse.response.action)+1);
+    var asPos = postPhrase.indexOf("as");
+    var newName = postPhrase.slice(0, asPos).join(" ");
+    var newAddress = postPhrase.slice(asPos+1).join(" ");
+
+    for(var i =0 ; i < obj.locations.length; i++){
+      if(obj.locations[i].name == newName){
+        obj.locations[i].address = newAddress;
+        updatedRelationship = obj.locations[i];
+        break;
+      }
+    }
+    fs.writeFileSync(data.userSettingsFile, JSON.stringify(obj), {"encoding":'utf8'});
+    retPhrase = nerves.stringFormat("I switched the location for {0} to {1}", [newName, newAddress]);
+    apiResponse = {"results": {"action":"replaced", "name":newName, "address":newAddress} };
+  }
+  else {
+    retPhrase = nerves.stringFormat("Sorry there is nothing to replace from your last request: '{0}'", [prevResponse.fullPhrase]);
+    apiResponse = {"code": -1};
+  }
+  callback({"todo":"", "jresponse":retPhrase, "japi":apiResponse});
+}
+
+exports.replaceUserSetting = function replaceSetting(action, phrase, callback) {}
