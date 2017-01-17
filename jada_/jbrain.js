@@ -13,7 +13,9 @@ exports.Extalk = function jconvo(phrase, callback) {
   var fullPhraseLibrary = null;
 
   data.getPhrases( function(res) {
-
+    if(res == null){
+      callback({ "todo":"", "jresponse": "Sorry There was an issue connectecting to DB", "japi": {"code":-777 } });
+    }
     // Check Full Phrases
     fullPhraseLibrary = underscore.filter(res, function(dt){  return dt.type == 'phrase'; });
     for(var j=0; j < fullPhraseLibrary.length; j++){
@@ -32,7 +34,7 @@ exports.Extalk = function jconvo(phrase, callback) {
     }
 
     if(actionCall != null){
-      var response = getActionResponse(actionCall, chopPhrase(actionCall.action, tmpStr));      
+      var response = getActionResponse(actionCall, chopPhrase(actionCall.action, tmpStr));
       nerves.getDataResponse(response, phrase, function(res){ callback(res); });
     }
     else {
