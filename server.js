@@ -1,5 +1,3 @@
-//Send Email from Node
-//https://codeforgeek.com/2014/07/send-e-mail-node-js/
 
 // server.js
 // modules
@@ -35,12 +33,16 @@ app.use(bodyParser.urlencoded({ extended: true }));
 // override with the X-HTTP-Method-Override header in the request. simulate DELETE
 app.use(methodOverride('X-HTTP-Method-Override'));
 
-// set the static files location /public/img will be /img for users
-app.use(express.static(__dirname + '/public'));
+//app.use(express.static(__dirname + '/public'));
+app.engine('.html', require('ejs').__express);
+app.use(express.static('./public'));
+app.set('views', __dirname + '/public/views');
+app.set('view engine', 'html');
 
-// routes
-// Route for database set up
-//require('./app/routes')(app);
+app.get('/', function(req, res){
+	res.render('index');
+});
+
 
 // start app
 app.listen(port);

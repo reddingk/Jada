@@ -1,3 +1,6 @@
+/***** JADA CONVO TIPS ****/
+node jada.js
+
 /***** PHRASES *****/
 /*SETINGS*/
   [Change] [my] {fullname} [to] ****
@@ -88,7 +91,7 @@
 /*Marvel Search*/
   {marvel} {characters} for ****
       : Search the marvel database for specific information regarding a character
-      
+
 /*Easter Eggs*/
   {do you know the muffin man}
   {how are you}
