@@ -1,0 +1,24 @@
+.convo-container {
+  height: 300px;
+  width: 500px;
+  border: 2px solid rgba(0,0,0,1);
+  overflow: hidden;
+  .message-container {
+    height: 80%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    .message-line {
+      display: block;
+      transition: .5s all ease;
+      -webkit-animation:1.5s fadeInLeft ease;
+      animation:1.5s fadeInLeft ease;
+      &+.message-line { border-top: 1px solid rgba(0,0,0,1);}
+    }
+  }
+  .input-container {
+    height: 20%;
+    border: rgba( 200,200,200,1);
+    input { width: 89%; height: 100%; display: inline-block;}
+    button { display: inline-block; width: 10%; background: rgba(130,224,255,1); border: none; padding: 5px; height: 100%;}
+  }
+}

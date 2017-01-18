@@ -8,7 +8,7 @@ var del = require('del');
 
 var config = {
   src: {
-    appJs:[		
+    appJs:[
       'app/js/config/*.js',
       'app/js/components/*.js',
       'app/js/directives/*.js',
@@ -29,7 +29,9 @@ var config = {
       'app/libs/angular-messages/angular-messages.min.js',
       'app/libs/angular-ui-router/release/angular-ui-router.min.js',
       'app/libs/angular-bootstrap/ui-bootstrap.min.js',
-      'app/libs/angular-bootstrap/ui-bootstrap-tpls.js'
+      'app/libs/angular-bootstrap/ui-bootstrap-tpls.js',
+      'app/libs/socket.io-client/dist/socket.io.js'
+
     ],
     libsCSS: [
       'app/libs/angular-material/angular-material.min.css',

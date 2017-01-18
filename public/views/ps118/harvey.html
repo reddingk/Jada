@@ -1,1 +1,13 @@
 <h2>{{$ctrl.title}}</h2>
+
+<div class="convo-container">
+  <div class="message-container">
+    <div class="message-line" ng-repeat="msg in $ctrl.messages">{{msg.txt}}</div>
+  </div>
+  <div class="input-container">
+    <input id="msg" ng-model="$ctrl.userMsg"/>
+    <button ng-click="$ctrl.sendMsg()">Send</button>
+  </div>
+</div>
+
+<div class="connection-status" ng-click="$ctrl.toggleConnection()">{{$ctrl.connStatus}}</div>

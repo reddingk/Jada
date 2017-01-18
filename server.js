@@ -8,6 +8,9 @@ var methodOverride = require('method-override');
 var mongoose = require('mongoose');
 var database = require('./jada_/config/database');
 
+var http = require('http').Server(app);
+var io = require('socket.io')(http);
+
 // configuration
 
 // config files
@@ -43,8 +46,24 @@ app.get('/', function(req, res){
 	res.render('index');
 });
 
+// socket connection
+io.on('connection', function(socket){
+  console.log('a user connected');
+
+	socket.on('tstChat', function(msg){
+    console.log('message: ' + msg);
+		io.emit('tstChat', msg);
+  });
+	socket.on('disconnect', function(){
+    console.log('user disconnected');
+  });
+});
 
 // start app
-app.listen(port);
+//app.listen(port);
+http.listen(port, function(){
+	console.log('Application is open on port ' + port);
+});
+
 // User message
-console.log('Application is open on port ' + port);
+//console.log('Application is open on port ' + port);
