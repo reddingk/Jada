@@ -9,10 +9,18 @@ JadenApp.config(['$stateProvider', '$urlRouterProvider','$locationProvider', fun
         }
       })
       .state('app.harvey', {
-        url: "messanger",
+        url: "Messanger",
         views: {
           'content@': {
             component: 'harvey'
+          }
+        }
+      })
+      .state('app.login', {
+        url: "Login",
+        views: {
+          'content@': {
+            component: 'jlogin'
           }
         }
       })
