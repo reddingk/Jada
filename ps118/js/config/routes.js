@@ -2,34 +2,24 @@ JadenApp.config(['$stateProvider', '$urlRouterProvider','$locationProvider', fun
       $stateProvider
       .state('app', {
         url: "/",
-        views: {
-          'content':{
-            component: 'gerald'
-          }
-        }
+        views: { 'content':{ component: 'gerald' }  }
       })
       .state('app.harvey', {
         url: "Messanger",
-        views: {
-          'content@': {
-            component: 'harvey'
-          }
-        }
+        views: { 'content@': { component: 'harvey' } }
+      })
+      .state('app.fuzzy', {
+        url: "FuzzySlippers",
+        views: { 'content@': { component: 'fuzzyslippers' } }
       })
       .state('app.login', {
         url: "Login",
-        views: {
-          'content@': {
-            component: 'jlogin'
-          }
-        }
+        views: { 'content@': { component: 'jlogin' } }
       })
       .state('app.construction', {
         url: "underconstruction",
         views: {
-          'content@': {
-            component: 'construction'
-          }
+          'content@': { component: 'construction' }
         }
       });
 
