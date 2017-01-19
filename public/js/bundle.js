@@ -53,44 +53,102 @@ components.component('harvey', {
    bindings: {},
 	controller: function ($scope) {
       var ctrl = this;
-      var socket = io('http://localhost:1003');
+      var socket = io('http://localhost:1003', { query: "userid=testAdmin" });
       //var socket = io();
       var d = new Date();
 
 		  ctrl.title = "Harvey 'The Mailman'";
-      ctrl.userMsg = "";
-      ctrl.connStatus = "disconnect";
-      ctrl.messages = [{"time": d.getTime() , "txt":"DEFAULT MSG"}];
+      ctrl.userId = "";
+      ctrl.privateId = "";
 
-      ctrl.toggleConnection = function(){
-        if(ctrl.connStatus == 'connect'){
-          socket.connect();
-          ctrl.connStatus = "disconnect";
+      ctrl.userMsg = "";
+      ctrl.userPrivateMsg = "";
+      ctrl.userRoomMsg = "";
+
+      ctrl.connStatus = "disconnect";
+      ctrl.roomConnStatus = "connect";
+
+      ctrl.messages = [{"time": d.getTime() , "info":{"msg":"DEFAULT MSG"} }];
+      ctrl.privateMessages = [{"time": d.getTime() , "info":{"msg": "DEFAULT PRIVATE MSG"}}];
+      ctrl.roomMessages = [{"time": d.getTime() , "info":{"msg": "DEFAULT ROOM MSG"}}];
+
+      /*Toggle connections*/
+      ctrl.toggleConnection = function(roomid){
+        if(roomid == 'general'){
+          if(ctrl.connStatus == 'connect'){
+            socket.connect();
+            ctrl.connStatus = "disconnect";
+          }
+          else {
+            socket.disconnect();
+            ctrl.connStatus = "connect";
+          }
         }
         else {
-          socket.disconnect();
-          ctrl.connStatus = "connect";
+          if(ctrl.roomConnStatus == 'connect'){
+            socket.emit('join room', {"roomId":roomid, "info":{"userId":ctrl.userId} } );
+            ctrl.roomConnStatus = "disconnect";
+          }
+          else {
+            socket.emit('leave room', {"roomId":roomid, "info":{"userId":ctrl.userId} } );
+            ctrl.roomConnStatus = "connect";
+          }
         }
       }
-      ctrl.sendMsg = function() {
-        socket.emit('tstChat', ctrl.userMsg );
-        ctrl.userMsg = "";
+
+      /* Send Message*/
+      ctrl.sendMsg = function(roomid) {
+        if(roomid == 'general'){
+          socket.emit('general', {"userId":ctrl.userId ,"msg":ctrl.userMsg} );
+          ctrl.userMsg = "";
+        }
+        else if(roomid == 'private'){
+          socket.emit('private message', {"privateId":ctrl.privateId, "info":{"userId":ctrl.userId ,"msg":ctrl.userPrivateMsg} } );
+          ctrl.privateMessages.push({"time": d.getTime(), "info":{"userId":ctrl.userId ,"msg":ctrl.userPrivateMsg} });
+          ctrl.userPrivateMsg = "";
+        }
+        else if(roomid == 'special'){
+          socket.emit('room message', {"roomId":ctrl.privateId, "info":{"userId":ctrl.userId ,"msg":ctrl.userRoomMsg} } );
+          ctrl.roomMessages.push({"time": d.getTime(), "info":{"userId":ctrl.userId ,"msg":ctrl.userRoomMsg} });
+          ctrl.userRoomMsg = "";
+        }
       }
 
-      // Add chat if chat message is received
-      socket.on('tstChat', function(msg){
-        var d = new Date();
-        ctrl.messages.push({"time": d.getTime(), "txt":msg});
-        $scope.$apply();
-      });
+      /* Socket Events */
+
+      // socket connection
       socket.on('connect', function(){
+        // send id with Socket ID
         var d = new Date();
-        ctrl.messages.push({"time": d.getTime(), "txt": " > Connected"});
+        ctrl.messages.push({"time": d.getTime(), "info": {"msg": " > Connected"}});
         $scope.$apply();
       });
+
+      // socket disconnection
       socket.on('disconnect', function(){
         var d = new Date();
-        ctrl.messages.push({"time": d.getTime(), "txt": " x Disconnected"});
+        ctrl.messages.push({"time": d.getTime(), "info": {"msg":" x Disconnected"}});
+        $scope.$apply();
+      });
+
+      // socket general messages
+      socket.on('general', function(msg){
+        var d = new Date();
+        ctrl.messages.push({"time": d.getTime(), "info":msg});
+        $scope.$apply();
+      });
+
+      // socket private messages
+      socket.on('private message', function(msg){
+        var d = new Date();
+        ctrl.privateMessages.push({"time": d.getTime(), "info":msg});
+        $scope.$apply();
+      });
+
+      // socket private messages
+      socket.on('room message', function(msg){
+        var d = new Date();
+        ctrl.roomMessages.push({"time": d.getTime(), "info":msg});
         $scope.$apply();
       });
    },

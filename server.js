@@ -48,15 +48,44 @@ app.get('/', function(req, res){
 
 // socket connection
 io.on('connection', function(socket){
-  console.log('a user connected');
+	var userId = socket.handshake.query.userid;
+  console.log(userId + ' connected on socket: ' + socket.id);
 
-	socket.on('tstChat', function(msg){
-    console.log('message: ' + msg);
-		io.emit('tstChat', msg);
+	// general message
+	socket.on('general', function(msg){
+    //console.log(msg);
+		io.emit('general', msg);
   });
+
+	// socket disconnection
 	socket.on('disconnect', function(){
-    console.log('user disconnected');
+    console.log(userId + ' disconnected: ' + socket.id);
   });
+
+	// private message
+	socket.on('private message',function(info){
+		//console.log(info);
+		io.to(info.privateId).emit('private message', info.info);
+	});
+
+	// Chat Room
+	// join room
+	socket.on('join room',function(info){
+		console.log(info.info.userId + " is joining room " + info.roomId)
+		socket.join(info.roomId);
+	});
+
+	// leave room
+	socket.on('leave room',function(info){
+		console.log(info.info.userId + " is leaving room " + info.roomId);
+		socket.leave(info.roomId);
+	});
+
+	// room message
+	socket.on('room message',function(info){
+		//console.log(info);
+		io.to(info.roomId).emit('room message', info.info);
+	});
 });
 
 // start app

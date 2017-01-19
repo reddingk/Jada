@@ -369,12 +369,12 @@ exports.getChangedSetting = function getChangedSetting(item, phrase, obj, callba
         // Chang Setting in DataBase
         fs.writeFileSync(data.userSettingsFile, JSON.stringify(obj), {"encoding":'utf8'});
 
-        apiResponse = {results: { "updated":true, "item":item, "newState":newItem}};
+        apiResponse = {results: { "updated":true, "item":item, "newState":newitem}};
         retPhrase = nerves.stringFormat("'{0}' setting was updated to '{1}' smoothly", [item, newitem]);
     }
   }
   catch(ex){
-    retPhrase = "You did not update your settings, Somthing went wrong sorry";
+    retPhrase = "You did not update your settings, Somthing went wrong sorry";    
     apiResponse = {"code":-10, "errorMsg": ex};
   }
 

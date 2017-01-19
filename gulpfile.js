@@ -9,40 +9,40 @@ var del = require('del');
 var config = {
   src: {
     appJs:[
-      'app/js/config/*.js',
-      'app/js/components/*.js',
-      'app/js/directives/*.js',
-      'app/js/services/*.js'
+      'ps118/js/config/*.js',
+      'ps118/js/components/*.js',
+      'ps118/js/directives/*.js',
+      'ps118/js/services/*.js'
     ],
     appLess: [
-      'app/less/**/*.less'
+      'ps118/less/**/*.less'
     ],
     libsJs: [
-      'app/libs/jquery/dist/jquery.min.js',
-      'app/libs/bootstrap/dist/js/bootstrap.min.js',
-      'app/libs/angular/angular.min.js',
-      'app/libs/angular-sanitize/angular-sanitize.min.js',
-      'app/libs/angular-route/angular-route.min.js',
-      'app/libs/angular-material/angular-material.min.js',
-      'app/libs/angular-animate/angular-animate.min.js',
-      'app/libs/angular-aria/angular-aria.min.js',
-      'app/libs/angular-messages/angular-messages.min.js',
-      'app/libs/angular-ui-router/release/angular-ui-router.min.js',
-      'app/libs/angular-bootstrap/ui-bootstrap.min.js',
-      'app/libs/angular-bootstrap/ui-bootstrap-tpls.js',
-      'app/libs/socket.io-client/dist/socket.io.js'
+      'ps118/libs/jquery/dist/jquery.min.js',
+      'ps118/libs/bootstrap/dist/js/bootstrap.min.js',
+      'ps118/libs/angular/angular.min.js',
+      'ps118/libs/angular-sanitize/angular-sanitize.min.js',
+      'ps118/libs/angular-route/angular-route.min.js',
+      'ps118/libs/angular-material/angular-material.min.js',
+      'ps118/libs/angular-animate/angular-animate.min.js',
+      'ps118/libs/angular-aria/angular-aria.min.js',
+      'ps118/libs/angular-messages/angular-messages.min.js',
+      'ps118/libs/angular-ui-router/release/angular-ui-router.min.js',
+      'ps118/libs/angular-bootstrap/ui-bootstrap.min.js',
+      'ps118/libs/angular-bootstrap/ui-bootstrap-tpls.js',
+      'ps118/libs/socket.io-client/dist/socket.io.js'
 
     ],
     libsCSS: [
-      'app/libs/angular-material/angular-material.min.css',
-      'app/libs/bootstrap/dist/css/bootstrap.min.css',
-      'app/libs/font-awesome/css/font-awesome.min.css',
-      'app/libs/animate.css/animate.min.css',
-      'app/libs/angular-bootstrap/ui-bootstrap-csp.css'
+      'ps118/libs/angular-material/angular-material.min.css',
+      'ps118/libs/bootstrap/dist/css/bootstrap.min.css',
+      'ps118/libs/font-awesome/css/font-awesome.min.css',
+      'ps118/libs/animate.css/animate.min.css',
+      'ps118/libs/angular-bootstrap/ui-bootstrap-csp.css'
     ],
     libsFonts: [
-      'app/libs/font-awesome/fonts/**',
-      'app/libs/bootstrap/fonts/**'
+      'ps118/libs/font-awesome/fonts/**',
+      'ps118/libs/bootstrap/fonts/**'
     ]
   },
   dest:{

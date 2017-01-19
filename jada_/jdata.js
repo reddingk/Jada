@@ -1,5 +1,4 @@
-exports.userSettingsFile = './settings.json';
-//exports.userSettingsFile = { "name": {"fullname":"Kristopher Redding", "nickname":"Kris"}, "voice":"off"};
+exports.userSettingsFile = '../settings.json';
 
 exports.greetings = ["Hey", "Hello {0} how are things treating you", "I hope you are having a good day today", "How's life", "How's your day treating you {0}"];
 
