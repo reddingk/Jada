@@ -1,0 +1,25 @@
+{
+  "name": "chocolateBoy",
+  "version": "1.0.0",
+  "description": "Chocolate boy single node",
+  "main": "cocoboy.js",
+  "scripts": {
+    "start": "node cocoboy.js"
+  },
+  "author": "Kris Redding",
+  "license": "ISC",
+  "dependencies": {
+    "async": "^2.1.4",
+    "body-parser": "^1.15.2",
+    "del": "^2.2.0",
+    "express": "^4.14.0",
+    "language-tags": "^1.0.5",
+    "method-override": "~2.0.2",
+    "mongoose": "^4.4.12",
+    "opn": "^4.0.2",
+    "request": "^2.74.0",
+    "run-sequence": "^1.2.1",
+    "socket.io-client": "^1.7.2",
+    "underscore": "^1.8.3"
+  }
+}
