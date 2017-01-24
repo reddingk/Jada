@@ -112,9 +112,9 @@ components.component('fuzzyslippers', {
 
         ctrl.sendMsg = function() {
           var d = new Date();
-          socket.emit('chocolate blast', { "info":{"userId":userId ,"msg":ctrl.cocoMsg} } );
+          socket.emit('chocolate blast', { "info":{"userId":userId , "ctrl":true, "msg":ctrl.cocoMsg} } );
           ctrl.messages.push({"time": d.getTime(), "info":{"userId":ctrl.userId ,"msg":ctrl.userRoomMsg} });
-          ctrl.cocoMsg = "";          
+          ctrl.cocoMsg = "";
         }
 
         ctrl.listCoco = function() {

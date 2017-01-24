@@ -1,6 +1,8 @@
 module.exports = function(io){
   var id = "TestCB";
   var socket = io.connect('http://localhost:1003', { query: "userid="+id });
+  var brain = require('./cbrain');
+
   // join chocolate network
   socket.emit('chocolate network', {"info":{"id":id} } );
 
@@ -25,6 +27,11 @@ module.exports = function(io){
 
   // chocolate blast
   socket.on('chocolate blast',function(info){
-  	console.log(info);
+    console.log(info);
+    if(info.ctrl == true){
+      brain.parseAction(info.msg, function(res){
+        socket.emit('chocolate blast', { "info":{"userId":id ,"response":res} } );
+      });
+    }
   });
 }
