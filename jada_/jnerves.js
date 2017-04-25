@@ -60,7 +60,8 @@ exports.getDataResponse = function dataResponse(response, fullPhrase, callback) 
         jfunc.testCode(fullPhrase, function(finalRes){ callback(finalRes); });
         break;
       case "translatePhrase":
-        jfunc.getTranslation(fullPhrase, function(finalRes){ callback(finalRes); });
+        //jfunc.getTranslation(fullPhrase, function(finalRes){ callback(finalRes); });
+        callback({ "todo":"", "jresponse": "Translation is currently unavaliable"});
         break;
       case "getDirections":
         jfunc.getDirections(fullPhrase, function(finalRes){ callback(finalRes); });

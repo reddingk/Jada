@@ -3,6 +3,7 @@
 // modules
 var express = require('express');
 var app = express();
+var path = require('path');
 var bodyParser = require('body-parser');
 var methodOverride = require('method-override');
 var mongoose = require('mongoose');
@@ -36,15 +37,14 @@ app.use(bodyParser.urlencoded({ extended: true }));
 // override with the X-HTTP-Method-Override header in the request. simulate DELETE
 app.use(methodOverride('X-HTTP-Method-Override'));
 
-//app.use(express.static(__dirname + '/public'));
-app.engine('.html', require('ejs').__express);
-app.use(express.static('./public'));
-app.set('views', __dirname + '/public/views');
-app.set('view engine', 'html');
+// set the static files location
+app.use(express.static(__dirname + '/public'));
 
-app.get('/', function(req, res){
-	res.render('index');
+// Beautify Routes
+app.get('*', function(req, res) {
+    res.sendFile('index.html', { root: path.join(__dirname, './public/views') });
 });
+//app.get('/', function(req, res){	res.render('index');});
 
 // SOCKET CONNECTION
 require('./ps118/server.config.js')(io);
@@ -54,6 +54,3 @@ require('./ps118/server.config.js')(io);
 http.listen(port, function(){
 	console.log('Application is open on port ' + port);
 });
-
-// User message
-//console.log('Application is open on port ' + port);

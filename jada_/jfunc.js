@@ -374,7 +374,7 @@ exports.getChangedSetting = function getChangedSetting(item, phrase, obj, callba
     }
   }
   catch(ex){
-    retPhrase = "You did not update your settings, Somthing went wrong sorry";    
+    retPhrase = "You did not update your settings, Somthing went wrong sorry";
     apiResponse = {"code":-10, "errorMsg": ex};
   }
 
@@ -395,6 +395,7 @@ function getIanaCode(src, trg, callback) {
 
   apiLib.itranslate4(null, null, null,
     function(res) {
+
         var srcs = res.src;
         var trgs = res.trg;
         var loopParams = [(srcs.length > trgs.length? srcs.length : trgs.length), false, false]
@@ -432,7 +433,13 @@ exports.getTranslation = function getTranslation(phrase, callback) {
     var toWord = (toIndex > 0 ? postPhrase[toIndex] : "english");
     var translatePhrase = postPhrase.slice((toIndex > -1 ? toIndex : fromIndex) + 1).join("+");
 
+    console.log("Test 2-1");
     getIanaCode(fromWord, toWord, function(res) {
+
+      console.log("Test 2");
+      console.log(res);
+      console.log("PHRASE: " + translatePhrase);
+
       apiLib.itranslate4(res[0], res[1], translatePhrase,
         function(res) {
           returnTanslation = nerves.stringFormat("The phrase \n {0} \nTranslated in {2} to: \n {1}",[translatePhrase.replace(/[+]/g, " "), res.dat[0].text[0], toWord]);
@@ -649,10 +656,17 @@ exports.getLocation = function getLocation(action, phrase, obj, callback) {
   var apiResponse = null;
   var retPhrase = "";
 
-
     if(action == "am") {
-      retPhrase = nerves.stringFormat("You are currently located at {0}", ["n/a"]);
-      apiResponse = { "results": {"where": "Me", "location": "n/a" }};
+      apiLib.getIPLocation(function(res){
+        if(res != null){
+          retPhrase = nerves.stringFormat("You are currently located near {0}, {1}", [res.city, res.regionName]);
+          apiResponse = { "results": {"where": "Me", "location": res }};
+        }
+        else{
+
+        }
+        callback({"todo":"", "jresponse":retPhrase, "japi":apiResponse});
+      });
     }
     else if(action == "is"){
       if (postPhrase.length > 0) {
@@ -681,12 +695,12 @@ exports.getLocation = function getLocation(action, phrase, obj, callback) {
         retPhrase = "sorry you didn't give me a location name I could work with.";
         apiResponse = {"code": -4};
       }
+      callback({"todo":"", "jresponse":retPhrase, "japi":apiResponse});
     }
     else {
       apiResponse = {"code":-1};
+      callback({"todo":"", "jresponse":retPhrase, "japi":apiResponse});
   }
-
-  callback({"todo":"", "jresponse":retPhrase, "japi":apiResponse});
 }
 
 

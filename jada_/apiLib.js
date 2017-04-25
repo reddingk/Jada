@@ -4,12 +4,8 @@ var data = require('./jdata');
 var md5 = require('md5');
 
 function getApiItem(name){
-  var item = null;
-  for(var i =0; i < data.app_apis.length; i++) {
-    if(data.app_apis[i].name == name)
-      { item = data.app_apis[i]; }
-    }
-    return item;
+  var item = data.app_apis_lib[name];
+  return (item == undefined ? null : item);
 }
 
 exports.tastekid = function tatekid(query, type, info, limit, callback) {
@@ -73,6 +69,9 @@ exports.itranslate4 = function itranslate4(src, target, phrase, callback){
           if(!error && response.statusCode ===200){
             callback(JSON.parse(body));
           }
+          else {
+            callback(JSON.parse({"error":"error returning data", "statusCode": response.statusCode}));
+          }
         });
     }
     catch(err) {
@@ -130,4 +129,23 @@ exports.getMarvelCharacter = function getMarvelCharacter(search, callback) {
     callback(null);
   }
 
+}
+
+exports.getIPLocation = function getIPLocation(callback){
+  var api = getApiItem("geoAPI");
+
+  if(api != null){
+    try{
+      var url = api.link;
+      request(url,
+        function (error, response, body){
+          if(!error && response.statusCode === 200){
+            callback(JSON.parse(body));
+          }
+        });
+    }
+    catch(err){
+      callback(null);
+    }
+  }
 }

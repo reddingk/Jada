@@ -81,7 +81,7 @@ JadenApp.config(['$stateProvider', '$urlRouterProvider','$locationProvider', fun
       });
 
       $urlRouterProvider.otherwise('/');
-      //$locationProvider.html5Mode(true);
+      $locationProvider.html5Mode(true);
     }]);
 
 // root component: all other components will be under this component

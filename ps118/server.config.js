@@ -1,3 +1,4 @@
+var socketList = {};
 
 module.exports = function(io){
 
@@ -6,7 +7,7 @@ module.exports = function(io){
   	var userId = socket.handshake.query.userid;
     console.log(userId + ' connected on socket: ' + socket.id);
     // add socket to list
-
+    socketList[userId] = {"socket":socket.id};
   	// general message
   	socket.on('general', function(msg){
       //console.log(msg);
@@ -17,6 +18,9 @@ module.exports = function(io){
   	socket.on('disconnect', function(){
       console.log(userId + ' disconnected: ' + socket.id);
       // remove socket from list
+      if(socketList.hasOwnProperty(userId)){
+        delete socketList[userId];
+      }
     });
 
   	// private message
@@ -56,7 +60,7 @@ module.exports = function(io){
   		console.log("getting list of connected users");
       var cocoClients = io.sockets.adapter.rooms["cocoNetwork"];
 
-  		io.to("cocoNetwork").emit('chocolate list', {"room-sockets":cocoClients, "msg":"received list of connected"});
+  		io.to("cocoNetwork").emit('chocolate list', {"room-sockets":cocoClients, "userList":socketList, "msg":"received list of connected"});
   	});
     // blast to all Chocolate Boys
     socket.on('chocolate blast',function(info){

@@ -6,7 +6,11 @@
 
 <div class="coco-convo-container">
   <div class="message-container">
-    <div class="message-line" ng-repeat="msg in $ctrl.messages"><span ng-if="msg.info.userId != undefined">{{msg.info.userId}}:</span> {{msg.info.msg}}</div>
+    <div class="message-line" ng-repeat="msg in $ctrl.messages">
+      <span ng-if="msg.info.userId != undefined">{{msg.info.userId}}:</span>
+      <span ng-if="msg.info.response == undefined">{{msg.info.msg}}</span>
+      <span ng-if="msg.info.response != undefined">{{msg.info.response}}</span>
+    </div>
   </div>
   <div class="input-container">
     <input id="msg" ng-model="$ctrl.cocoMsg"/>

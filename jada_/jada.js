@@ -40,14 +40,10 @@ rl.on('line', (input) => {
     }
 
     // Exit or continue with command line utility
-    if(input == "exit"){
-      console.log("Bye");
-      rl.close();
-    }
+    if(input == "exit"){ console.log("Bye"); rl.close();  }
     else {
       if(settings.voice == "on") {rl.setPrompt('|jada| -v- > '); }
       else {rl.setPrompt('|jada| --- > '); }
-
       rl.prompt();
     }
   });

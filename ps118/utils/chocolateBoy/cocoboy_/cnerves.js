@@ -5,7 +5,7 @@ exports.returnAction = function retAction(action, phrase, callback){
   else {
     switch(action){
       case "cmdline":
-        func.cmdline(phrase, function(res) { callback(res);} );
+        func.cmdline(phrase, function(res) { callback(res.cmdResponse);} );
         break;
       default:
         break;

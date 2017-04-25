@@ -1,2 +1,3 @@
-app/libs/*
 node_modules/*
+ps118/libs/*
+ps118/utils/chocolateBoy/node_modules/*
