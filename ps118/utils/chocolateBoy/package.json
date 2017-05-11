@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node cocoboy.js"
   },
-  "author": "Kris Redding",
+  "author": "KRedd",
   "license": "ISC",
   "dependencies": {
     "async": "^2.1.4",

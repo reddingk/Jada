@@ -1,0 +1,23 @@
+{
+  "name": "phoebe",
+  "version": "1.0.0",
+  "description": "Phoebe Single node",
+  "main": "phoebe.js",
+  "scripts": {
+    "start": "node phoebe.js"
+  },
+  "author": "KRedd",
+  "license": "ISC",
+  "dependencies": {
+    "async": "^2.1.4",
+    "body-parser": "^1.15.2",
+    "del": "^2.2.0",
+    "express": "^4.14.0",
+    "method-override": "~2.0.2",
+    "mongoose": "^4.9.6",
+    "opencv": "^6.0.0",
+    "os": "^0.1.1",
+    "socket.io-client": "^1.7.2",
+    "underscore": "^1.8.3"
+  }
+}
