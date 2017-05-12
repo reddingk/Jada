@@ -27,7 +27,6 @@ app.use(methodOverride('X-HTTP-Method-Override'));
 
 //OPENCV TEST
 require('./msphoebe_/opencv.test.js');
-console.log("finished Test");
 // start app
 //app.listen(port);
 // User message
