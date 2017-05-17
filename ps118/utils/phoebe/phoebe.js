@@ -4,7 +4,7 @@ var express = require('express');
 var app = express();
 var bodyParser = require('body-parser');
 var methodOverride = require('method-override');
-//var io = require('socket.io-client');
+var io = require('socket.io-client');
 
 // set ports
 var port = process.env.PORT || 2727;
@@ -25,11 +25,12 @@ app.use(methodOverride('X-HTTP-Method-Override'));
 // SOCKET CONNECTION
 //require('./msphoebe_/server.config.js')(io);
 
-//OPENCV TEST
-require('./msphoebe_/opencv.test.js');
 // start app
-//app.listen(port);
+app.listen(port);
 // User message
-//console.log('Application is open on port ' + port);
+console.log('Application is open on port ' + port);
 
 //http.listen(port, function(){ console.log('Application is open on port ' + port);});
+
+//OPENCV TEST
+require('./msphoebe_/opencv.test.js')(io);

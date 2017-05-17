@@ -4,6 +4,10 @@ JadenApp.config(['$stateProvider', '$urlRouterProvider','$locationProvider', fun
         url: "/",
         views: { 'content':{ component: 'gerald' }  }
       })
+      .state('app.phoebe', {
+        url: "Video",
+        views: { 'content@': { component: 'phoebe' } }
+      })
       .state('app.harvey', {
         url: "Messanger",
         views: { 'content@': { component: 'harvey' } }

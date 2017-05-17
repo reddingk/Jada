@@ -2,11 +2,36 @@ var fs = require('fs');
 var cv = require('opencv');
 var path = require('path');
 
-// TESTING FUNCTION
-//imageTest();
-//videoFrameTest();
-//cameraTest();
-motionTest2();
+// server info
+var os = require('os');
+var mongoose = require('mongoose');
+var database = require('./dbcfg');
+
+// camera properties
+var camWidth = 320;
+var camHeight = 240;
+var camFps = 10;
+var camInterval = 1000 / camFps;
+
+mongoose.Promise = global.Promise;
+mongoose.connect(database.remoteUrl);
+
+var cocoConnects = mongoose.model('connects', { name: {type: String, default: ''},  loc: {type: String, default: undefined} });
+
+module.exports = function(io){
+  cocoConnects.find(function(err, tmpLoc){
+    srcLoc = tmpLoc[0].loc;
+    var id = "CB-" + os.hostname();
+
+    var socket = io.connect(srcLoc, { query: "userid="+id });
+
+    // TESTING FUNCTION
+    //imageTest();
+    //videoFrameTest();
+    //cameraTest();
+    faceCheckTest(socket);
+  });
+}
 
 
 function imageTest(){
@@ -78,7 +103,7 @@ function cameraTest(){
     setInterval(function() {
       camera.read(function(err, im) {
         if (err) throw err;
-        console.log(im.size())
+        //console.log(im.size())
         if (im.size()[0] > 0 && im.size()[1] > 0){
           window.show(im);
         }
@@ -86,35 +111,34 @@ function cameraTest(){
       });
     }, 20);
   } catch (e){
-    console.log("Couldn't start camera:", e)
+    console.log("Couldn't start camera:" + e);
   }
 }
 
-function motionTest(){
+function faceCheckTest(socket){
   try {
     var camera = new cv.VideoCapture(0);
-    var window = new cv.NamedWindow('Video', 0);
-    console.log("0) Read");
+    camera.setWidth(camWidth);
+    camera.setHeight(camHeight);
 
-    camera.read(function(err, mat) {
-      if (err) throw err;
-      var track = new cv.TrackedObject(mat, [420, 110, 490, 170], {channel: 'value'});
-      console.log("1) Read");
+    var window = new cv.NamedWindow('Video', 0)
 
-      setInterval(function() {
-        camera.read(function(err, im) {
-          console.log("2) Read");
+    console.log("Set Up Camera");
 
-          if (im.size()[0] > 0 && im.size()[1] > 0){
-            var rec = track.track(im);
-            im.rectangle([rec[0], rec[1]], [rec[2], rec[3]]);
-            window.show(im);
-          }
-          window.blockingWaitKey(0, 50);
-        });
-      }, 20);
-    });
-  } catch (e){
-    console.log("Couldn't start camera:", e)
+    setInterval(function() {
+      camera.read(function(err, im) {
+        if (err) throw err;
+
+        if (im.size()[0] > 0 && im.size()[1] > 0){
+          console.log("Send Data");
+          window.show(im);
+          socket.emit('frame', { buffer: im.toBuffer() });
+        }
+        window.blockingWaitKey(0, 50);
+      });
+    }, camInterval);
+  }
+  catch(ex){
+    console.log("Couldn't start camera:" + ex);
   }
 }
