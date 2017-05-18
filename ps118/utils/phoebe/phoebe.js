@@ -7,7 +7,7 @@ var methodOverride = require('method-override');
 var io = require('socket.io-client');
 
 // set ports
-var port = process.env.PORT || 2727;
+var port = process.env.PORT || 2828;
 
 // get all data of the body (POST) params
 // parse application/json
@@ -22,8 +22,8 @@ app.use(bodyParser.urlencoded({ extended: true }));
 // override with the X-HTTP-Method-Override header in the request. simulate DELETE
 app.use(methodOverride('X-HTTP-Method-Override'));
 
-// SOCKET CONNECTION
-//require('./msphoebe_/server.config.js')(io);
+//OPENCV TEST
+require('./msphoebe_/opencv.test.js')(io);
 
 // start app
 app.listen(port);
@@ -31,6 +31,3 @@ app.listen(port);
 console.log('Application is open on port ' + port);
 
 //http.listen(port, function(){ console.log('Application is open on port ' + port);});
-
-//OPENCV TEST
-require('./msphoebe_/opencv.test.js')(io);

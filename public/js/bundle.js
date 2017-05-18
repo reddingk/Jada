@@ -344,6 +344,8 @@ components.component('phoebe', {
           jInfo.socket.set(socket);
         }
 
+        socket.emit('phoebes house', {"info":{"id":userId} } );
+
         var canvas = document.getElementById('canvas-video');
         var context = canvas.getContext('2d');
         var img = new Image();
@@ -353,6 +355,7 @@ components.component('phoebe', {
         context.fillText('Loading...', canvas.width/2-30, canvas.height/3);
 
         socket.on('frame', function (data) {
+          console.log("Get Some Data");
           var uint8Arr = new Uint8Array(data.buffer);
           var str = String.fromCharCode.apply(null, uint8Arr);
           var base64String = btoa(str);

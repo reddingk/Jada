@@ -73,6 +73,18 @@ module.exports = function(io){
   		io.to(info.id).emit('chocolate command', info.info);
   	});
 
+    /*Pheobes House*/
+    // phoebes house join
+    socket.on('phoebes house',function(info){
+      console.log(info.info.id + " is joining room phoebe's house");
+      socket.join("phoebeHouse");
+    });
+    // chocolate command
+  	socket.on('frame',function(info){
+  		//console.log(info);
+  		io.to("phoebeHouse").emit('frame', info);
+  	});
+
   });
 
 }

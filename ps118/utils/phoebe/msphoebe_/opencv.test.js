@@ -16,20 +16,22 @@ var camInterval = 1000 / camFps;
 mongoose.Promise = global.Promise;
 mongoose.connect(database.remoteUrl);
 
-var cocoConnects = mongoose.model('connects', { name: {type: String, default: ''},  loc: {type: String, default: undefined} });
+var phoebeConnects = mongoose.model('connects', { name: {type: String, default: ''},  loc: {type: String, default: undefined} });
 
 module.exports = function(io){
-  cocoConnects.find(function(err, tmpLoc){
+  phoebeConnects.find(function(err, tmpLoc){
     srcLoc = tmpLoc[0].loc;
     var id = "CB-" + os.hostname();
 
     var socket = io.connect(srcLoc, { query: "userid="+id });
+    socket.emit('phoebes house', {"info":{"id":id} } );
 
     // TESTING FUNCTION
     //imageTest();
     //videoFrameTest();
     //cameraTest();
-    faceCheckTest(socket);
+    streamTest(socket);
+    //faceCheckTest(socket);
   });
 }
 
@@ -115,13 +117,13 @@ function cameraTest(){
   }
 }
 
-function faceCheckTest(socket){
+function streamTest(socket){
   try {
     var camera = new cv.VideoCapture(0);
     camera.setWidth(camWidth);
     camera.setHeight(camHeight);
 
-    var window = new cv.NamedWindow('Video', 0)
+    //var window = new cv.NamedWindow('Video', 0)
 
     console.log("Set Up Camera");
 
@@ -130,11 +132,46 @@ function faceCheckTest(socket){
         if (err) throw err;
 
         if (im.size()[0] > 0 && im.size()[1] > 0){
-          console.log("Send Data");
-          window.show(im);
+          //window.show(im);
           socket.emit('frame', { buffer: im.toBuffer() });
         }
-        window.blockingWaitKey(0, 50);
+        //window.blockingWaitKey(0, 50);
+      });
+    }, camInterval);
+  }
+  catch(ex){
+    console.log("Couldn't start camera:" + ex);
+  }
+}
+
+function faceCheckTest(socket){
+  try {
+    var camera = new cv.VideoCapture(0);
+    camera.setWidth(camWidth);
+    camera.setHeight(camHeight);
+
+    //var window = new cv.NamedWindow('Video', 0)
+
+    console.log("Set Up Camera");
+
+    setInterval(function() {
+      camera.read(function(err, im) {
+        if (err) throw err;
+
+        if (im.size()[0] > 0 && im.size()[1] > 0){
+
+          im.detectObject(cv.FACE_CASCADE, {}, function(err, faces){
+            if(err) throw err;
+
+            for (var i=0;i<faces.length; i++){
+              var face = faces[i];
+              im.ellipse(face.x + face.width/2, face.y + face.height/2, face.width/2, face.height/2, [255,0,0], 2);
+            }
+            //window.show(im);
+            socket.emit('frame', { buffer: im.toBuffer() });
+          });
+        }
+        //window.blockingWaitKey(0, 50);
       });
     }, camInterval);
   }
