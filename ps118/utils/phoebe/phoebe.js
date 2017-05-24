@@ -2,6 +2,7 @@
 // modules
 var express = require('express');
 var app = express();
+
 var bodyParser = require('body-parser');
 var methodOverride = require('method-override');
 var io = require('socket.io-client');
@@ -26,8 +27,13 @@ app.use(methodOverride('X-HTTP-Method-Override'));
 require('./msphoebe_/opencv.test.js')(io);
 
 // start app
-app.listen(port);
-// User message
-console.log('Application is open on port ' + port);
+app.listen(port, function(){
+  // User message
+  console.log('Application is open on port ' + port);
+});
 
-//http.listen(port, function(){ console.log('Application is open on port ' + port);});
+// Exit process on quit
+/*process.on('SIGINT', function() {
+  console.log("Ended Server");
+  //process.exit(0);
+});*/

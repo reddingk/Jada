@@ -30,8 +30,10 @@ module.exports = function(io){
     //imageTest();
     //videoFrameTest();
     //cameraTest();
-    streamTest(socket);
+    //streamTest(socket);
     //faceCheckTest(socket);
+    //motionVideoTest();
+    cameraFaceTest();
   });
 }
 
@@ -50,15 +52,6 @@ function imageTest(){
         var face = faces[i]
         im.ellipse(face.x + face.width/2, face.y + face.height/2, face.width/2, face.height/2, [255,0,0], 2);
 
-        /*im.detectObject(cv.EYE_CASCADE,{"scale":1.3, "neighbors":4}, function(err, eyes){
-          console.log("Face: " + i +" There Are " + eyes.length + " Eyes");
-
-          for(var j=0; j<eyes.length; j++){
-            var y = eyes[j];
-            im.ellipse(y.x + y.width/2, y.y + y.height/2, y.width/2, y.height/2, [0,0,255], 5);
-          }
-          im.save('./phoebe_stuff/out/out'+testID+'.jpg');
-        });*/
       }
       im.save('./phoebe_stuff/out/out'+testID+'.jpg');
       console.log("Finished Proccessing");
@@ -95,6 +88,26 @@ function videoFrameTest(){
     }
     iter();
   });
+}
+
+function motionVideoTest(){
+  var vid = new cv.VideoCapture(0);
+  var window = new cv.NamedWindow('Video', 0);
+
+  setInterval(function() {
+    vid.read(function(err, mat){
+      if (err) throw err;
+
+      if(mat.size()[0] > 0 && mat.size()[1] > 0){
+        vid.read(function(err, m2){
+          if (m2.size()[0] > 0 && m2.size()[1] > 0){
+            window.show(m2);
+          }
+          window.blockingWaitKey(0, 50);
+        });
+      }
+    });
+  }, 20);
 }
 
 function cameraTest(){
@@ -177,5 +190,36 @@ function faceCheckTest(socket){
   }
   catch(ex){
     console.log("Couldn't start camera:" + ex);
+  }
+}
+
+
+function cameraFaceTest(){
+  try{
+    var vid = new cv.VideoCapture(0);
+    var window = new cv.NamedWindow('Video', 0);
+
+    setInterval(function() {
+      vid.read(function(err, mat){
+        if (err) throw err;
+
+        if(mat.size()[0] > 0 && mat.size()[1] > 0){
+          //console.log("Mat Size 0: "+mat.size()[0] + " Mat Size 1: " + mat.size()[1]);
+          mat.detectObject(cv.FACE_CASCADE, {}, function(err, faces){
+            if(err) throw err;
+
+            for (var i=0;i<faces.length; i++){
+              var face = faces[i];
+              mat.ellipse(face.x + face.width/2, face.y + face.height/2, face.width/2, face.height/2, [255,0,0], 2);
+            }
+            window.show(mat);
+          });
+        }
+        window.blockingWaitKey(0, 50);
+      });
+    }, 20);
+  }
+  catch(ex){
+    console.log("killed Camera");
   }
 }
