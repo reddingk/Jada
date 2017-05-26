@@ -31,9 +31,3 @@ app.listen(port, function(){
   // User message
   console.log('Application is open on port ' + port);
 });
-
-// Exit process on quit
-/*process.on('SIGINT', function() {
-  console.log("Ended Server");
-  //process.exit(0);
-});*/

@@ -10,8 +10,7 @@ var database = require('./dbcfg');
 // camera properties
 var camWidth = 320;
 var camHeight = 240;
-var camFps = 10;
-var camInterval = 1000 / camFps;
+var camInterval = 100;
 
 mongoose.Promise = global.Promise;
 mongoose.connect(database.remoteUrl);
@@ -33,7 +32,8 @@ module.exports = function(io){
     //streamTest(socket);
     //faceCheckTest(socket);
     //motionVideoTest();
-    cameraFaceTest();
+    //cameraFaceTest(socket);
+    //opticalFlowTest(); // x
   });
 }
 
@@ -194,32 +194,91 @@ function faceCheckTest(socket){
 }
 
 
-function cameraFaceTest(){
+function cameraFaceTest(socket){
   try{
     var vid = new cv.VideoCapture(0);
-    var window = new cv.NamedWindow('Video', 0);
+    var window = new cv.NamedWindow('Video Demo', 0);    
+    var videoStatus = null;
 
-    setInterval(function() {
-      vid.read(function(err, mat){
-        if (err) throw err;
+    videoStatus = setInterval(function() {      
+      var settings = JSON.parse(fs.readFileSync('testfile.json','utf8')); 
+      if(settings.video == 0){
+        window.destroy();           
+        console.log("Exited Camera");
+        clearInterval(videoStatus);        
+      }   
+      else {
+        vid.read(function(err, mat){
+          if (err) throw err;
 
-        if(mat.size()[0] > 0 && mat.size()[1] > 0){
-          //console.log("Mat Size 0: "+mat.size()[0] + " Mat Size 1: " + mat.size()[1]);
-          mat.detectObject(cv.FACE_CASCADE, {}, function(err, faces){
-            if(err) throw err;
+          if(mat.size()[0] > 0 && mat.size()[1] > 0){          
+            mat.detectObject(cv.FACE_CASCADE, {}, function(err, faces){
+              if(err) throw err;
 
-            for (var i=0;i<faces.length; i++){
-              var face = faces[i];
-              mat.ellipse(face.x + face.width/2, face.y + face.height/2, face.width/2, face.height/2, [255,0,0], 2);
-            }
-            window.show(mat);
-          });
-        }
-        window.blockingWaitKey(0, 50);
-      });
-    }, 20);
+              for (var i=0;i<faces.length; i++){
+                var face = faces[i];
+                mat.ellipse(face.x + face.width/2, face.y + face.height/2, face.width/2, face.height/2, [255,0,0], 2);
+              }
+              window.show(mat);
+              // Send to server
+            });
+          }
+          window.blockingWaitKey(0, 50);
+        });   
+      }       
+    }, camInterval);        
   }
   catch(ex){
-    console.log("killed Camera");
+    console.log("Killed Camera: " + ex);
+  }
+}
+
+function opticalFlowTest(){
+  try {
+    var camera = new cv.VideoCapture(0);
+    var window = new cv.NamedWindow('Video', 0);
+    
+    // Parameters for lucas kanade optical flow
+    var lk_params = {  winSize: [15, 15], maxLevel: 2, criteria: [cv.TERM_CRITERIA_EPS | cv.TERM_CRITERIA_COUNT, 30, 0.03] };
+    var feature_params = { maxCorners: 100, qualityLevel: 0.1, minDistance: 10 };
+
+    // Create some random colors
+    var color = [255, 0, 0];
+
+    setInterval(function() {
+      camera.read(function(err, im) {
+        if (err) throw err;
+
+        var old_frame = im;
+        
+        if (im.size()[0] > 0 && im.size()[1] > 0){          
+
+          var out = old_frame.copy();
+          camera.read(function(err, newFrame) {
+            if (err) throw err;
+
+            if (newFrame.size()[0] > 0 && newFrame.size()[1] > 0) {
+              var goodFeatures = old_frame.goodFeaturesToTrack(feature_params.maxCorners, feature_params.qualityLevel, feature_params.minDistance);
+
+              // calculate optical flow
+              /*var flow = old_frame.calcOpticalFlowPyrLK(newFrame, goodFeatures, lk_params.winSize, lk_params.maxLevel, lk_params.criteria);
+
+              // draw the tracks
+              for(var i = 0; i < flow.old_points.length; i++){
+                if(flow.found[i]){
+                  out.line(flow.old_points[i], flow.new_points[i], color);
+                }
+              }*/
+
+              window.show(out);
+              old_frame = newFrame.copy();
+            }
+            window.blockingWaitKey(0, 50);
+          });          
+        }        
+      });
+    }, 20);
+  } catch (e){
+    console.log("Couldn't start camera:" + e);
   }
 }
