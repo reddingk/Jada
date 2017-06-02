@@ -32,8 +32,7 @@ module.exports = function(io){
     //streamTest(socket);
     //faceCheckTest(socket);
     //motionVideoTest();
-    //cameraFaceTest(socket);
-    //opticalFlowTest(); // x
+    //cameraFaceTest(socket);    
   });
 }
 
@@ -230,55 +229,5 @@ function cameraFaceTest(socket){
   }
   catch(ex){
     console.log("Killed Camera: " + ex);
-  }
-}
-
-function opticalFlowTest(){
-  try {
-    var camera = new cv.VideoCapture(0);
-    var window = new cv.NamedWindow('Video', 0);
-    
-    // Parameters for lucas kanade optical flow
-    var lk_params = {  winSize: [15, 15], maxLevel: 2, criteria: [cv.TERM_CRITERIA_EPS | cv.TERM_CRITERIA_COUNT, 30, 0.03] };
-    var feature_params = { maxCorners: 100, qualityLevel: 0.1, minDistance: 10 };
-
-    // Create some random colors
-    var color = [255, 0, 0];
-
-    setInterval(function() {
-      camera.read(function(err, im) {
-        if (err) throw err;
-
-        var old_frame = im;
-        
-        if (im.size()[0] > 0 && im.size()[1] > 0){          
-
-          var out = old_frame.copy();
-          camera.read(function(err, newFrame) {
-            if (err) throw err;
-
-            if (newFrame.size()[0] > 0 && newFrame.size()[1] > 0) {
-              var goodFeatures = old_frame.goodFeaturesToTrack(feature_params.maxCorners, feature_params.qualityLevel, feature_params.minDistance);
-
-              // calculate optical flow
-              /*var flow = old_frame.calcOpticalFlowPyrLK(newFrame, goodFeatures, lk_params.winSize, lk_params.maxLevel, lk_params.criteria);
-
-              // draw the tracks
-              for(var i = 0; i < flow.old_points.length; i++){
-                if(flow.found[i]){
-                  out.line(flow.old_points[i], flow.new_points[i], color);
-                }
-              }*/
-
-              window.show(out);
-              old_frame = newFrame.copy();
-            }
-            window.blockingWaitKey(0, 50);
-          });          
-        }        
-      });
-    }, 20);
-  } catch (e){
-    console.log("Couldn't start camera:" + e);
   }
 }
