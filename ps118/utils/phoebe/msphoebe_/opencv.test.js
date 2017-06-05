@@ -32,7 +32,8 @@ module.exports = function(io){
     //streamTest(socket);
     //faceCheckTest(socket);
     //motionVideoTest();
-    //cameraFaceTest(socket);    
+    //cameraFaceTest(socket); 
+    multiColorTrack();   
   });
 }
 
@@ -230,4 +231,60 @@ function cameraFaceTest(socket){
   catch(ex){
     console.log("Killed Camera: " + ex);
   }
+}
+
+function multiColorTrack(){
+   try{
+      var camera = new cv.VideoCapture(0);
+      var window = new cv.NamedWindow('Video Demo', 0);
+
+      var color_thresh = [[124,0,0], [124,255,255]];
+
+      var lineType = 8;
+      var maxLevel = 0;
+      var thickness = 3;
+
+      setInterval(function() {
+        camera.read(function(err, im) {
+          if (err) throw err;
+
+          if (im.size()[0] > 0 && im.size()[1] > 0){
+            var thresh = im.copy();
+            
+            thresh.cvtColor('CV_BGR2HSV');            
+            thresh.inRange(color_thresh[0], color_thresh[1]);			      
+            // Erode
+            var erodeElement = cv.imgproc.getStructuringElement(1, [3, 3]);
+            thresh.erode(1, erodeElement);
+            thresh.erode(1, erodeElement);                    
+
+            //Dilate
+            var dilateElement = cv.imgproc.getStructuringElement(1, [8, 8]);
+            thresh.dilate(8);
+            thresh.dilate(8);
+			      
+            var contours = thresh.findContours();
+
+            for (var i = 0; i < contours.size(); i++) {
+              if(contours.area(i) > 400) {
+                var moments = contours.moments(i);
+                var cgx = Math.round(moments.m10 / moments.m00);
+                var cgy = Math.round(moments.m01 / moments.m00);
+                
+                var color = [255,0,0];
+
+                im.drawContour(contours, i, color, thickness, lineType, maxLevel, [0, 0]);                
+              }
+            }
+
+            window.show(im);
+          }
+          window.blockingWaitKey(0, 50);
+        });
+      }, camInterval);
+
+    }
+    catch(ex){
+      console.log("Killed Camera: " + ex);
+    }  
 }
