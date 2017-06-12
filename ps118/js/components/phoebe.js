@@ -62,7 +62,7 @@ components.component('phoebe', {
         }
         ctrl.stop = function(){
           socket.emit('stop', { 'id':ctrl.sId } );
-          // show loading notice                   
+          // fill context                   
           context.fill();
 
           ctrl.vidType = "NONE";
