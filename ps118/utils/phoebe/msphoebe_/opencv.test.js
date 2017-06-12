@@ -238,7 +238,8 @@ function multiColorTrack(){
       var camera = new cv.VideoCapture(0);
       var window = new cv.NamedWindow('Video Demo', 0);
 
-      var color_thresh = [[124,0,0], [124,255,255]];
+      var color_thresh = [[121, 69, 43], [255, 149, 95]];       
+      //var color_thresh = [[0, 0, 0], [36, 2, 255]];
 
       var lineType = 8;
       var maxLevel = 0;

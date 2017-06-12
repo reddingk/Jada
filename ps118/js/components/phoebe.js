@@ -28,7 +28,7 @@ components.component('phoebe', {
         context.fillStyle = '#333';
         context.fillText('Loading...', canvas.width/2-30, canvas.height/3);
 
-        socket.on('frame', function (data) {
+        socket.on('PHframe', function (data) {
           console.log("Get Some Data");
           var uint8Arr = new Uint8Array(data.buffer);
           var str = String.fromCharCode.apply(null, uint8Arr);
@@ -39,6 +39,38 @@ components.component('phoebe', {
           };
           img.src = 'data:image/png;base64,' + base64String;
         });
+
+        ctrl.vidType = "NONE";
+        ctrl.sId = "";
+        // video controls
+        ctrl.live = function(){
+          socket.emit('liveStream', { 'id':ctrl.sId } );
+          ctrl.vidType = "LIVE";
+        }
+
+        ctrl.face = function(){
+          socket.emit('faceDetect', {'id':ctrl.sId } );
+          ctrl.vidType = "FACE";
+        }
+        ctrl.motion = function(){
+          socket.emit('motionTracker', { 'id':ctrl.sId } );
+          ctrl.vidType = "MOTION";
+        }
+        ctrl.color = function(){
+          socket.emit('multiColorTrack', {'id':ctrl.sId, 'colors':{'minColor':[255,0,0], 'maxColor':[255, 149, 95]}}  );
+          ctrl.vidType = "COLOR";
+        }
+        ctrl.stop = function(){
+          socket.emit('stop', { 'id':ctrl.sId } );
+          // show loading notice                   
+          context.fill();
+
+          ctrl.vidType = "NONE";
+        }
+        ctrl.echo = function(){
+          socket.emit('echo Test', { 'id':ctrl.sId } );
+          ctrl.vidType = "NONE";
+        }
       }
    },
    templateUrl: 'views/ps118/phoebe.html'

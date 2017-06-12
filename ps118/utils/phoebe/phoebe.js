@@ -28,8 +28,9 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(methodOverride('X-HTTP-Method-Override'));
 
 //OPENCV TEST
+require('./msphoebe_/server.config.js')(io);
 //require('./msphoebe_/motion.test.js')(io);
-require('./msphoebe_/opencv.test.js')(io);
+//require('./msphoebe_/opencv.test.js')(io);
 
 // list all running processes
 var net_data = [];

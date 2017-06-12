@@ -79,11 +79,36 @@ module.exports = function(io){
       console.log(info.info.id + " is joining room phoebe's house");
       socket.join("phoebeHouse");
     });
-    // chocolate command
-  	socket.on('frame',function(info){
+    // frame command
+  	socket.on('PHframe',function(info){
   		//console.log(info);
-  		io.to("phoebeHouse").emit('frame', info);
+  		io.to("phoebeHouse").emit('PHframe', info);
   	});
+		socket.on('stop', function(info){     
+      io.to(info.id).emit('stop', {});
+    });
+
+    socket.on('liveStream', function(info){ 
+			console.log('live to: ' + info.id);
+      io.to(info.id).emit('liveStream', {});
+    });  
+
+    socket.on('faceDetect', function(info){
+			io.to(info.id).emit('faceDetect', {});      
+    });  
+
+    socket.on('motionTracker', function(info){      
+			io.to(info.id).emit('motionTracker', {});
+    });  
+
+    socket.on('multiColorTrack', function(info){      
+			io.to(info.id).emit('multiColorTrack', info.colors);
+    });
+    
+    socket.on('echo Test', function(info){
+			console.log('echo to: ' + info.id);    
+			io.to(info.id).emit('echo Test', {});        
+    });
 
   });
 

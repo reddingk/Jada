@@ -4,3 +4,13 @@
 <div class="container center">
   <canvas id="canvas-video" width="640" height="480"></canvas>
 </div>
+<h1>{{$ctrl.vidType}}</h1>
+<input id="socket-ID" ng-model="$ctrl.sId" />
+<div class="video-Ctrl">
+  <button class="p-ctrl" ng-click="$ctrl.live()">live</button>
+  <button class="p-ctrl" ng-click="$ctrl.face()">face</button>
+  <button class="p-ctrl" ng-click="$ctrl.motion()">motion</button>
+  <button class="p-ctrl" ng-click="$ctrl.color()">multi color</button>
+  <button class="p-ctrl" ng-click="$ctrl.stop()">stop</button>
+  <button class="p-ctrl" ng-click="$ctrl.echo()">echo</button>
+</div>
