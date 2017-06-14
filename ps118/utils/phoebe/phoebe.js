@@ -34,18 +34,18 @@ require('./msphoebe_/server.config.js')(io);
 
 // list all running processes
 var net_data = [];
-netstat({
+/*netstat({
     filter: {
-      local: { port: 2828}      
+      //local: { port: 2828}      
     },
-    limit: 1,
+    //limit: 1,
     done: function(err){      
-            
+      //console.log(net_data);  
       if(net_data.length < 1){
-        /*app.listen(port, function(){
+        //app.listen(port, function(){
           // User message
-          console.log('[Clean] Application is open on port %s', port);
-        });*/
+        //  console.log('[Clean] Application is open on port %s', port);
+        //});
       }
       else {    
         console.log("Removing Old Process");
@@ -54,14 +54,15 @@ netstat({
             if (err) { throw new Error( err ); }
             else {
               console.log( 'Process %s has been killed without a clean-up!', pidStr );
-              /*app.listen(port, function(){
+              //app.listen(port, function(){
                 // User message
-                console.log('[Fixed] Application is open on port %s', port);
-              });*/
+              //  console.log('[Fixed] Application is open on port %s', port);
+              //});
             }
         });
-      } 
+      }
+
     }
-}, function (data) { net_data.push(data);});
+}, function (data) { net_data.push(data);});*/
 
 

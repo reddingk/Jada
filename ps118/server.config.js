@@ -84,12 +84,12 @@ module.exports = function(io){
   		//console.log(info);
   		io.to("phoebeHouse").emit('PHframe', info);
   	});
-		socket.on('stop', function(info){     
-      io.to(info.id).emit('stop', {});
+		socket.on('stop', function(info){ 
+			console.log("stopping video: " + info.type);
+      io.to(info.id).emit('stop', {'type':info.type});
     });
 
-    socket.on('liveStream', function(info){ 
-			console.log('live to: ' + info.id);
+    socket.on('liveStream', function(info){ 			
       io.to(info.id).emit('liveStream', {});
     });  
 
@@ -105,8 +105,7 @@ module.exports = function(io){
 			io.to(info.id).emit('multiColorTrack', info.colors);
     });
     
-    socket.on('echo Test', function(info){
-			console.log('echo to: ' + info.id);    
+    socket.on('echo Test', function(info){  
 			io.to(info.id).emit('echo Test', {});        
     });
 

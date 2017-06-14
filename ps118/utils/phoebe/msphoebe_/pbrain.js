@@ -5,18 +5,20 @@ var path = require('path');
 // Global Variables
 var camWidth = 320, camHeight = 240, camInterval = 100, lineType = 8, maxLevel = 0, thickness = 3;
 
-var videoDisplay = false;
+var videoDisplay = {'all':false, 'liveStream':false, 'faceDetect':false, 'motionTracker':false, 'multiColorTrack':false};
 
 // Stop Video
-exports.stopStream = function stopVideo(){
-    videoDisplay = false;
+exports.stopStream = function stopVideo(type){
+    videoDisplay[type] = false;
+    console.log("calling stop: " + type);
 }
 
 // Live stream video to socket
 exports.liveStream = function liveStream(socket){
   try {
     // Set Video Display flag
-    videoDisplay = true;
+    videoDisplay.all = true;
+    videoDisplay.liveStream = true;
     var videoStatus = null;
 
     var vid = new cv.VideoCapture(0);
@@ -26,7 +28,7 @@ exports.liveStream = function liveStream(socket){
     console.log("Setting Up Camera");
 
     videoStatus = setInterval(function() {
-      if(!videoDisplay){          
+      if(!videoDisplay.all || !videoDisplay.liveStream){          
         console.log("[Live] Exited Camera");
         clearInterval(videoStatus);        
       }   
@@ -50,7 +52,8 @@ exports.liveStream = function liveStream(socket){
 exports.faceDetect =function faceDetect(socket){
   try {
     // Set Video Display flag
-    videoDisplay = true;
+    videoDisplay.all = true;
+    videoDisplay.faceDetect = true;
     var videoStatus = null;
 
     var detectColor = [255,0,0];
@@ -61,7 +64,7 @@ exports.faceDetect =function faceDetect(socket){
     console.log("Set Up Camera");
 
     videoStatus = setInterval(function() {
-      if(!videoDisplay){          
+      if(!videoDisplay.all || !videoDisplay.faceDetect){          
         console.log("[Face Detect] Exited Camera");
         clearInterval(videoStatus);        
       }   
@@ -94,7 +97,8 @@ exports.faceDetect =function faceDetect(socket){
 exports.motionTracker =function motionTracker(socket){
     try {
         // Set Video Display flag
-        videoDisplay = true;
+        videoDisplay.all = true;
+        videoDisplay.motionTracker = true;
         var videoStatus = null;
     
         var vid = new cv.VideoCapture(0);
@@ -113,7 +117,7 @@ exports.motionTracker =function motionTracker(socket){
         var blurSize2 = 185;
 
         videoStatus = setInterval(function() {
-            if(!videoDisplay){          
+            if(!videoDisplay.all || !videoDisplay.motionTracker){          
                 console.log("[Motion] Exited Camera");
                 clearInterval(videoStatus);        
             }   
@@ -210,7 +214,8 @@ exports.motionTracker =function motionTracker(socket){
 exports.multiColorTrack =function multiColorTrack(socket, minColorThresh, maxColorThresh){
    try{
       // Set Video Display flag
-      videoDisplay = true;
+      videoDisplay.all = true;
+      videoDisplay.multiColorTrack = true;
       var videoStatus = null;
     
       var camera = new cv.VideoCapture(0);      
@@ -218,7 +223,7 @@ exports.multiColorTrack =function multiColorTrack(socket, minColorThresh, maxCol
       //var color_thresh = [minColorThresh, [255, 149, 95]];         
 
       videoStatus = setInterval(function() {
-        if(!videoDisplay){          
+        if(!videoDisplay.all || !videoDisplay.multiColorTrack){          
             console.log("[Multi Color] Exited Camera");
             clearInterval(videoStatus);        
         }   

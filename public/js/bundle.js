@@ -369,30 +369,37 @@ components.component('phoebe', {
         ctrl.vidType = "NONE";
         ctrl.sId = "";
         // video controls
+        ctrl.stop = function(vidType){
+          vidType = (vidType == "NONE" ? "all" : vidType);
+          console.log("Stop: " + vidType);
+          socket.emit('stop', { 'id':ctrl.sId, 'type': vidType} );
+          // fill context 
+          context.fillStyle = "#ffffff";                         
+          ctrl.vidType = "NONE";
+        }
+
         ctrl.live = function(){
+          ctrl.stop(ctrl.vidType);
           socket.emit('liveStream', { 'id':ctrl.sId } );
-          ctrl.vidType = "LIVE";
+          ctrl.vidType = "liveStream";
         }
 
         ctrl.face = function(){
+          ctrl.stop(ctrl.vidType);
           socket.emit('faceDetect', {'id':ctrl.sId } );
-          ctrl.vidType = "FACE";
+          ctrl.vidType = "faceDetect";
         }
         ctrl.motion = function(){
+          ctrl.stop(ctrl.vidType);
           socket.emit('motionTracker', { 'id':ctrl.sId } );
-          ctrl.vidType = "MOTION";
+          ctrl.vidType = "motionTracker";
         }
         ctrl.color = function(){
+          ctrl.stop(ctrl.vidType);
           socket.emit('multiColorTrack', {'id':ctrl.sId, 'colors':{'minColor':[255,0,0], 'maxColor':[255, 149, 95]}}  );
-          ctrl.vidType = "COLOR";
+          ctrl.vidType = "multiColorTrack";
         }
-        ctrl.stop = function(){
-          socket.emit('stop', { 'id':ctrl.sId } );
-          // show loading notice
-          context.fillStyle = '#333';
-          context.fillText('Loading...', canvas.width/2-30, canvas.height/3);
-          ctrl.vidType = "NONE";
-        }
+        
         ctrl.echo = function(){
           socket.emit('echo Test', { 'id':ctrl.sId } );
           ctrl.vidType = "NONE";

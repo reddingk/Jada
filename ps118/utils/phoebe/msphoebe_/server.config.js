@@ -26,9 +26,9 @@ module.exports = function(io){
       console.log("connected to phoebe's house");
     });
 
-    socket.on('stop', function(){
-      console.log('Stop Videos');
-      brain.stopStream();
+    socket.on('stop', function(info){
+      console.log('Stop Video: ' + info.type);
+      brain.stopStream(info.type);
     });
 
     socket.on('liveStream', function(){
