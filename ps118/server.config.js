@@ -85,7 +85,7 @@ module.exports = function(io){
   		io.to("phoebeHouse").emit('PHframe', info);
   	});
 		socket.on('stop', function(info){ 
-			console.log("stopping video: " + info.type);
+			//console.log("stopping video: " + info.type);
       io.to(info.id).emit('stop', {'type':info.type});
     });
 

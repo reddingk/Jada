@@ -27,27 +27,27 @@ module.exports = function(io){
     });
 
     socket.on('stop', function(info){
-      console.log('Stop Video: ' + info.type);
+      //console.log('Stop Video: ' + info.type);
       brain.stopStream(info.type);
     });
 
     socket.on('liveStream', function(){
-      console.log('Live Stream Video');
+      //console.log('Live Stream Video');
       brain.liveStream(socket);
     });  
 
     socket.on('faceDetect', function(){
-      console.log('Face Detect PH');
+      //console.log('Face Detect PH');
       brain.faceDetect(socket);
     });  
 
     socket.on('motionTracker', function(){
-      console.log('Motion Tracker PH');
+      //console.log('Motion Tracker PH');
       brain.motionTracker(socket);
     });  
 
     socket.on('multiColorTrack', function(info){
-      console.log('Track Color');
+      //console.log('Track Color');
       brain.multiColorTrack(socket, info.minColor, info.maxColor);
     });
     

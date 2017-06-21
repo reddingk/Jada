@@ -324,6 +324,18 @@ components.component('jlogin', {
    templateUrl: 'views/ps118/login.html'
 });
 
+components.component('jOutline', {
+  bindings: {},
+	require: {
+      parent: '^jaden'
+  },
+	controller: function ($timeout, $mdSidenav, $log, $state) {
+    var ctrl = this;
+
+
+   },
+   templateUrl: 'views/ps118/common/_outline.html'
+});
 // root component: all other components will be under this component
 // objects: view - this will store the state and other high level objects
 components.component('phoebe', {
@@ -370,8 +382,7 @@ components.component('phoebe', {
         ctrl.sId = "";
         // video controls
         ctrl.stop = function(vidType){
-          vidType = (vidType == "NONE" ? "all" : vidType);
-          console.log("Stop: " + vidType);
+          vidType = (vidType == "NONE" ? "all" : vidType);          
           socket.emit('stop', { 'id':ctrl.sId, 'type': vidType} );
           // fill context 
           context.fillStyle = "#ffffff";                         
