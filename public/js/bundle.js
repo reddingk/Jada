@@ -55,6 +55,81 @@ services.service('jInfo',['jData', '$filter', '$state', function JadenInfo(jData
   return new JadenInfoData();
 }]);
 
+services.service('jInterface',['iData','$filter', '$state','$http', function JadaInterface(iData, $filter, $state, $http){
+
+  return {
+    jada:{
+      talk:function(phrase, callback){
+        iData.jadaRequest(location, callback);
+      },
+      location: {
+        local: function(callback){                    
+            iData.simpleRequest(iData.urlLib.ipAdd, callback);
+        }
+      },
+      weather: {          
+          forecast:function(location, callback){
+              var locPhrase = {'name':location.name,'phrase':'get weather for '+location.city+','+location.region+','+location.country};
+              iData.jadaRequest(locPhrase, callback);              
+          }
+      }
+    }
+  }
+}]).factory("iData", ['$http', function($http){
+  function InterfaceData(){
+    var vm = this;
+    var baseurl = getBaseUrl();
+    vm.urlLib = {"ipAdd":"http://ip-api.com/json"};
+
+    // Get Base URL
+    function getBaseUrl(){
+        var pathArray = location.href.split( '/' );
+        var protocol = pathArray[0];
+        var host = pathArray[2];
+        var url = protocol + '//' + host +'/';
+
+        return url;
+    }
+    // Simple Request
+    vm.simpleRequest = function(reqURL, callback){
+        $http({
+            method: 'GET', url: reqURL,
+            headers: {'Content-Type': 'application/json' }
+        }).then(function successCallback(response) {
+            if(response != undefined && response.data != undefined ){
+                callback(response.data);
+            }
+            else {
+                callback(null);
+            }
+        }, function errorCallback(response){
+            callback(response);
+        });
+    }
+
+    // Jada Request
+    vm.jadaRequest = function(phraseData, callback){
+        $http({
+            method: 'POST', 
+            url: baseurl+'jada/talk',
+            headers: {'Content-Type': 'application/json' },
+            data: phraseData
+        }).then(function successCallback(response) {
+            if(response != undefined && response.data != undefined ){
+                callback(response.data);
+            }
+            else {
+                callback(null);
+            }
+        }, function errorCallback(response){
+            callback(response);
+        });
+    }
+  }
+
+  return new InterfaceData();
+}]);
+
 JadenApp.config(['$stateProvider', '$urlRouterProvider','$locationProvider', function($stateProvider, $urlRouterProvider, $locationProvider) {
       $stateProvider
       .state('app', {
@@ -150,7 +225,7 @@ components.component('fuzzyslippers', {
 // objects: view - this will store the state and other high level objects
 components.component('gerald', {
    bindings: {},
-	controller: function (jInfo) {
+	controller: function (jInfo, jInterface) {
       // Login Check
       if(jInfo.check.jlogin()){
         var userId = jInfo.user.get.userId();
@@ -159,6 +234,24 @@ components.component('gerald', {
   		  ctrl.title = "Gerald";
 
         ctrl.welcome = "Welcome " + userId;
+
+        // Get Local Info: IP, Username
+        jInterface.jada.location.local(function(res){
+          if(res!= null){
+            var location = {'name':userId,'city':res.city, 'region':res.region,'country':res.country};
+            jInterface.jada.weather.forecast(location, function(res){
+              if(res!=null){
+                ctrl.TEST = res;
+              }
+              else {
+                ctrl.TEST = "[ERROR]: No Weather Data";
+              }
+            });
+          }
+          else {
+            ctrl.TEST = "[ERROR]: No Location"
+          }
+        });
       }
    },
    templateUrl: 'views/ps118/gerald.html'

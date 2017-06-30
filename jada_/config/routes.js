@@ -22,12 +22,6 @@ function getPhraseLibrary(res){
 };
 
 module.exports = function(app){
-
-  // API TEST
-  app.get('/jada/test', function (req, res) {
-    console.log("In Test");
-    return res.json({"result":"In Test - Response"});
-  });
   // Get Phrases
   app.get('/jada/phrases', function (req, res) {
     getPhraseLibrary(res);

@@ -60,10 +60,7 @@ function getActionResponse(actionCall, phrase) {
   {
     var response = getSubActionResponse(actionCall.subactions, chopPhrase(actionCall.action, tmpStr));
     var res = (response == null? {"response":actionCall.response, "action": actionCall.action } : response);
-    /*console.log("response :");
-    console.log(response);
-    console.log("res: ");
-    console.log(res);*/
+    
     if(response == null && actionCall.additional_phrases != undefined)
       res.additional_phrases = actionCall.additional_phrases;
     return res;
