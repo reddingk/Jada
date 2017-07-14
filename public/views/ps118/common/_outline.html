@@ -1,5 +1,5 @@
-<!-- BODY Needs to be placed in this file -->
-<!--<div class="mainBody" ui-view="content" autoscroll="true" aria-relevant="all" aria-live="assertive"></div>-->
+<!-- HEADER Needs to be placed in this file -->
+<!--<j-header/> -->
 
 <div class="outline-container">
     <div class="outer-outline">
@@ -14,24 +14,22 @@
             </div>
 
             <!-- Inner Orbit Orbes-->
-            <div class="orbit-l1">                
+            <div class="orbit-l1">
+                <!-- Outer Orbes -->                
                 <div class="orbit-orbe"><div class="inner-orbe"></div></div>
                 <div class="orbit-orbe"><div class="inner-orbe"></div></div>
                 <div class="orbit-orbe"><div class="inner-orbe"></div></div>
+                <div class="orbit-orbe menu-orb"><div class="inner-orbe"></div></div>
                 <div class="orbit-orbe"><div class="inner-orbe"></div></div>
                 <div class="orbit-orbe"><div class="inner-orbe"></div></div>
-                <div class="orbit-orbe"><div class="inner-orbe"></div></div>
+
+                <!-- Inner Content -->
+                <div class="orbit-l2-container">
+                    <div class="orbit-l2">
+                        <div class="mainBody" ui-view="content" autoscroll="true" aria-relevant="all" aria-live="assertive"></div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
-
-<!-- 
-<div class="outline-svg">
-        <svg viewBox='0 0 104 104'>            
-            <path d='M52,102 A50,50 0 0,1 19.86,13.69' id='left-half' />
-            <path d='M52,102 A50,50 0 0,0 84.14,13.69' id='right-half'/>
-        </svg>
-    </div>
-
--->
