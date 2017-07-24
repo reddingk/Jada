@@ -3,7 +3,7 @@ components.component('jOutline', {
 	require: {
       parent: '^jaden'
   },
-	controller: function ($timeout, $mdSidenav, $log, $state) {
+	controller: function ($timeout, $mdSidenav, $log, $state, $scope) {
     var ctrl = this;
 
     ctrl.getOrbes = function(num){
@@ -30,6 +30,14 @@ components.component('jOutline', {
 
     // Set Orbes
     ctrl.setOrbes();
+
+    // Set on resize
+    window.onresize = function(){
+    	setTimeout(function(){
+				ctrl.setOrbes();
+				$scope.$apply();
+			}, 100);
+		};
 
    },
    templateUrl: 'views/ps118/common/_outline.html'
