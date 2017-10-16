@@ -1,5 +1,8 @@
+'use strict';
+
 var brain = require('../jbrain');
-var data = require('../jdata');
+const Data = require('./jdata.js');
+let data = new Data('../settings.json', false);
 
 var JInput = require('./models/jInput');
 var Phrases = require('./models/phrases');

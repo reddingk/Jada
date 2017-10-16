@@ -1,6 +1,9 @@
+'use strict';
+
 var jbrain = require('./jbrain');
 var jfunc = require('./jfunc');
-var data = require('./jdata');
+const Data = require('./jdata.js');
+let data = new Data('../settings.json', false);
 var fs = require('fs');
 
 

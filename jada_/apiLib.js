@@ -1,6 +1,10 @@
+'use strict';
+
 var func = require('./jnerves');
 var request = require('request');
-var data = require('./jdata');
+const Data = require('./jdata.js');
+let data = new Data('../settings.json', false);
+
 var md5 = require('md5');
 
 function getApiItem(name){

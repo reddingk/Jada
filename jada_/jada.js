@@ -1,5 +1,8 @@
+'use strict';
+
 var brain = require('./jbrain');
-var data = require('./jdata');
+const Data = require('./jdata.js');
+let data = new Data('../settings.json', false);
 
 var say = require('say');
 var fs = require('fs');
@@ -8,6 +11,7 @@ var fs = require('fs');
 // database config files
 var mongoose = require('mongoose');
 var database = require('./config/database');
+
 mongoose.Promise = global.Promise;
 mongoose.connect(database.remoteUrl);
 
