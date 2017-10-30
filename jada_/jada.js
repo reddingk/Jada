@@ -1,8 +1,10 @@
 'use strict';
 
-var brain = require('./jbrain');
+const Brain = require('./jbrain.js');
+let jbrain = new Brain();
+
 const Data = require('./jdata.js');
-let data = new Data('../settings.json', false);
+let jdata = new Data('../settings.json', false);
 
 var say = require('say');
 var fs = require('fs');
@@ -21,7 +23,7 @@ const rl = readline.createInterface({
   output: process.stdout
 });
 
-var settings = JSON.parse(fs.readFileSync(data.userSettingsFile,'utf8'));
+var settings = JSON.parse(fs.readFileSync(jdata.userSettingsFile,'utf8'));
 if(settings.voice == "on") {rl.setPrompt('|jada| -v- > '); }
 else {rl.setPrompt('|jada| --- > '); }
 
@@ -30,12 +32,12 @@ rl.prompt();
 
 rl.on('line', (input) => {
 
-  brain.Extalk( brain.clean(input.trim()), function(res) {
+  jbrain.jConvo( jbrain.cleanPhrase(input.trim()), function(res) {
 
     var output = res.jresponse + "\n";
     if(output != "") {
       console.log(output);
-      settings = JSON.parse(fs.readFileSync(data.userSettingsFile,'utf8'));
+      settings = JSON.parse(fs.readFileSync(jdata.userSettingsFile,'utf8'));
       // check voice setting to read to user
       if(settings.voice == "on") {
         var speechout = output.replace(/\n/g, " ");

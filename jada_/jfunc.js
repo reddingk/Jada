@@ -1,10 +1,13 @@
 'use strict';
 
-var jbrain = require('./jbrain');
 var apiLib = require('./apiLib');
 var nerves = require('./jnerves');
+
 const Data = require('./jdata.js');
 let data = new Data('../settings.json', false);
+
+const Brain = require('./jbrain.js');
+//let jbrain = new Brain();
 
 //
 var fs = require('fs');
