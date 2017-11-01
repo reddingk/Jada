@@ -52,13 +52,13 @@ class JFUNC {
       callback({ "todo":"", "jresponse": persGreeting, "japi": {"results":persGreeting } });
     }
     else if(tmpStr == 1) {
-      jbrain.jConvo(tmpStr[0], function(res){
+      self.jbrain.jConvo(tmpStr[0], function(res){
         var finalResponse = persGreeting + ": " + res.jresponse;
         callback({ "todo":"", "jresponse": finalResponse, "japi": {"results":res.japi } });
       });
     }
     else {
-      jbrain.jConvo(tmpStr.join(" "), function(res){
+      self.jbrain.jConvo(tmpStr.join(" "), function(res){
         var finalResponse = persGreeting + ": " + res.jresponse;
         callback({ "todo":"", "jresponse": finalResponse, "japi": {"results":res.japi } });
       });
