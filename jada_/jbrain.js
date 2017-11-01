@@ -10,11 +10,13 @@ var phraseDB = require('./config/models/phrases');
 
 const Data = require('./jdata.js');
 const Nerves = require('./jnerves.js');
+const Tools = require('./jtools.js');
 
 class JBRAIN {  
-  constructor() {
-    this.jdata = new Data('../settings.json', true);
-    this.jNerves = new Nerves('../settings.json');    
+  constructor() {   
+    this.jdata = new Data('../settings.json', true);   
+    this.jNerves = new Nerves('../settings.json', this); 
+    this.jTools = new Tools();   
   }
 
   /* FUNCTIONS */
@@ -28,13 +30,11 @@ class JBRAIN {
     var phraseLibrary = null;
     var fullPhraseLibrary = null;    
   
-    self.jdata.searchPhrase(tmpStr, function(res){
-      console.log("[res1]: " + res);
-  
+    self.jdata.searchPhrase(tmpStr, function(res){      
       // Check Full Phrases    
       if(self.jdata.fullPhraseLib == null){
-        self.jdata.getFullPhrases(function(res){ 
-          self.jdata.fullPhraseLib = res;     
+        self.jdata.getFullPhrases(function(fullres){ 
+          self.jdata.fullPhraseLib = fullres;     
           self.getCall(phrase, res, callback);
         });  
       }
@@ -66,9 +66,14 @@ class JBRAIN {
       actionCall = underscore.min(tmpFull, function(mt){ return mt.level; });
     }
 
-    console.log("AC: "+ actionCall);
-    var response = getActionResponse(actionCall, chopPhrase(actionCall.action, phraseSplit));
-    self.jNerves.dataResponse(response, "", function(res){ callback(res); });
+    if(actionCall != null){
+      var response = self.getActionResponse(actionCall, self.chopPhrase(actionCall.action, phraseSplit));      
+      self.jNerves.dataResponse(response, phrase, function(res){ callback(res); });
+    }
+    else {
+      var response = {"response":"N/A"}
+      self.jNerves.dataResponse(response, "", function(res){ callback(res); });
+    }
   }
   
   // Return the phrase that remains after the action
@@ -89,15 +94,16 @@ class JBRAIN {
 
   // Get Action Response
   getActionResponse(actionCall, phrase){
+    var self = this;
     var phraseSplit = phrase.split(" ");
 
     //No response in main there is only a response in subactions
-    if(actionCall.response == undefined && actionCall.subactions != undefined){
-      return getSubActionResponse(actionCall.subactions, chopPhrase(actionCall.action, phraseSplit));
+    if(self.jTools.emptyCheck(actionCall.response) && actionCall.subactions != undefined){      
+      return self.getSubActionResponse(actionCall.subactions, self.chopPhrase(actionCall.action, phraseSplit));
     }
     //Check for subaction responses before returning main response
-    else if(actionCall.subactions != undefined) {
-      var response = getSubActionResponse(actionCall.subactions, chopPhrase(actionCall.action, phraseSplit));
+    else if(!self.jTools.emptyCheck(actionCall.subactions)) {
+      var response = self.getSubActionResponse(actionCall.subactions, self.chopPhrase(actionCall.action, phraseSplit));     
       var res = (response == null? {"response":actionCall.response, "action": actionCall.action } : response);
       
       if(response == null && actionCall.additional_phrases != undefined)
@@ -116,36 +122,42 @@ class JBRAIN {
 
   // Get the Sub Action based on the phrase
   getSubActionResponse(subactions, phrase) {
+    var self = this;
     var phraseSplit = phrase.split(" ");
     var retResponse = null;
     var subResponses = [];
 
     // Check for Sub action in remaining phrase
     for(var i=0; i < phraseSplit.length; i++){
-      var tmpResponse = underscore.where(subactions, {action: phraseSplit[i]});
-
+      //var tmpResponse = underscore.where(subactions, {action: phraseSplit[i]});
+      var tmpResponse = underscore.filter(subactions, function(val){ return ((phraseSplit[i] == val.action)  || (val.additional_phrases != undefined && val.additional_phrases.indexOf(phraseSplit[i]) > -1))  });
       if(tmpResponse != null){
-        subResponses.concat(tmpResponse);
+        if(subResponses.length == 0) {
+          subResponses = tmpResponse;
+        }
+        else {
+          subResponses.concat(tmpResponse);
+        }
       }
     }
-
-    retResponse = underscore.min(subResponses, function(mt){ return mt.level; });
-    if(retResponse != null) {
-      if(retResponse.subactions == undefined) {
-        var returnObj = {"response":tmpResponse.response, "action": tmpResponse.action, "level": tmpResponse.level, "additional_phrases": tmpResponse.additional_phrases};
+    
+    retResponse = underscore.min(subResponses, function(mt){ return mt.level; });       
+    
+    if(retResponse != Infinity) {  
+       if(self.jTools.emptyCheck(retResponse.subactions)) {
+        var returnObj = {"response":retResponse.response, "action": retResponse.action, "level": retResponse.level};
         
-        if(tmpResponse.additional_phrases != undefined) {
+        if(!self.jTools.emptyCheck(retResponse.additional_phrases)) {
           returnObj.additional_phrases = retResponse.additional_phrases;
-        }
-
+        }        
         return returnObj;
       }
       else {
-        return getSubActionResponse(retResponse.subactions, chopPhrase(retResponse.action, phraseSplit));
+        return self.getSubActionResponse(retResponse.subactions, self.chopPhrase(retResponse.action, phraseSplit));
       }
     }
     else {
-      return retResponse;
+      return null;
     }
   }
 

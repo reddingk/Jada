@@ -3,9 +3,6 @@
 const Brain = require('./jbrain.js');
 let jbrain = new Brain();
 
-const Data = require('./jdata.js');
-let jdata = new Data('../settings.json', false);
-
 var say = require('say');
 var fs = require('fs');
 // configuration
@@ -15,7 +12,7 @@ var mongoose = require('mongoose');
 var database = require('./config/database');
 
 mongoose.Promise = global.Promise;
-mongoose.connect(database.remoteUrl);
+mongoose.connect(database.remoteUrl, { useMongoClient: true });
 
 const readline = require('readline');
 const rl = readline.createInterface({
@@ -23,7 +20,7 @@ const rl = readline.createInterface({
   output: process.stdout
 });
 
-var settings = JSON.parse(fs.readFileSync(jdata.userSettingsFile,'utf8'));
+var settings = JSON.parse(fs.readFileSync(jbrain.jdata.userSettingsFile,'utf8'));
 if(settings.voice == "on") {rl.setPrompt('|jada| -v- > '); }
 else {rl.setPrompt('|jada| --- > '); }
 
@@ -37,7 +34,7 @@ rl.on('line', (input) => {
     var output = res.jresponse + "\n";
     if(output != "") {
       console.log(output);
-      settings = JSON.parse(fs.readFileSync(jdata.userSettingsFile,'utf8'));
+      settings = JSON.parse(fs.readFileSync(jbrain.jdata.userSettingsFile,'utf8'));
       // check voice setting to read to user
       if(settings.voice == "on") {
         var speechout = output.replace(/\n/g, " ");

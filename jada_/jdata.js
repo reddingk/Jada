@@ -41,7 +41,7 @@ class JDATA {
   }
 
   getFullPhrases(callback){
-    console.log(" > Getting all full phrases");
+    //console.log(" > Getting all full phrases");
     if(this.fullPhraseLib == null) {
       phraseDB.find({ 'type' : 'phrase' }, function(err, res){
         if(res == null|| res == undefined) { res = [];}        
@@ -54,7 +54,7 @@ class JDATA {
   }
 
   searchPhrase(wordList, callback) {
-    console.log(" > Getting actions for: " + wordList.join(" "));
+    //console.log(" > Getting actions for: " + wordList.join(" "));
 
     phraseDB.find({'$and': [
         {'type': { '$ne': 'phrase' }},
