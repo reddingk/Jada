@@ -40,7 +40,7 @@ class JNERVES {
           callback(finalResponse);
           break;
         case "greetings":
-        self.jfunc.greetings(response.action, response.additional_phrases, fullPhrase, obj, function(res){ callback(res);});
+          self.jfunc.greetings(response.action, response.additional_phrases, fullPhrase, obj, function(res){ callback(res);});
           break;
         case "getLocalTime":
           finalResponse = self.jfunc.getLocalDateTime("time");
