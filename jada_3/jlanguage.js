@@ -21,6 +21,11 @@ class JLANGUAGE {
     }
 
     /* Functions */  
+    cleanPhrase(phrase) {    
+        var tmpPhrase = phrase.toLowerCase();      
+        return tmpPhrase;
+    }
+
     getPhrases(callback) {
         if(this.phraseLib == null || this.phraseLib.length == 0){
             console.log(" > Getting Phrases From DB");
@@ -83,19 +88,19 @@ class JLANGUAGE {
 
             if(actionCall != null){
                 var response = self.getActionResponse(actionCall, self.chopPhrase(actionCall.action, phraseSplit));      
-                //self.jNerves.dataResponse(response, phrase, function(res){ callback(res); });
             }
             else {
                 var response = {"response":"N/A"}
-                //self.jNerves.dataResponse(response, "", function(res){ callback(res); });
             }
         }
-        catch(ex){}
+        catch(ex){
+            console.log("Error Processing Language [jl0]");
+        }
 
         return response;
     }
 
-     // Return the phrase that remains after the action
+    // Return the phrase that remains after the action
     chopPhrase(action, phrase) {
         var index = phrase.indexOf(action);
         if(index > -1) {
@@ -140,7 +145,7 @@ class JLANGUAGE {
         }
     }
 
-      // Get the Sub Action based on the phrase
+    // Get the Sub Action based on the phrase
     getSubActionResponse(subactions, phrase) {
         var self = this;
         var phraseSplit = phrase.split(" ");

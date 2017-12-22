@@ -12,16 +12,18 @@ var underscore = require('underscore');
 var md5 = require('md5');
 
 const Tools = require('./jtools.js');
+const Cells = require('./jcell.js');
 
 class JNERVESYSTEM {
     constructor(innerBrain){
         this.jbrain = innerBrain;
-        this.jTools = new Tools();
-        this.greetings = ["Hey", "Hello {0} how are things treating you", "I hope you are having a good day today", "How's life", "How's your day treating you {0}"];
+        this.jtools = new Tools();
+        this.jcell = new Cells();
+        this.greetPhrases = ["Hey", "Hello {0} how are things treating you", "I hope you are having a good day today", "How's life", "How's your day treating you {0}"];
     }
 
     /* Greetings */
-    greetings = function(response, callback){
+    greetings(response, callback){
         var self = this;
 
         var tmpStr = response.fullPhrase.split(" ");
@@ -30,8 +32,8 @@ class JNERVESYSTEM {
         removables.push(response.action);
         removables.push("Jada");
 
-        var num = Math.floor((Math.random() * (self.greetings.length)));
-        var persGreeting = self.jtools.stringFormat(self.greetings[num], [obj.name.nickname]);
+        var num = Math.floor((Math.random() * (self.greetPhrases.length)));
+        var persGreeting = self.jtools.stringFormat(self.greetPhrases[num], [response.obj.name.nickname]);
         
         // Remove Greetings from phrase
         for(var i =0 ; i < removables.length; i++){
@@ -40,34 +42,58 @@ class JNERVESYSTEM {
                 tmpStr.splice(index,1).join(" ");
             }
         }
+
         if(tmpStr.length == 0) {
             callback({ "todo":"", "jresponse": persGreeting, "japi": {"results":persGreeting } });
-          }
-          else if(tmpStr == 1) {
+        }
+        else if(tmpStr == 1) {
             self.jbrain.convo(tmpStr[0], function(res){
               var finalResponse = persGreeting + ": " + res.jresponse;
               callback({ "todo":"", "jresponse": finalResponse, "japi": {"results":res.japi } });
             });
-          }
-          else {
+        }
+        else {
             self.jbrain.convo(tmpStr.join(" "), function(res){
               var finalResponse = persGreeting + ": " + res.jresponse;
               callback({ "todo":"", "jresponse": finalResponse, "japi": {"results":res.japi } });
             });
-          }
+        }
     }
 
     /* Get Local Time */
-    getLocalTime = function(response, callback){
-        var self = this;        
-        var date = new Date();
+    getLocalTime(response, callback){
+        var self = this;   
+        self.jcell.getLocalDateTime({"type":"time"},
+            function(res){
+                var finalResponse = null;
+                if(res.error == null && res.results != null){
+                    var timeRes = res.results;
+                    finalResponse = self.jtools.stringFormat("The time according to this machine is {0}", [timeRes]);
+                }
+                else {
+                    finalResponse = "There was an error while retrieving the time, sorry check back later.";
+                }
+                callback({"jresponse": finalResponse});
+        });    
+    }
 
-        var h = (date.getHours() > 12 ? date.getHours() - 12 : date.getHours());
-        var m = (date.getMinutes() < 10 ? "0"+ date.getMinutes() : date.getMinutes());
-        var timeDelim = (date.getHours() > 12 ? "pm" : "am");
-        var finalResponse = "The time according to this machine is " + h + ":" + m +" " + timeDelim;
-        var apiResponse = {"results": self.jtools.stringFormat("{0}:{1} {2}",[h,m, timeDelim])};
-
-        callback({ "todo":"", "jresponse": finalResponse, "japi": apiResponse});
+    /* Get Local Date*/
+    getLocalDate(response, callback){
+        var self = this;   
+        self.jcell.getLocalDateTime({"type":"date"},
+            function(res){
+                var finalResponse = null;
+                if(res.error == null){
+                    var timeRes = res.results;
+                    finalResponse = self.jtools.stringFormat("The date according to this machine is {0}", [timeRes]);
+                }
+                else {
+                    finalResponse = "There was an error while retrieving the time, sorry check back later.";
+                }
+                callback({"jresponse": finalResponse});
+        });    
     }
 }
+
+
+module.exports = JNERVESYSTEM;

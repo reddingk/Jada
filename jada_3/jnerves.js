@@ -11,7 +11,7 @@ const NerveSystem = require('./jnerveSystem.js');
 class JNERVES {
     constructor(settingFile, brain){
       this.settingFile = settingFile;
-      this.jnerveSystem = new NerveSystem(brain);
+      this.jnervesystem = new NerveSystem(brain);
     }
 
     dataResponse(response, fullPhrase, callback) {
@@ -21,18 +21,23 @@ class JNERVES {
         if(response == null) { callback(finalResponse); }
         else{
             response.fullPhrase = fullPhrase;
-            response.obj = JSON.parse(fs.readFileSync(self.settingFile,'utf8'));
-            response.prevResponse = obj.lastAction;
+            var obj = JSON.parse(fs.readFileSync(self.settingFile,'utf8'));
+
+            response.obj = obj;
+            response.prevResponse = response.obj.lastAction;
             response.obj.lastAction = {"response":response, "fullPhrase":fullPhrase};
-            fs.writeFileSync(self.settingFile, JSON.stringify(response.obj), {"encoding":'utf8'});
+            //fs.writeFileSync(self.settingFile, JSON.stringify(obj), {"encoding":'utf8'});
             
-            if(!(response.response in self.jnerveSystem)){
+            if(!(response.response in self.jnervesystem)){
                 finalResponse.jresponse = "I feel like you were close to asking me something, you may be missing something when you mentioned '" + response.action+"'. ";
                 callback(finalResponse);
             }
             else {
-                self.jnerveSystem[response.response](response, function(finalRes){ callback(finalRes); });
+                self.jnervesystem[response.response](response, function(finalRes){ callback(finalRes); });
             }
         }
     }
 }
+
+
+module.exports = JNERVES;

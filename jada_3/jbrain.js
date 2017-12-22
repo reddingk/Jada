@@ -8,9 +8,10 @@ const Language = require('./jlanguage.js');
 const Nerves = require('./jnerves.js');
 
 class JBRAIN {  
-    constructor() {   
+    constructor() {
+        this.settingsFile = '../settings.json';   
         this.jlanguage = new Language();
-        this.jNerves = new Nerves('../settings.json', this);           
+        this.jNerves = new Nerves(this.settingsFile, this);           
     }
 
     /* Functions */
@@ -30,7 +31,7 @@ class JBRAIN {
             if(self.jlanguage.fullPhraseLib == null){
                 self.jlanguage.getFullPhrases(function(fullres){ 
                     self.jlanguage.fullPhraseLib = fullres;     
-                    var response = self.getCall(phrase, res);
+                    var response = self.jlanguage.getCall(phrase, res);
 
                     if(response != null){
                         phrase = ( response.response == "N/A" ? "" : phrase);
@@ -39,10 +40,17 @@ class JBRAIN {
                 });  
             }
             else {
-                self.getCall(phrase, res, callback);
+                var response = self.jlanguage.getCall(phrase, res, callback);
+                if(response != null){
+                    phrase = ( response.response == "N/A" ? "" : phrase);
+                    self.jNerves.dataResponse(response, phrase, function(res){ callback(res); });
+                }
             }
         });
     }
 
     directData(){ }
 }
+
+
+module.exports = JBRAIN;
