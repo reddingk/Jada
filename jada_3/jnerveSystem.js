@@ -18,7 +18,8 @@ class JNERVESYSTEM {
     constructor(innerBrain){
         this.jbrain = innerBrain;
         this.jtools = new Tools();
-        this.jcell = new Cells();
+        this.jcell = new Cells(innerBrain.settingFile);
+
         this.greetPhrases = ["Hey", "Hello {0} how are things treating you", "I hope you are having a good day today", "How's life", "How's your day treating you {0}"];
     }
 
@@ -247,6 +248,148 @@ class JNERVESYSTEM {
             callback({"jresponse": finalResponse});
         }
     }
+
+    /* Get Detailed Weather Forecast */
+    getWeatherDetailedForecast(response, callback){
+        var self = this;
+        var finalResponse = null;
+        var dataObj = {"type":"forecast"};
+
+        var tmpPhrase = response.fullPhrase.split(" ");
+        var postPhrase = tmpPhrase.slice(tmpPhrase.indexOf("details"));
+        var forIndex = postPhrase.indexOf("for");
+
+        if(forIndex >= 0){
+            dataObj.location = postPhrase.slice(forIndex+1).join(" ");
+            
+            self.jcell.weatherInfo(dataObj, function(res){                 
+                if(res.error == null && res.results != null){                   
+                    if(res.results.list.length > 0) {  
+                        var dateString = "";
+                        finalResponse = self.jtools.stringFormat("The weather forecast for the next few days accourding to OpenWeather.com for {0}: ",[res.results.city.name]);
+                        
+                        for(var i =0; i < res.results.list.length; i++){
+                            var item = res.results.list[i];
+                            var newDate = new Date(item.dt_txt);
+                            if(newDate.toDateString() != dateString ){
+                                dateString = newDate.toDateString();
+                                finalResponse += self.jtools.stringFormat("\n\n|{0}\n [{1}]: {2} degrees and '{3}' ", [dateString, newDate.toLocaleTimeString(), item.main.temp_max, item.weather[0].description]);
+                            }
+                            else {
+                                finalResponse += self.jtools.stringFormat("\n [{0}]: {1} degrees and '{2}' ", [newDate.toLocaleTimeString(), item.main.temp_max, item.weather[0].description]);
+                            }
+                        }
+                        finalResponse += "\n";
+                    }
+                    else {
+                        finalResponse = self.jtools.stringFormat("Sorry we could not find: {0} maybe you spelled it wrong?", [dataObj.location]);
+                    }
+                }
+                else {
+                    finalResponse = "There was an error while retrieving current weather data: " + res.error;
+                }
+                callback({"jresponse": finalResponse});
+            });
+        }
+        else {
+            finalResponse = "Im not sure where you would like me to look";
+            callback({"jresponse": finalResponse});
+        }
+    }
+
+    /* Change full name */
+    changeFullName(response, callback){
+        var self = this;
+        var finalResponse = null;
+        var dataObj = {"item":"fullname", "newitem":null};
+
+        var tmpPhrase = response.fullPhrase.split(" ");
+        var postPhrase = tmpPhrase.slice(tmpPhrase.indexOf("my"));
+        var forIndex = postPhrase.indexOf("to");
+
+        try {
+            if(forIndex >= 0){
+                dataObj.newitem = postPhrase.slice(forIndex+1).join(" ");
+
+                self.jcell.getChangedSetting(dataObj, function(res){  
+                    if(res.error == null && res.results != null){
+                        finalResponse = self.jtools.stringFormat("I {0} '{1}' to {2}",[(res.results.updated == true ? "Successfully Updated" : "Couldn't Update"), res.results.item, res.results.newitem]);
+                    }
+                    else {
+                        finalResponse = self.jtools.stringFormat("Error Updating User Settings: {0}", [results.error]);
+                    }
+                    callback({"jresponse": finalResponse});
+                });
+            }
+        }
+        catch(ex){
+            finalResponse = "Error changing fullName: " + ex;
+            callback({"jresponse": finalResponse});
+        }
+    }
+
+    /* Change nickname */
+    changeNickname(response, callback){
+        var self = this;
+        var finalResponse = null;
+        var dataObj = {"item":"nickname", "newitem":null};
+
+        var tmpPhrase = response.fullPhrase.split(" ");
+        var postPhrase = tmpPhrase.slice(tmpPhrase.indexOf("my"));
+        var forIndex = postPhrase.indexOf("to");
+
+        try {
+            if(forIndex >= 0){
+                dataObj.newitem = postPhrase.slice(forIndex+1).join(" ");
+
+                self.jcell.getChangedSetting(dataObj, function(res){  
+                    if(res.error == null && res.results != null){
+                        finalResponse = self.jtools.stringFormat("I {0} '{1}' to {2}",[(res.results.updated == true ? "Successfully Updated" : "Couldn't Update"), res.results.item, res.results.newitem]);
+                    }
+                    else {
+                        finalResponse = self.jtools.stringFormat("Error Updating User Settings: {0}", [results.error]);
+                    }
+                    callback({"jresponse": finalResponse});
+                });
+            }
+        }
+        catch(ex){
+            finalResponse = "Error changing fullName: " + ex;
+            callback({"jresponse": finalResponse});
+        }
+    }
+
+    /* Change voice settings */
+    changeVoice(response, callback){
+        var self = this;
+        var finalResponse = null;
+        var dataObj = {"item":"voice", "newitem":null};
+
+        var tmpPhrase = response.fullPhrase.split(" ");
+        var postPhrase = tmpPhrase.slice(tmpPhrase.indexOf("my"));
+        var forIndex = postPhrase.indexOf("to");
+
+        try {
+            if(forIndex >= 0){
+                dataObj.newitem = postPhrase.slice(forIndex+1).join(" ");
+
+                self.jcell.getChangedSetting(dataObj, function(res){  
+                    if(res.error == null && res.results != null){
+                        finalResponse = self.jtools.stringFormat("I {0} '{1}' to {2}",[(res.results.updated == true ? "Successfully Updated" : "Couldn't Update"), res.results.item, res.results.newitem]);
+                    }
+                    else {
+                        finalResponse = self.jtools.stringFormat("Error Updating User Settings: {0}", [results.error]);
+                    }
+                    callback({"jresponse": finalResponse});
+                });
+            }
+        }
+        catch(ex){
+            finalResponse = "Error changing fullName: " + ex;
+            callback({"jresponse": finalResponse});
+        }
+    }
+/*END*/
 }
 
 

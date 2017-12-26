@@ -4,12 +4,14 @@
  * By: Kris Redding
  */
 var request = require('request');
+var fs = require('fs');
 
 const Tools = require('./jtools.js');
 
 class JCELL {  
-    constructor() {
+    constructor(settingFile) {
         this.jtools = new Tools();
+        this.settingFile = settingFile;
         this.apiLib = {
             "tasteKid": {"link":"http://www.tastekid.com/api/","key":"228198-JadenPer-P426AN1R"},
             "openWeather": {"link":"http://api.openweathermap.org/data/2.5/", "key":"90c2be179d4c18b392e3e11efa2ee5c1"},
@@ -139,6 +141,42 @@ class JCELL {
         else {
             response.error = "Unable to retrieve API data";
             callback(response);
+        }
+    }
+
+    /* Change User Settings */
+    getChangedSetting(item, callback){
+        var self = this;
+        var response = {"error":null, "results":null};
+
+        try {
+            var obj = JSON.parse(fs.readFileSync(self.settingFile,'utf8'));
+
+            if(!self.checkParameterList(["item", "newitem"], items)){
+                response.error = "Missing Parameter";
+            }
+            else {
+                switch(item.item){
+                    case "fullname":
+                        obj.name.fullname = item.newitem;
+                        break;
+                    case "nickname":
+                        obj.name.nickname = item.newitem;
+                        break;
+                    case "voice":
+                        obj.voice = (item.newitem == "on" ? "on": "off");
+                        break;
+                    default:
+                        break;
+                }
+
+                // Chang Setting in DataBase
+                fs.writeFileSync(self.settingFile, JSON.stringify(obj), {"encoding":'utf8'});
+                response.results = { "updated":true, "item":item.item, "newState":item.newitem};
+            }
+        }
+        catch(ex){
+            response.error = self.jtools.stringFormat("Error updating {0} to {1}: {2}", [item.item, item.newitem, ex]);
         }
     }
     
