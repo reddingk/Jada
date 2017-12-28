@@ -9,8 +9,8 @@ var fs = require('fs');
 const NerveSystem = require('./jnerveSystem.js');
 
 class JNERVES {
-    constructor(settingFile, brain){
-      this.settingFile = settingFile;
+    constructor(brain){
+      this.settingFile = brain.settingFile;
       this.jnervesystem = new NerveSystem(brain);
     }
 

@@ -9,9 +9,9 @@ const Nerves = require('./jnerves.js');
 
 class JBRAIN {  
     constructor() {
-        this.settingsFile = '../settings.json';   
+        this.settingFile = '../settings2.json';   
         this.jlanguage = new Language();
-        this.jNerves = new Nerves(this.settingsFile, this);           
+        this.jNerves = new Nerves(this);           
     }
 
     /* Functions */

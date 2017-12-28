@@ -316,7 +316,7 @@ class JNERVESYSTEM {
                         finalResponse = self.jtools.stringFormat("I {0} '{1}' to {2}",[(res.results.updated == true ? "Successfully Updated" : "Couldn't Update"), res.results.item, res.results.newitem]);
                     }
                     else {
-                        finalResponse = self.jtools.stringFormat("Error Updating User Settings: {0}", [results.error]);
+                        finalResponse = self.jtools.stringFormat("Error Updating User Settings: {0}", [res.error]);
                     }
                     callback({"jresponse": finalResponse});
                 });
@@ -347,7 +347,7 @@ class JNERVESYSTEM {
                         finalResponse = self.jtools.stringFormat("I {0} '{1}' to {2}",[(res.results.updated == true ? "Successfully Updated" : "Couldn't Update"), res.results.item, res.results.newitem]);
                     }
                     else {
-                        finalResponse = self.jtools.stringFormat("Error Updating User Settings: {0}", [results.error]);
+                        finalResponse = self.jtools.stringFormat("Error Updating User Settings: {0}", [res.error]);
                     }
                     callback({"jresponse": finalResponse});
                 });
@@ -378,7 +378,7 @@ class JNERVESYSTEM {
                         finalResponse = self.jtools.stringFormat("I {0} '{1}' to {2}",[(res.results.updated == true ? "Successfully Updated" : "Couldn't Update"), res.results.item, res.results.newitem]);
                     }
                     else {
-                        finalResponse = self.jtools.stringFormat("Error Updating User Settings: {0}", [results.error]);
+                        finalResponse = self.jtools.stringFormat("Error Updating User Settings: {0}", [res.error]);
                     }
                     callback({"jresponse": finalResponse});
                 });
@@ -388,6 +388,243 @@ class JNERVESYSTEM {
             finalResponse = "Error changing fullName: " + ex;
             callback({"jresponse": finalResponse});
         }
+    }
+
+    /* get directions */
+    getDirections(response, callback){
+        var self = this;
+        var finalResponse = null;
+        var dataObj = {};               
+
+        try {
+            var tmpPhrase = response.fullPhrase.split(" ");
+            var dircIndex = tmpPhrase.indexOf("directions");
+            dataObj.type = ( dircIndex > 0 ? tmpPhrase[dircIndex - 1] : "driving");
+
+            var postPhrase = tmpPhrase.slice(dircIndex);
+            var fromIndex = postPhrase.indexOf("from") + 1;
+            var toIndex = postPhrase.indexOf("to") + 1;
+            
+            if(fromIndex > -1 && toIndex > -1){
+                var tmpFrom = (fromIndex < toIndex ? postPhrase.slice(fromIndex, toIndex-1) : postPhrase.slice(fromIndex));
+                var tmpTo = (fromIndex < toIndex ? postPhrase.slice(toIndex) : postPhrase.slice(toIndex, fromIndex-1));
+
+                dataObj.fromLoc = tmpFrom.join(" ");
+                dataObj.toLoc = tmpTo.join(" ");                
+                dataObj.type = (dataObj.type == "transit" ? "transit" :"driving");                
+
+                self.jcell.getDirections(dataObj, function(res){
+                    if(res.error == null && res.results != null && res.results.status == "OK"){
+                        var legs = res.results.routes[0].legs[0];
+                        var resultList = [];
+                        
+                        resultList.push(self.jtools.stringFormat("It will take approximately {0} and {1} from '{2}' to '{3}': ", [legs.duration.text, legs.distance.text, legs.start_address, legs.end_address]));
+                        for(var i in legs.steps){
+                            var step = legs.steps[i];
+                            resultList.push(self.jtools.stringFormat(" ({0} : {1}) {2}",[step.distance.text, step.duration.text, step.html_instructions.replace(/<(.|\n)*?>/g, '')]));
+                        }
+                        finalResponse = resultList.join("\n\n");
+                    }
+                    else {
+                        finalResponse = self.jtools.stringFormat("Error Retrieving Directions: {0}", [res.error]);
+                    }
+                    callback({"jresponse": finalResponse});
+                });
+            }
+            else {
+                finalResponse = "Sorry I was not able to get the directions for you";
+                callback({"jresponse": finalResponse});
+            }
+        }
+        catch(ex){
+            finalResponse = "Sorry there was an error while getting the directions for you: " + ex;
+            callback({"jresponse": finalResponse});
+        }
+    }
+
+    /* Get Server CPU Arch */
+    getCpuArch(response, callback){
+        var self = this;
+        var finalResponse = null;
+        var dataObj = {"type":"arch"};
+
+        try {                          
+            self.jcell.getOSInfo(dataObj, function(res){  
+                if(res.error == null && res.results != null){
+                    finalResponse = self.jtools.stringFormat("the cpu architecture is {0}",[res.results]);
+                }
+                else {
+                    finalResponse = self.jtools.stringFormat("Error retrieving CPU ARCH: {0}", [res.error]);
+                }
+                callback({"jresponse": finalResponse});
+            });            
+        }
+        catch(ex){
+            finalResponse = "Error retrieving CPU ARCH: " + ex;
+            callback({"jresponse": finalResponse});
+        }
+    }
+
+    /* Get Server CPU Info */
+    getCpuInfo(response, callback){
+        var self = this;
+        var finalResponse = null;
+        var dataObj = {"type":"info"};
+
+        try {                          
+            self.jcell.getOSInfo(dataObj, function(res){  
+                if(res.error == null && res.results != null){
+                    var cores = res.results;
+
+                    finalResponse = self.jtools.stringFormat("You have {0} cores on this machine, they are the following: ", [cores.length]);
+                    for(var i =0; i < cores.length; i++)
+                    { finalResponse += self.jtools.stringFormat("\n core {0}: {1}", [i, cores[i].model]);  }                    
+                }
+                else {
+                    finalResponse = self.jtools.stringFormat("Error retrieving CPU INFO: {0}", [res.error]);
+                }
+                callback({"jresponse": finalResponse});
+            });            
+        }
+        catch(ex){
+            finalResponse = "Error retrieving CPU INFO: " + ex;
+            callback({"jresponse": finalResponse});
+        }
+    }
+
+    /* Get Server Computer Hostname */
+    getComputerHostname(response, callback){
+        var self = this;
+        var finalResponse = null;
+        var dataObj = {"type":"hostname"};
+
+        try {                          
+            self.jcell.getOSInfo(dataObj, function(res){  
+                if(res.error == null && res.results != null){
+                    finalResponse = self.jtools.stringFormat("The computers hostname is {0}",[res.results]);
+                }
+                else {
+                    finalResponse = self.jtools.stringFormat("Error retrieving Computer Hostname: {0}", [res.error]);
+                }
+                callback({"jresponse": finalResponse});
+            });            
+        }
+        catch(ex){
+            finalResponse = "Error retrieving Computer Hostname: " + ex;
+            callback({"jresponse": finalResponse});
+        }
+    }
+
+    /* Get Server Network Interface */
+    getNetworkInterface(response, callback){
+        var self = this;
+        var finalResponse = null;
+        var dataObj = {"type":"networkinterface"};
+
+        try {                          
+            self.jcell.getOSInfo(dataObj, function(res){  
+                if(res.error == null && res.results != null){
+                    var network = res.results;
+                    var info = null;  
+                    for(var i in network) {
+                        for(var j in network[i]){
+                            var iface = network[i][j];
+                            if(iface.family == "IPv4" && !iface.internal) {
+                                info = iface;
+                                break;
+                            }
+                        }
+                    }
+
+                    finalResponse = (info != null ? self.jtools.stringFormat("network information address: {0}, netmask: {1}, mac: {2}", [info.address, info.netmask, info.mac]) : "Sorry no network information");
+                }
+                else {
+                    finalResponse = self.jtools.stringFormat("Error retrieving network information: {0}", [res.error]);
+                }
+                callback({"jresponse": finalResponse});
+            });            
+        }
+        catch(ex){
+            finalResponse = "Error retrieving network information: " + ex;
+            callback({"jresponse": finalResponse});
+        }
+    }
+
+    /* Get Server System Release */
+    getSystemRelease(response, callback){
+        var self = this;
+        var finalResponse = null;
+        var dataObj = {"type":"systemrelease"};
+
+        try {                          
+            self.jcell.getOSInfo(dataObj, function(res){  
+                if(res.error == null && res.results != null){
+                    finalResponse = self.jtools.stringFormat("The operating system release is {0}",[res.results]);
+                }
+                else {
+                    finalResponse = self.jtools.stringFormat("Error retrieving system release: {0}", [res.error]);
+                }
+                callback({"jresponse": finalResponse});
+            });            
+        }
+        catch(ex){
+            finalResponse = "Error retrieving system release: " + ex;
+            callback({"jresponse": finalResponse});
+        }
+    }
+
+    /* Get Server System Memory */
+    getSystemMemory(response, callback){
+        var self = this;
+        var finalResponse = null;
+        var dataObj = {"type":"systemmemory"};
+
+        try {                          
+            self.jcell.getOSInfo(dataObj, function(res){  
+                if(res.error == null && res.results != null){
+                    var memory = res.results;
+                    var memPhrase = "";
+                    if(memory > 1073741824) { memPhrase = self.jtools.stringFormat("{0} GB", [(memory/1073741824).toFixed(3) ]); }
+                    else if(memory > 1048576) { memPhrase = self.jtools.stringFormat("{0} MB", [(memory/1048576).toFixed(3) ]);  }
+                    else if(memory > 1024) { memPhrase = self.jtools.stringFormat("{0} KB", [(memory/1024).toFixed(3) ]); }
+                    else { memPhrase = self.jtools.stringFormat("{0} B",[memory]); }
+
+                    finalResponse = self.jtools.stringFormat("The amount of avaliable memory for the system is {0}",[memPhrase]);
+                }
+                else {
+                    finalResponse = self.jtools.stringFormat("Error retrieving system memory: {0}", [res.error]);
+                }
+                callback({"jresponse": finalResponse});
+            });            
+        }
+        catch(ex){
+            finalResponse = "Error retrieving system memory: " + ex;
+            callback({"jresponse": finalResponse});
+        }
+    }
+
+    /* Easter Eggs */
+    easterEggs(reponse, callback){
+        var self = this;
+        var finalResponse = null;
+
+        try {
+            switch(reponse.action){
+                case "do you know the muffin man":
+                  finalResponse = "yes, he lives in mulbery lane";                  
+                  break;
+                case "how are you":
+                  // TODO: perform system diagnostic
+                  finalResponse = "great thanks for asking";                  
+                  break;
+                default:                  
+                  break;
+              }              
+        }
+        catch(ex){
+            finalResponse = "(-_-)";
+        }
+        callback({"jresponse": finalResponse});
     }
 /*END*/
 }

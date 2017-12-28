@@ -20,7 +20,7 @@ const rl = readline.createInterface({
   output: process.stdout
 });
 
-var settings = JSON.parse(fs.readFileSync(jbrain.settingsFile,'utf8'));
+var settings = JSON.parse(fs.readFileSync(jbrain.settingFile,'utf8'));
 if(settings.voice == "on") {rl.setPrompt('|jada| -v- > '); }
 else {rl.setPrompt('|jada| --- > '); }
 
@@ -34,7 +34,7 @@ rl.on('line', (input) => {
     var output = res.jresponse + "\n";
     if(output != "") {
       console.log(output);
-      settings = JSON.parse(fs.readFileSync(jbrain.settingsFile,'utf8'));
+      settings = JSON.parse(fs.readFileSync(jbrain.settingFile,'utf8'));
       // check voice setting to read to user
       if(settings.voice == "on") {
         var speechout = output.replace(/\n/g, " ");

@@ -5,6 +5,7 @@
  */
 var request = require('request');
 var fs = require('fs');
+var os = require('os');
 
 const Tools = require('./jtools.js');
 
@@ -12,6 +13,7 @@ class JCELL {
     constructor(settingFile) {
         this.jtools = new Tools();
         this.settingFile = settingFile;
+        this.cacheData = {"directions":{}};
         this.apiLib = {
             "tasteKid": {"link":"http://www.tastekid.com/api/","key":"228198-JadenPer-P426AN1R"},
             "openWeather": {"link":"http://api.openweathermap.org/data/2.5/", "key":"90c2be179d4c18b392e3e11efa2ee5c1"},
@@ -179,7 +181,99 @@ class JCELL {
             response.error = self.jtools.stringFormat("Error updating {0} to {1}: {2}", [item.item, item.newitem, ex]);
         }
     }
-    
+
+    /* get Directions */
+    getDirections(items, callback){
+        var self = this;
+        var response = {"error":null, "results":null};
+        var api = self.getApiItem("googleMapsDirections");
+
+        if(api != null){
+            try {        
+                var obj = JSON.parse(fs.readFileSync(self.settingFile,'utf8'));
+
+                if(!self.checkParameterList(["toLoc","fromLoc","type"], items)){
+                    response.error = "Missing Parameter";
+                }
+                else {                    
+                    if(items.toLoc in obj.locations){ items.toLoc = obj.locations[items.toLoc].address; }
+                    if(items.fromLoc in obj.locations){ items.fromLoc = obj.locations[items.fromLoc].address; }
+
+                    var requestId = self.jtools.stringFormat("{0}|{1}|{2}", [items.fromLoc.replace(/\s/g,"+"), items.toLoc.replace(/\s/g,"+"), items.type]);
+
+                    if(requestId in self.cacheData.directions){                        
+                        response.results = self.cacheData.directions[requestId];
+                        callback(response);
+                    }
+                    else {
+                        var url = self.jtools.stringFormat("{0}?key={1}&origin={2}&destination={3}&mode={4}",[api.link, api.key, items.fromLoc.replace(/\s/g,"+"), items.toLoc.replace(/\s/g,"+"), items.type]);
+
+                        request({ url: url, json: true}, function (error, res, body){                        
+                            if(!error && res.statusCode === 200){
+                                response.results = body; 
+                                self.cacheData.directions[requestId] = body;                                                           
+                            }
+                            else {
+                                response.error = "error with request";
+                            }
+                            callback(response);
+                        });
+                    }
+                }
+            }
+            catch(ex){
+                response.error = "Error Proccessing API Request: " + ex;                
+                callback(response);
+            }
+        }
+        else {
+            response.error = "Unable to retrieve API data";
+            callback(response);
+        }
+    }
+
+    /* getserver Operating System Info */
+    getOSInfo(items, callback){
+        var date = new Date();
+        var self = this;
+        var response = {"error":null, "results":null};
+
+        try {
+            if(!self.checkParameterList(["type"], items)){
+                response.error = "Missing Parameter";
+            }
+            else {
+                switch(items.type){
+                    case "arch":                      
+                      response.results = os.arch();
+                      break;                    
+                    case "info":                      
+                      response.results = os.cpus();
+                      break;
+                    case "hostname":                      
+                      response.results = os.hostname();
+                      break;
+                    case "networkinterface":                      
+                      response.results = os.networkInterfaces();
+                      break;
+                    case "systemrelease":                      
+                      response.results = os.release();
+                      break;
+                    case "systemmemory":                      
+                      response.results = os.totalmem();
+                      break;                    
+                    default:
+                        break;
+                }
+            }
+        }
+        catch(ex){
+            response.error = "Error retrieving OS data";
+        }
+        
+        callback(response);
+    }
+
     /* private methods */
     checkParameterList(params, items){        
         for(var i =0; i < params.length; i++){
