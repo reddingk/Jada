@@ -274,6 +274,43 @@ class JCELL {
         callback(response);
     }
 
+    getRelationships(items, callback){
+        var date = new Date();
+        var self = this;
+        var response = {"error":null, "results":null};
+
+        try {
+            if(!self.checkParameterList(["type","searchName"], items)){
+                response.error = "Missing Parameter";
+            }
+            else {
+                var obj = JSON.parse(fs.readFileSync(self.settingFile,'utf8'));
+                var userRelationships = obj.relationships;
+                var relationships = [];
+
+                if(items.type == "me"){
+                    relationships.push({"type":"me", "info":{"name":obj.name.fullname, "nickname":obj.name.nickname}});
+                }
+                else {
+                    for(var i =0; i < userRelationships.length; i++){  
+                        if(userRelationships[i].name.indexOf(items.searchName) > -1) {
+                        relationships.push({"type":"name", "info":userRelationships[i]});
+                        }
+                        else if(items.searchName in userRelationships[i].title){
+                        relationships.push({"type":"title", "info":userRelationships[i]});
+                        }
+                    }
+                }
+
+                response.results = relationships;
+            }
+        }
+        catch(ex){
+            response.error = "Error getting relationship information";
+        }
+        callback(response);
+    }
+
     /* private methods */
     checkParameterList(params, items){        
         for(var i =0; i < params.length; i++){

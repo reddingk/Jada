@@ -626,6 +626,64 @@ class JNERVESYSTEM {
         }
         callback({"jresponse": finalResponse});
     }
+
+    /* Relationship Guide */
+    relationshipGuide(response, callback){
+        var self = this;
+        var finalResponse = null;
+        var dataObj = {"type":null, "searchName":null};
+
+        try {
+            var tmpPhrase = response.fullPhrase.split(" ");
+            var postPhrase = tmpPhrase.slice(tmpPhrase.indexOf(response.action)+1);
+            if(postPhrase.indexOf("my") > -1){
+                postPhrase = postPhrase.slice(postPhrase.indexOf("my")+1);
+            }
+
+            dataObj.type = (response.action == "am" ? "me" : (response.action == "is" || response.action == "are" ? "other" : null));
+            if(dataObj.type == "other"){
+                dataObj.searchName = postPhrase.join(" ").replace(/'s$/g, "");
+            }
+
+            self.jcell.getRelationships(dataObj, function(res){  
+                if(res.error == null && res.results != null){
+                    var relationships = res.results;
+
+                    if(relationships.length > 0){
+                        var relInfo = [];
+                        for(var j =0; j < relationships.length; j++){
+                            if(relationships[j].type == "me"){
+                                relInfo.push(self.jtools.stringFormat("You are {0} aka {1}", [relationships[j].info.name, relationships[j].info.nickname]));
+                            }
+                            else if(relationships[j].type == "name"){
+                                relInfo.push(Object.keys(relationships[j].info.title).join(","))
+                            }
+                            else {
+                                relInfo.push(relationships[j].info.name);
+                            }
+                        }
+                        if(dataObj.type == "me"){
+                            finalResponse = relInfo.join("");
+                        }
+                        else {
+                            finalResponse =  self.jtools.stringFormat("you told me your {0}{1} '{2}'", [dataObj.searchName, (relationships.length > 1 ? "'s are" :" is"), relInfo.join("")]);
+                        }
+                    }
+                    else {
+                        finalResponse = self.jtools.stringFormat("sorry I don't think you told me about {0}.", [postPhrase.join(" ")]);
+                    }
+                }
+                else {
+                    finalResponse = "sorry you didn't give me a name or nickname I could work with.";
+                }
+                callback({"jresponse": finalResponse});
+            });            
+        }
+        catch(ex){
+            finalResponse = "error trying to find relationship: " + ex;
+            callback({"jresponse": finalResponse});
+        }
+    }
 /*END*/
 }
 
