@@ -6,6 +6,7 @@
 var request = require('request');
 var fs = require('fs');
 var os = require('os');
+var underscore = require('underscore');
 
 const Tools = require('./jtools.js');
 
@@ -309,6 +310,90 @@ class JCELL {
             response.error = "Error getting relationship information";
         }
         callback(response);
+    }
+
+    /* Get Location */
+    getLocation(items, callback){
+        var date = new Date();
+        var self = this;
+        var response = {"error":null, "results":null};
+
+        try {
+            if(!self.checkParameterList(["type","searchName"], items)){
+                response.error = "Missing Parameter";
+            }
+            else {
+                if(items.type == "me"){
+                    var api = self.getApiItem("geoAPI");
+
+                    if(api != null){
+                        try{
+                          var url = api.link;
+                          request(url, function (error, res, body){                                                           
+                              if(!error && res.statusCode === 200){                                
+                                response.results = {"type":"me", "location": JSON.parse(body)};
+                              }
+                              callback(response);
+                          });
+                        }
+                        catch(err){
+                          response.error = "Error with request: "+ err;
+                          callback(response);
+                        }
+                    }
+                }
+                else if(items.type == "other"){
+                    var obj = JSON.parse(fs.readFileSync(self.settingFile,'utf8'));
+ 
+                    response.results = {"type":"other", "location": obj.locations[items.searchName]};
+                    callback(response);
+                }
+                else {
+                    response.error = "sorry you didn't give me a location name I could work with.";
+                    callback(response);
+                }
+            }
+        }
+        catch(ex){
+            response.error = "Sorry there was a larger error getting location info:" + ex;
+            callback(response);
+        }
+    }
+
+    /* Add User Setting to data file */
+    addUserSetting(items, callback){
+        var date = new Date();
+        var self = this;
+        var response = {"error":null, "results":null};
+
+        try {
+            if(!self.checkParameterList(["type","info"], items)){
+                response.error = "Missing Parameter";
+            }
+            else {
+                var obj = JSON.parse(fs.readFileSync(self.settingFile,'utf8'));
+
+                if(items.type == "location"){
+                    if(items.info.name in obj.locations){
+                        response.results = {"status":false, "data":obj.locations[items.info.name]};
+                    }
+                    else {
+                        obj.locations.push({"name":items.info.name, "address":items.info.address});
+                        fs.writeFileSync(self.settingFile, JSON.stringify(obj), {"encoding":'utf8'});
+                        response.results = {"status":true, "data":null};
+                    }
+                }
+                else if(items.type == "relationship"){
+                    var existingRelationship = underscore.filter(obj.relationships, function(dt) {  return dt.name == newName; });
+                    if(existingRelationship.length > 0){
+                        
+                    }
+                }
+            }
+        }
+        catch(ex){
+
+        }
     }
 
     /* private methods */

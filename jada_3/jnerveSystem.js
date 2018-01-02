@@ -684,6 +684,83 @@ class JNERVESYSTEM {
             callback({"jresponse": finalResponse});
         }
     }
+
+    /* Get Location information */
+    locationGuide(response, callback){
+        var self = this;
+        var finalResponse = null;
+        var dataObj = {"type":null, "searchName":null};
+
+        try {
+            var tmpPhrase = response.fullPhrase.split(" ");
+            var postPhrase = tmpPhrase.slice(tmpPhrase.indexOf(response.action)+1);
+            if(postPhrase.indexOf("my") > -1){
+                postPhrase = postPhrase.slice(postPhrase.indexOf("my")+1);
+            }
+
+            dataObj.searchName = postPhrase.join(" ");
+            dataObj.type = (response.action == "am" ? "me" : (response.action == "is" ? "other" : null));
+
+            self.jcell.getLocation(dataObj, function(res){
+                if(res.error == null && res.results != null){
+                    if(res.results.type == "me"){                        
+                        finalResponse = self.jtools.stringFormat("You are currently located near {0}, {1}",[res.results.location.city, res.results.location.regionName]);
+                    }
+                    else {
+
+                        finalResponse = self.jtools.stringFormat("you told me the address for {0} is '{1}'", [res.results.location.name, res.results.location.address]);
+                    }                    
+                }
+                else {
+                    finalResponse = "Sorry: " + res.error;
+                }
+                callback({"jresponse": finalResponse});
+            });
+
+        }
+        catch(ex){
+            callback({"jresponse": "There seems to be an issue with my location guide: " + ex});
+        }
+    }
+
+    /* Add user data */
+    addUserSetting(response, callback){
+        var self = this;
+        var finalResponse = null;
+        var dataObj = {"type":null, "info":{}};
+
+        try {
+            var tmpPhrase = response.fullPhrase.split(" ");
+            var postPhrase = tmpPhrase.slice(tmpPhrase.indexOf(action)+1);
+
+            dataObj.type = (response.action == "location" || response.action == "relationship"? response.action : null);
+            if(dataObj.type == "location"){
+                var asPos = postPhrase.indexOf("as");
+
+                dataObj.info.name = postPhrase.slice(0, asPos).join(" ");
+                dataObj.info.address = postPhrase.slice(asPos+1).join(" ");                
+            }
+            else if(dataObj.type == "relationship"){
+                var myPos = postPhrase.indexOf("my");
+                var isPos = postPhrase.indexOf("is");
+
+                if(isPos > -1 && myPos > -1){
+                    if(isPos < myPos){
+                        dataObj.info.name = postPhrase.slice(0, isPos).join(" ");
+                        dataObj.info.title = postPhrase.slice(myPos+1).join(" ");
+                    }
+                    else {
+                        dataObj.info.name = postPhrase.slice(isPos+1).join(" ");
+                        dataObj.info.title = postPhrase.slice(myPos+1, isPos).join(" ");
+                    }
+                }
+            }
+        }
+        catch(ex){
+
+        }
+    }
+
 /*END*/
 }
 
