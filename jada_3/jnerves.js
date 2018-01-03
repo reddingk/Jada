@@ -27,7 +27,7 @@ class JNERVES {
             response.prevResponse = response.obj.lastAction;
             response.obj.lastAction = {"response":response, "fullPhrase":fullPhrase};
             //fs.writeFileSync(self.settingFile, JSON.stringify(obj), {"encoding":'utf8'});
-            
+                        
             if(!(response.response in self.jnervesystem)){
                 finalResponse.jresponse = "I feel like you were close to asking me something, you may be missing something when you mentioned '" + response.action+"'. ";
                 callback(finalResponse);

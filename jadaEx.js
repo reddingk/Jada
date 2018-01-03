@@ -1,6 +1,6 @@
 'use strict';
 
-const Brain = require('./jbrain.js');
+const Brain = require('./jada_3/jbrain.js');
 let jbrain = new Brain();
 
 var say = require('say');
@@ -9,7 +9,7 @@ var fs = require('fs');
 
 // database config files
 var mongoose = require('mongoose');
-var database = require('./config/database');
+var database = require('./jada_3/config/database');
 
 mongoose.Promise = global.Promise;
 mongoose.connect(database.remoteUrl, { useMongoClient: true });
@@ -21,6 +21,7 @@ const rl = readline.createInterface({
 });
 
 var settings = JSON.parse(fs.readFileSync(jbrain.settingFile,'utf8'));
+
 if(settings.voice == "on") {rl.setPrompt('|jada| -v- > '); }
 else {rl.setPrompt('|jada| --- > '); }
 

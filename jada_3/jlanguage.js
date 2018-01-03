@@ -44,10 +44,14 @@ class JLANGUAGE {
     getFullPhrases(callback){
         //console.log(" > Getting all full phrases");
         if(this.fullPhraseLib == null) {
-            phraseDB.find({ 'type' : 'phrase' }, function(err, res){
+            phraseDB.find({ 'type' : 'phrase' }, function(err, res){            
+                console.log(" [2]>");
                 if(res == null|| res == undefined) { res = [];}        
-                callback(res);
+                callback(res);                
             });
+
+            /*  TEST  */
+            callback([ { _id: '58764602f36d284ed588a889', type: 'phrase', response: 'easterEggs', level: '101', action: 'do you know the muffin man' },{ _id: '587671b7f36d284ed588c9bf', type: 'phrase', response: 'easterEggs', level: '101', action: 'how are you' } ]);
         }
         else {
             callback(this.fullPhraseLib);
@@ -55,8 +59,7 @@ class JLANGUAGE {
     }
 
     searchPhrase(wordList, callback) {
-        //console.log(" > Getting actions for: " + wordList.join(" "));
-
+        
         phraseDB.find({'$and': [
             {'type': { '$ne': 'phrase' }},
             {'$or': [
@@ -64,9 +67,12 @@ class JLANGUAGE {
             {'additional_phrases': {'$elemMatch': {'$in': wordList}}}
             ]}
         ]}, function(err, res){ 
-        if(res == null || res == undefined) { res = [];} 
+            console.log(" [1]>");            
+            if(res == null || res == undefined) { res = [];}                            
             callback(res);
         });
+        /*  TEST  */
+        callback([{ _id: '58751c73f36d285ed998acdc', additional_phrases: [ 'hi', 'hey', 'hola', 'greetings' ], response: 'greetings', level: '0', action: 'hello' }]);
     }
 
     /* Get Phrase Action Call */

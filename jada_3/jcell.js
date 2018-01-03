@@ -30,8 +30,8 @@ class JCELL {
         var date = new Date();
         var self = this;
         var response = {"error":null, "results":null};
-
-
+        self.saveLastAction("getLocalDateTime", items);
+        
         try {
             if(!self.checkParameterList(["type"], items)){
                 response.error = "Missing Parameter";
@@ -86,7 +86,8 @@ class JCELL {
         var self = this;
         var response = {"error":null, "results":null};
         var api = self.getApiItem("tasteKid");
-
+        self.saveLastAction("mediaCompare", items);
+        
         if(api != null){
             try {
                 if(!self.checkParameterList(["type", "query", "limit", "info"], items)){
@@ -119,7 +120,8 @@ class JCELL {
         var self = this;
         var response = {"error":null, "results":null};
         var api = self.getApiItem("openWeather");
-
+        self.saveLastAction("weatherInfo", items);
+        
         if(api != null){
             try {
                 if(!self.checkParameterList(["type", "location"], items)){
@@ -151,7 +153,8 @@ class JCELL {
     getChangedSetting(item, callback){
         var self = this;
         var response = {"error":null, "results":null};
-
+        self.saveLastAction("getChangedSetting", items);
+        
         try {
             var obj = JSON.parse(fs.readFileSync(self.settingFile,'utf8'));
 
@@ -188,7 +191,8 @@ class JCELL {
         var self = this;
         var response = {"error":null, "results":null};
         var api = self.getApiItem("googleMapsDirections");
-
+        self.saveLastAction("getDirections", items);
+        
         if(api != null){
             try {        
                 var obj = JSON.parse(fs.readFileSync(self.settingFile,'utf8'));
@@ -235,10 +239,10 @@ class JCELL {
 
     /* getserver Operating System Info */
     getOSInfo(items, callback){
-        var date = new Date();
         var self = this;
         var response = {"error":null, "results":null};
-
+        self.saveLastAction("getOSInfo", items);
+        
         try {
             if(!self.checkParameterList(["type"], items)){
                 response.error = "Missing Parameter";
@@ -276,10 +280,10 @@ class JCELL {
     }
 
     getRelationships(items, callback){
-        var date = new Date();
         var self = this;
         var response = {"error":null, "results":null};
-
+        self.saveLastAction("getRelationship", items);
+        
         try {
             if(!self.checkParameterList(["type","searchName"], items)){
                 response.error = "Missing Parameter";
@@ -314,9 +318,9 @@ class JCELL {
 
     /* Get Location */
     getLocation(items, callback){
-        var date = new Date();
         var self = this;
         var response = {"error":null, "results":null};
+        self.saveLastAction("getLocation", items);
 
         try {
             if(!self.checkParameterList(["type","searchName"], items)){
@@ -361,10 +365,10 @@ class JCELL {
     }
 
     /* Add User Setting to data file */
-    addUserSetting(items, callback){
-        var date = new Date();
+    addUserSetting(items, callback){        
         var self = this;
         var response = {"error":null, "results":null};
+        self.saveLastAction("addUserSetting", items);
 
         try {
             if(!self.checkParameterList(["type","info"], items)){
@@ -374,31 +378,102 @@ class JCELL {
                 var obj = JSON.parse(fs.readFileSync(self.settingFile,'utf8'));
 
                 if(items.type == "location"){
-                    if(items.info.name in obj.locations){
-                        response.results = {"status":false, "data":obj.locations[items.info.name]};
+                    if(items.info.name in obj.locations){                        
+                        response.results = {"status":false, "type":"location", "data":obj.locations[items.info.name]};
                     }
-                    else {
-                        obj.locations.push({"name":items.info.name, "address":items.info.address});
+                    else {                        
+                        obj.locations[items.info.name] = {"name":items.info.name, "address":items.info.address};
                         fs.writeFileSync(self.settingFile, JSON.stringify(obj), {"encoding":'utf8'});
-                        response.results = {"status":true, "data":null};
+                        response.results = {"status":true, "type":"location", "data":null};
                     }
                 }
                 else if(items.type == "relationship"){
                     var existingRelationship = underscore.filter(obj.relationships, function(dt) {  return dt.name == items.info.name; });
                     if(existingRelationship.length > 0){
-                        if(items.info.title in existingRelationship[0].title){
-                            response.results = {"status":false, "data":existingRelationship[0]};
+                        if(items.info.title in existingRelationship[0].title){                            
+                            response.results = {"status":false, "type":"relationship", "data":existingRelationship[0]};
+                        }
+                        else {                            
+                            var reIndex = obj.relationships.findIndex(i => i.name == items.info.name);
+                            obj.relationships[reIndex].title[items.info.title] = true;
+                            
+                            fs.writeFileSync(self.settingFile, JSON.stringify(obj), {"encoding":'utf8'});
+                            response.results = {"status":true, "type":"relationship", "data":null};
                         }
                     }
+                    else {                        
+                        var newRel = { "name":items.info.name, "title":{}};
+                        newRel.title[items.info.title] = true;
+                        
+                        obj.relationships.push(newRel);
+                        fs.writeFileSync(self.settingFile, JSON.stringify(obj), {"encoding":'utf8'});
+                        response.results = {"status":true, "type":"relationship", "data":null};
+                    }
+                }
+                else {
+                    response.error = "Sorry I am not sure what should be updated";
                 }
             }
         }
         catch(ex){
-
+            response.error = "Sorry there was a larger error getting setting user info:" + ex;            
         }
+        callback(response);
+    }
+    
+    /* Run a replace on the last action called */
+    replaceLastAction(items, callback){
+        var self = this;
+        var response = {"error":null, "results":null};
+        var prev = self.saveLastAction("replaceLastAction", items);
+        var obj = JSON.parse(fs.readFileSync(self.settingFile,'utf8'));
+
+        try {
+            if(prev != null && prev.method == "addUserSetting"){
+                if(prev.data.type == "location") {
+                    if(prev.data.info.name in obj.locations) {
+                        obj.locations[prev.data.info.name] = {"name": prev.data.info.name, "address": prev.data.info.address};
+                        fs.writeFileSync(self.settingFile, JSON.stringify(obj), {"encoding":'utf8'});
+
+                        response.results = { "status":true, "type":"location", "data": prev.data.info};
+                    }
+                    else {
+                        response.results = {"status":false, "type":"location", "data":prev.data.info};
+                    }
+                }
+                else {
+                    response.results = { "status": false, "type":null, "data":prev };
+                }
+            }
+            else {
+                response.results = { "status": false, "type":null, "data":prev };
+            }
+        }
+        catch(ex){
+            response.error = "Error with replace: " + ex;
+        }
+
+        callback(response);
     }
 
     /* private methods */
+    saveLastAction(method, data) {
+        var self = this;
+        var prevResponse = null;
+
+        try {
+            var obj = JSON.parse(fs.readFileSync(self.settingFile,'utf8'));        
+            prevResponse = obj.lastAction;
+            obj.lastAction = {"method":method, "data":data};
+            fs.writeFileSync(self.settingFile, JSON.stringify(obj), {"encoding":'utf8'});
+        }
+        catch(ex){
+            console.log("save Last Action Error: " + ex);
+        }
+
+        return prevResponse;
+    }
+
     checkParameterList(params, items){        
         for(var i =0; i < params.length; i++){
             if(!(params[i] in items)){
@@ -412,7 +487,7 @@ class JCELL {
         var self = this;
         var item = self.apiLib[name];
         return (item == undefined ? null : item);
-    }
+    }    
 }
 
 module.exports = JCELL;

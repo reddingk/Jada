@@ -666,7 +666,7 @@ class JNERVESYSTEM {
                             finalResponse = relInfo.join("");
                         }
                         else {
-                            finalResponse =  self.jtools.stringFormat("you told me your {0}{1} '{2}'", [dataObj.searchName, (relationships.length > 1 ? "'s are" :" is"), relInfo.join("")]);
+                            finalResponse =  self.jtools.stringFormat("you told me your {0}{1} '{2}'", [dataObj.searchName, (relationships.length > 1 ? "'s are" :" is"), relInfo.join(",")]);
                         }
                     }
                     else {
@@ -707,8 +707,12 @@ class JNERVESYSTEM {
                         finalResponse = self.jtools.stringFormat("You are currently located near {0}, {1}",[res.results.location.city, res.results.location.regionName]);
                     }
                     else {
-
-                        finalResponse = self.jtools.stringFormat("you told me the address for {0} is '{1}'", [res.results.location.name, res.results.location.address]);
+                        if(res.results.location == null || res.results.location == undefined){
+                            finalResponse = self.jtools.stringFormat("you never told me where {0} was located", [dataObj.searchName]);
+                        }
+                        else {
+                            finalResponse = self.jtools.stringFormat("you told me the address for {0} is '{1}'", [res.results.location.name, res.results.location.address]);
+                        }
                     }                    
                 }
                 else {
@@ -728,10 +732,10 @@ class JNERVESYSTEM {
         var self = this;
         var finalResponse = null;
         var dataObj = {"type":null, "info":{}};
-
+        
         try {
             var tmpPhrase = response.fullPhrase.split(" ");
-            var postPhrase = tmpPhrase.slice(tmpPhrase.indexOf(action)+1);
+            var postPhrase = tmpPhrase.slice(tmpPhrase.indexOf(response.action)+1);
 
             dataObj.type = (response.action == "location" || response.action == "relationship"? response.action : null);
             if(dataObj.type == "location"){
@@ -753,14 +757,86 @@ class JNERVESYSTEM {
                         dataObj.info.name = postPhrase.slice(isPos+1).join(" ");
                         dataObj.info.title = postPhrase.slice(myPos+1, isPos).join(" ");
                     }
-                }
+                }               
             }
+
+            self.jcell.addUserSetting(dataObj, function(res){                    
+                if(res.error == null && res.results != null){
+                    if(res.results.type == "location"){
+                        if(res.results.status == false){
+                            finalResponse = self.jtools.stringFormat("I believe you already have an address for {0} which is {1}, if you would like me to change it just ask me to 'replace'", [res.results.data.name, res.results.data.address]);                                
+                        }
+                        else {
+                            finalResponse = self.jtools.stringFormat("I will remember the location {0} for you", [dataObj.info.name]);
+                        }
+                    }
+                    else if(res.results.type == "relationship"){
+                        if(res.results.status == false){
+                            finalResponse = self.jtools.stringFormat("You already told me to note {0} as {1}", [dataObj.info.name, dataObj.info.title]);
+                        }
+                        else {
+                            finalResponse = self.jtools.stringFormat("I will remember that {0} is also your '{1}'", [dataObj.info.name, dataObj.info.title]);
+                        }
+                    }
+                }
+                else {
+                    finalResponse = "Unable to complete: " + res.error;
+                }
+
+                callback({"jresponse": finalResponse});
+            });
+
         }
         catch(ex){
-
+            callback({"jresponse": "There seems to be an issue with my using settings: " + ex});
         }
     }
 
+    /* replace Last Action */
+    replaceLastAction(response, callback) {
+        var self = this;
+        var finalResponse = null;
+        var dataObj = {"type":null, "info":null};
+
+        try {
+            self.jcell.replaceLastAction(dataObj, function(res){
+                if(res.error == null && res.results != null){
+                    if(res.results.type == null) {
+                        finalResponse = self.jtools.stringFormat("Unable to perform a replace the last action was {0}", [res.results.data.method]);
+                    } 
+                    else if(res.results.type == "location") {
+                        if(res.results.status == true){
+                            finalResponse = self.jtools.stringFormat("I switched the location for {0} to {1}", [res.results.data.name, res.results.data.address]);
+                        }
+                        else {
+                            finalResponse = self.jtools.stringFormat("Unable to switch the location", []);
+                        }
+                    }                    
+                }
+                else {
+                    finalResponse = "Unable to replace: " + res.error;
+                }
+
+                callback({"jresponse": finalResponse});
+            });
+        }
+        catch(ex){
+            callback({"jresponse": "There seems to be an issue with my replace: " + ex});
+        }
+    }
+
+    marvelCharacter(response, callback){
+        var self = this;
+        var finalResponse = null;
+        var dataObj = {"type":null, "info":null};
+
+        try {
+
+        }
+        catch(ex){
+            
+        }
+    }
 /*END*/
 }
 

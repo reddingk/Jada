@@ -9,7 +9,7 @@ const Nerves = require('./jnerves.js');
 
 class JBRAIN {  
     constructor() {
-        this.settingFile = '../settings2.json';   
+        this.settingFile = __dirname + '/config/settings.json';           
         this.jlanguage = new Language();
         this.jNerves = new Nerves(this);           
     }
@@ -25,12 +25,13 @@ class JBRAIN {
         var tmpStr = phrase.split(" ");  
         var phraseLibrary = null;
         var fullPhraseLibrary = null;
-
-        self.jlanguage.searchPhrase(tmpStr, function(res){
+        
+        self.jlanguage.searchPhrase(tmpStr, function(res){            
             // Check Full Phrases    
             if(self.jlanguage.fullPhraseLib == null){
                 self.jlanguage.getFullPhrases(function(fullres){ 
-                    self.jlanguage.fullPhraseLib = fullres;     
+                    self.jlanguage.fullPhraseLib = fullres; 
+                    
                     var response = self.jlanguage.getCall(phrase, res);
 
                     if(response != null){
