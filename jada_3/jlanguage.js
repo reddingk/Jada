@@ -51,7 +51,7 @@ class JLANGUAGE {
             });
 
             /*  TEST  */
-            callback([ { _id: '58764602f36d284ed588a889', type: 'phrase', response: 'easterEggs', level: '101', action: 'do you know the muffin man' },{ _id: '587671b7f36d284ed588c9bf', type: 'phrase', response: 'easterEggs', level: '101', action: 'how are you' } ]);
+            //callback([ { _id: '58764602f36d284ed588a889', type: 'phrase', response: 'easterEggs', level: '101', action: 'do you know the muffin man' },{ _id: '587671b7f36d284ed588c9bf', type: 'phrase', response: 'easterEggs', level: '101', action: 'how are you' } ]);
         }
         else {
             callback(this.fullPhraseLib);
@@ -72,7 +72,7 @@ class JLANGUAGE {
             callback(res);
         });
         /*  TEST  */
-        callback([{ _id: '58751c73f36d285ed998acdc', additional_phrases: [ 'hi', 'hey', 'hola', 'greetings' ], response: 'greetings', level: '0', action: 'hello' }]);
+        //callback([{ _id: '58751c73f36d285ed998acdc', additional_phrases: [ 'hi', 'hey', 'hola', 'greetings' ], response: 'greetings', level: '0', action: 'hello' }]);
     }
 
     /* Get Phrase Action Call */
