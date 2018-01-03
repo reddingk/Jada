@@ -384,9 +384,11 @@ class JCELL {
                     }
                 }
                 else if(items.type == "relationship"){
-                    var existingRelationship = underscore.filter(obj.relationships, function(dt) {  return dt.name == newName; });
+                    var existingRelationship = underscore.filter(obj.relationships, function(dt) {  return dt.name == items.info.name; });
                     if(existingRelationship.length > 0){
-                        
+                        if(items.info.title in existingRelationship[0].title){
+                            response.results = {"status":false, "data":existingRelationship[0]};
+                        }
                     }
                 }
             }

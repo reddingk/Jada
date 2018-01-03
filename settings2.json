@@ -29,56 +29,56 @@
     "relationships": [
         {
             "name": "grace manning",
-            "title": [
-                "fiancee"
-            ]
+            "title": {
+                "fiancee":true
+            }
         },
         {
             "name": "raegan parker",
-            "title": [
-                "goddaughter",
-                "rae"
-            ]
+            "title": {
+                "goddaughter":true,
+                "rae":true
+            }
         },
         {
             "name": "rudi redding",
-            "title": [
-                "father",
-                "dad"
-            ]
+            "title": {
+                "father":true,
+                "dad":true
+            }
         },
         {
             "name": "donna redding",
-            "title": [
-                "mother",
-                "mom"
-            ]
+            "title": {
+                "mother":true,
+                "mom":true
+            }
         },
         {
             "name": "kamron redding",
-            "title": [
-                "brother"
-            ]
+            "title": {
+                "brother":true
+            }
         },
         {
             "name": "khalin redding",
-            "title": [
-                "brother"
-            ]
+            "title": {
+                "brother":true
+            }
         },
         {
             "name": "jason pena",
-            "title": [
-                "friend",
-                "best man"
-            ]
+            "title": {
+                "friend":true,
+                "best man":true
+            }
         },
         {
             "name": "alex goley",
-            "title": [
-                "friend",
-                "business partner"
-            ]
+            "title": {
+                "friend":true,
+                "business partner":true
+            }
         }
     ]
 }
