@@ -28,7 +28,7 @@ class JLANGUAGE {
 
     getPhrases(callback) {
         if(this.phraseLib == null || this.phraseLib.length == 0){
-            console.log(" > Getting Phrases From DB");
+            //console.log(" > Getting Phrases From DB");
             phraseDB.find(function(err, res){
                 if(err){ err; }
                 if(res == null|| res == undefined) { res = [];}
@@ -45,13 +45,9 @@ class JLANGUAGE {
         //console.log(" > Getting all full phrases");
         if(this.fullPhraseLib == null) {
             phraseDB.find({ 'type' : 'phrase' }, function(err, res){            
-                console.log(" [2]>");
                 if(res == null|| res == undefined) { res = [];}        
                 callback(res);                
             });
-
-            /*  TEST  */
-            //callback([ { _id: '58764602f36d284ed588a889', type: 'phrase', response: 'easterEggs', level: '101', action: 'do you know the muffin man' },{ _id: '587671b7f36d284ed588c9bf', type: 'phrase', response: 'easterEggs', level: '101', action: 'how are you' } ]);
         }
         else {
             callback(this.fullPhraseLib);
@@ -66,13 +62,10 @@ class JLANGUAGE {
             {'action': {'$in': wordList}},
             {'additional_phrases': {'$elemMatch': {'$in': wordList}}}
             ]}
-        ]}, function(err, res){ 
-            console.log(" [1]>");            
+        ]}, function(err, res){         
             if(res == null || res == undefined) { res = [];}                            
             callback(res);
         });
-        /*  TEST  */
-        //callback([{ _id: '58751c73f36d285ed998acdc', additional_phrases: [ 'hi', 'hey', 'hola', 'greetings' ], response: 'greetings', level: '0', action: 'hello' }]);
     }
 
     /* Get Phrase Action Call */
