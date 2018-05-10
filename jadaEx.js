@@ -12,7 +12,9 @@ var mongoose = require('mongoose');
 var database = require('./jada_3/config/database');
 
 mongoose.Promise = global.Promise;
-mongoose.connect(database.remoteUrl, { useMongoClient: true });
+ mongoose.connect(database.remoteUrl, { useMongoClient: true })
+ .then(() => {})
+ .catch(err => { console.log("Error connectiong to DB, exiting now: ");  process.exit(1); });
 
 const readline = require('readline');
 const rl = readline.createInterface({

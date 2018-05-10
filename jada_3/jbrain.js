@@ -33,28 +33,13 @@ class JBRAIN {
         var tmpStr = phrase.split(" ");
         var phraseLibrary = null;
         var fullPhraseLibrary = null;
-
-        self.jlanguage.searchPhrase(tmpStr, function(res){
-            // Check Full Phrases
-            if(self.jlanguage.fullPhraseLib == null){
-                self.jlanguage.getFullPhrases(function(fullres){
-                    self.jlanguage.fullPhraseLib = fullres;
-
-                    var response = self.jlanguage.getCall(phrase, res);
-
-                    if(response != null){
-                        phrase = ( response.response == "N/A" ? "" : phrase);
-                        self.jNerves.dataResponse(response, phrase, function(res){ callback(res); });
-                    }
-                });
-            }
-            else {
-                var response = self.jlanguage.getCall(phrase, res, callback);
-                if(response != null){
-                    phrase = ( response.response == "N/A" ? "" : phrase);
-                    self.jNerves.dataResponse(response, phrase, function(res){ callback(res); });
-                }
-            }
+        self.jlanguage.dbConnection(function(res){
+          if(res == true){
+            self.dbActions(tmpStr, phrase, callback);
+          }
+          else {
+            self.offlineActions(tmpStr, phrase, callback);
+          }
         });
     }
 
@@ -71,6 +56,40 @@ class JBRAIN {
         response.error = "Error calling directData function: "+ ex;
         return response;
       }
+    }
+
+    /* Internal functions */
+    /* Database Actions */
+    dbActions(tmpStr, phrase, callback){
+
+      self.jlanguage.searchPhrase(tmpStr, function(res){
+          // Check Full Phrases
+          if(self.jlanguage.fullPhraseLib == null){
+              self.jlanguage.getFullPhrases(function(fullres){
+                  self.jlanguage.fullPhraseLib = fullres;
+
+                  var response = self.jlanguage.getCall(phrase, res);
+
+                  if(response != null){
+                      phrase = ( response.response == "N/A" ? "" : phrase);
+                      self.jNerves.dataResponse(response, phrase, function(res){ callback(res); });
+                  }
+              });
+          }
+          else {
+              var response = self.jlanguage.getCall(phrase, res, callback);
+              if(response != null){
+                  phrase = ( response.response == "N/A" ? "" : phrase);
+                  self.jNerves.dataResponse(response, phrase, function(res){ callback(res); });
+              }
+          }
+      });
+    }
+
+    /*Offline Actions */
+    offlineActions(tmpStr, phrase, callback){
+      var self= this;
+      callback({"jresponse":"Sorry We were not able to connect to the DB"});
     }
 }
 
