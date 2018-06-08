@@ -5,69 +5,159 @@
  * By: Kris Redding
  */
 
-var phraseDB = require('./config/models/phrases');
 var underscore = require('underscore');
+var fs = require('fs');
+var database = require('./config/database');
+var mongoClient = require('mongodb').MongoClient;
 
 const Tools = require('./jtools.js');
 
-
-class JLANGUAGE { 
+class JLANGUAGE {
     constructor(){
         this.phraseLib = [];
         this.fullPhraseLib = null;
+        this.offlineFile = __dirname + '/config/basedb.json';
+        this.mongoOptions = { connectTimeoutMS: 500};
         this.greetings = ["Hey", "Hello {0} how are things treating you", "I hope you are having a good day today", "How's life", "How's your day treating you {0}"];
 
         this.jTools = new Tools();
     }
 
-    /* Functions */  
-    cleanPhrase(phrase) {    
-        var tmpPhrase = phrase.toLowerCase();      
+    /* Functions */
+    cleanPhrase(phrase) {
+        var tmpPhrase = phrase.toLowerCase();
         return tmpPhrase;
     }
 
     getPhrases(callback) {
-        if(this.phraseLib == null || this.phraseLib.length == 0){
-            //console.log(" > Getting Phrases From DB");
-            phraseDB.find(function(err, res){
-                if(err){ err; }
-                if(res == null|| res == undefined) { res = [];}
-                this.phraseLib = res;
-                callback(this.phraseLib);
+        var self = this;
+
+        try{
+            mongoClient.connect(database.remoteUrl, self.mongoOptions, function(err, db){ 
+                if(err) {
+                    //console.log(" Debug: Error Get All Phrases");
+                    callback(self.offlineGet("all", []));
+                }
+                else {
+                    if(this.phraseLib == null || this.phraseLib.length == 0){
+                        console.log(" > Getting Phrases From DB");
+                        db.collection('phrases', function(err, collection){
+                            collection.find(function(err, res){
+                                if(err){ err; }
+                                if(res == null|| res == undefined) { res = [];}
+                                this.phraseLib = res;
+                                callback(this.phraseLib);
+                            });
+                        });
+                    }
+                    else {
+                        callback(this.phraseLib);
+                    }
+                }
             });
-        }
-        else {
-            callback(this.phraseLib);
+        }  
+        catch(ex){
+            //callback(null);
         }
     }
-
     getFullPhrases(callback){
-        //console.log(" > Getting all full phrases");
-        if(this.fullPhraseLib == null) {
-            phraseDB.find({ 'type' : 'phrase' }, function(err, res){            
-                if(res == null|| res == undefined) { res = [];}        
-                callback(res);                
+        var self = this;
+
+        try {
+            mongoClient.connect(database.remoteUrl, self.mongoOptions, function(err, db){
+                if(err) {
+                    //console.log(" Debug: Error Get Full Phrase");
+                    callback(self.offlineGet("full", []));
+                }
+                else {
+                    if(this.fullPhraseLib == null) {
+                        console.log(" > Getting Full Phrases From DB");
+                        db.collection('phrases', function(err, collection){
+                            collection.find({ 'type' : 'phrase' }, function(err, res){
+                                if(res == null|| res == undefined) { res = [];}
+                                callback(res);
+                            });
+                        });                
+                    }
+                    else {
+                        callback(this.fullPhraseLib);
+                    }
+                }
             });
-        }
-        else {
-            callback(this.fullPhraseLib);
+        }  
+        catch(ex){
+            //callback(null);
         }
     }
 
     searchPhrase(wordList, callback) {
-        
-        phraseDB.find({'$and': [
-            {'type': { '$ne': 'phrase' }},
-            {'$or': [
-            {'action': {'$in': wordList}},
-            {'additional_phrases': {'$elemMatch': {'$in': wordList}}}
-            ]}
-        ]}, function(err, res){         
-            if(res == null || res == undefined) { res = [];}                            
-            callback(res);
-        });
+        var self = this;
+        try {
+            mongoClient.connect(database.remoteUrl, self.mongoOptions, function(err, db){
+                if(err) {
+                    //console.log(" Debug: Error Search Phrase");
+                    callback(self.offlineGet("search", wordList));
+                }
+                else {                    
+                    db.collection('phrases', function(err, collection){
+                        /* Find all that
+                         * Not Phrase &&
+                         * [action in wordlist || additional_phrases in wordlist]
+                         */
+
+                        collection.find({'$and': [
+                            {'type': { '$ne': 'phrase' }},
+                            {'$or': [
+                            {'action': {'$in': wordList}},
+                            {'additional_phrases': {'$elemMatch': {'$in': wordList}}}
+                            ]}
+                        ]}, function(err, res){
+                            if(res == null || res == undefined) { res = [];}
+                            callback(res);
+                        });
+                    });
+                }
+            });
+        }  
+        catch(ex){
+            //callback(null);
+        } 
     }
 
+
+    /* PRIVATE FUNCTIONS */
+
+    /* Offline Get */
+    offlineGet(type, wordlist){
+        var self = this;
+        var res = [];
+
+        try {
+            var basedb = JSON.parse(fs.readFileSync(self.offlineFile,'utf8'));
+
+            switch(type){
+                case "search":
+                    var q1 = underscore.reject(basedb.phrases, function(p){ return p.type == 'phrase'});
+                    var q2 = underscore.filter(q1, function(p){ return wordlist.includes(p.action); });
+                    var q3 = underscore.filter(q1, function(p){ return p.additional_phrases && p.additional_phrases.some(function(ap) { return wordlist.includes(ap);}); });
+
+                    res = q2.concat(q3);    
+                    break;
+                case "full":
+                    res = underscore.where(basedb.phrases, {type: "phrases"});
+                    break;
+                case "all":
+                    res = basedb.phrases;
+                    break;
+                default:
+                    break;
+            }
+        }
+        catch(ex){
+            console.log("Error with offline search: ", ex);
+        }
+        return res;
+    }
     /* Get Phrase Action Call */
     getCall(phrase, acList){
         var self = this;
@@ -75,25 +165,25 @@ class JLANGUAGE {
         var response = null;
 
         try {
-            var phraseSplit = phrase.split(" ");        
+            var phraseSplit = phrase.split(" ");
             var tmpFull = underscore.filter(self.fullPhraseLib, function(dt){ return phrase.search(dt.action) > -1; });
-            
+
             if(tmpFull == null || tmpFull == undefined || tmpFull == ''){
                 actionCall = underscore.min(acList, function(mt){ return mt.level; });
-            } 
+            }
             else {
                 actionCall = underscore.min(tmpFull, function(mt){ return mt.level; });
             }
 
             if(actionCall != null){
-                var response = self.getActionResponse(actionCall, self.chopPhrase(actionCall.action, phraseSplit));      
+                var response = self.getActionResponse(actionCall, self.chopPhrase(actionCall.action, phraseSplit));
             }
             else {
                 var response = {"response":"N/A"}
             }
         }
         catch(ex){
-            console.log("Error Processing Language [jl0]");
+            console.log(" > Error Processing Language [jl0]");
         }
 
         return response;
@@ -121,17 +211,17 @@ class JLANGUAGE {
         var phraseSplit = phrase.split(" ");
 
         //No response in main there is only a response in subactions
-        if(self.jTools.emptyCheck(actionCall.response) && actionCall.subactions != undefined){      
+        if(self.jTools.emptyCheck(actionCall.response) && actionCall.subactions != undefined){
             return self.getSubActionResponse(actionCall.subactions, self.chopPhrase(actionCall.action, phraseSplit));
         }
         //Check for subaction responses before returning main response
         else if(!self.jTools.emptyCheck(actionCall.subactions)) {
-            var response = self.getSubActionResponse(actionCall.subactions, self.chopPhrase(actionCall.action, phraseSplit));     
+            var response = self.getSubActionResponse(actionCall.subactions, self.chopPhrase(actionCall.action, phraseSplit));
             var res = (response == null? {"response":actionCall.response, "action": actionCall.action } : response);
-            
+
             if(response == null && actionCall.additional_phrases != undefined)
                 res.additional_phrases = actionCall.additional_phrases;
-            
+
             return res;
         }
         //Return main response
@@ -152,7 +242,7 @@ class JLANGUAGE {
         var subResponses = [];
 
         // Check for Sub action in remaining phrase
-        for(var i=0; i < phraseSplit.length; i++){            
+        for(var i=0; i < phraseSplit.length; i++){
             var tmpResponse = underscore.filter(subactions, function(val){ return ((phraseSplit[i] == val.action)  || (val.additional_phrases != undefined && val.additional_phrases.indexOf(phraseSplit[i]) > -1))  });
             if(tmpResponse != null){
                 if(subResponses.length == 0) {
@@ -163,16 +253,16 @@ class JLANGUAGE {
                 }
             }
         }
-        
-        retResponse = underscore.min(subResponses, function(mt){ return mt.level; });       
-        
-        if(retResponse != Infinity) {  
+
+        retResponse = underscore.min(subResponses, function(mt){ return mt.level; });
+
+        if(retResponse != Infinity) {
             if(self.jTools.emptyCheck(retResponse.subactions)) {
                 var returnObj = {"response":retResponse.response, "action": retResponse.action, "level": retResponse.level};
-                
+
                 if(!self.jTools.emptyCheck(retResponse.additional_phrases)) {
                     returnObj.additional_phrases = retResponse.additional_phrases;
-                }        
+                }
                 return returnObj;
             }
             else {
@@ -183,41 +273,7 @@ class JLANGUAGE {
             return null;
         }
     }
-
 }
 
 module.exports = JLANGUAGE;
 
-/*
-  PHRASE LIBRARY
-  action: ACTION WORD
-  response: RESPONSE FUNCTION
-  additional_phrases: ADDITIONAL PHRASEING FOR SAME ACTION
-  subactions: SUB ACTIONS UNDER SAME CATEGORY
-*/
-var phraseLibrary_BackUp = [
-    {"action": "test", "level":0, "response":"testCode"},
-    {"action": "change", "level":0, "subactions":[{"action":"my", "level":1, "subactions":[{"action":"fullname", "level":1, "response":"changeFullName"}, {"action":"nickname", "level":1, "response":"changeNickname"},{"action":"voice", "level":1, "response":"changeVoice"}]}]},
-    {"action": "hello", "level":0, "response":"greetings", "additional_phrases":["hi", "hey", "hola", "greetings"]},
-    {"action": "date", "level":1, "response":"getLocalDate", "subactions":[ {"action":"in", "response":"getTimeZoneDate"}]},
-    {"action": "translate", "level":2, "response":"translatePhrase"},
-    {"action": "media", "level":1, "additional_phrases":["books", "music","movies","shows","games","authors"], "subactions":[ {"action":"similar", "level":1, "response":"getTastekidResults"} ]},
-    {"action": "time", "level":2, "response":"getLocalTime", "subactions":[ {"action":"in", "response":"getTimeZoneTime"}]},
-    {"action": "weather", "level":2, "response":"getWeatherCurrent", "subactions":[{"action":"forecast", "level":2, "response":"getWeatherForecast"}, {"action":"details", "level":1, "response":"getWeatherDetailedForecast"} ]},
-    {"action": "directions", "level":2, "response":"getDirections"},
-    {"action": "who", "level":2, "subactions":[{"action": "am", "level":2, "response":"relationshipGuide"}, {"action": "is", "level":2, "response":"relationshipGuide"}]},
-    {"action": "where", "level":2, "subactions":[{"action": "am", "level":2, "response":"locationGuide"}, {"action": "is", "level":2, "response":"locationGuide"}]},
-    {"action": "remember", "level":3, "subactions":[{"action": "location", "level":3, "response":"addUserSetting"}, {"action": "relationship", "level":3, "response":"addUserSetting"}]},
-    {"action": "replace", "level":3, "response":"replaceLastAction", "subactions":[{"action": "location", "level":3, "response":"replaceUserSetting"}, {"action": "relationship", "level":3, "response":"replaceUserSetting"}]},
-    {"action": "marvel", "level":4, "subactions": [{"action": "characters", "level":4, "response":"marvelCharacter"}]},
-  
-    {"action": "cpu", "level":10, "subactions":[{"action": "architecture", "level":10, "response":"getCpuArch", "additional_phrases":["arch"]}, {"action": "information", "level":10, "response":"getCpuInfo", "additional_phrases":["info"]}]},
-    {"action": "computers", "level":10, "subactions":[ {"action":"hostname", "level":10, "response":"getComputerHostname"}]},
-    {"action": "network", "level":10, "subactions":[ {"action":"interface", "level":10, "response":"getNetworkInterface"}]},
-    {"action": "system", "level":10, "subactions":[{"action": "release", "level":10, "response":"getSystemRelease"}, {"action": "memory", "level":10, "response":"getSystemMemory"}]}
-  ];
-  
-  var fullPhrase_Backup = [
-    {"type":"phrase", "action":"do you know the muffin man", "level":101, "response":"easterEggs"},
-    {"type":"phrase", "action":"how are you", "level":101, "response":"easterEggs"}
-  ];

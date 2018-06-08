@@ -120,8 +120,8 @@ class JCELL {
         var self = this;
         var response = {"error":null, "results":null};
         var api = self.getApiItem("openWeather");
-        self.saveLastAction("weatherInfo", items);
-        
+        self.saveLastAction("weatherInfo", items);      
+
         if(api != null){
             try {
                 if(!self.checkParameterList(["type", "location"], items)){
@@ -129,7 +129,7 @@ class JCELL {
                 }
                 else {                    
                     var url = self.jtools.stringFormat("{0}{1}?q={2}&appid={3}&units=imperial", [api.link, items.type, items.location.replace(" ", "+"), api.key]);
-                                        
+                    
                     request({ url: url, json: true}, function (error, res, body){
                         if(!error && res.statusCode === 200){
                             response.results = body;                                                   
