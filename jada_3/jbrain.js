@@ -28,33 +28,37 @@ class JBRAIN {
     /* Jada conversation function */
     convo(phrase, callback) { 
         var self = this;
+        try {
+            var tmpStr = phrase.split(" ");  
+            var phraseLibrary = null;
+            var fullPhraseLibrary = null;
+            
+            self.jlanguage.searchPhrase(tmpStr, function(res){            
+                // Check Full Phrases    
+                if(self.jlanguage.fullPhraseLib == null){
+                    self.jlanguage.getFullPhrases(function(fullres){ 
+                        self.jlanguage.fullPhraseLib = fullres; 
+                        
+                        var response = self.jlanguage.getCall(phrase, res);
 
-        var tmpStr = phrase.split(" ");  
-        var phraseLibrary = null;
-        var fullPhraseLibrary = null;
-        
-        self.jlanguage.searchPhrase(tmpStr, function(res){            
-            // Check Full Phrases    
-            if(self.jlanguage.fullPhraseLib == null){
-                self.jlanguage.getFullPhrases(function(fullres){ 
-                    self.jlanguage.fullPhraseLib = fullres; 
-                    
-                    var response = self.jlanguage.getCall(phrase, res);
-
+                        if(response != null){
+                            phrase = ( response.response == "N/A" ? "" : phrase);
+                            self.jNerves.dataResponse(response, phrase, function(res){ callback(res); });
+                        }
+                    });  
+                }
+                else {
+                    var response = self.jlanguage.getCall(phrase, res, callback);
                     if(response != null){
                         phrase = ( response.response == "N/A" ? "" : phrase);
                         self.jNerves.dataResponse(response, phrase, function(res){ callback(res); });
                     }
-                });  
-            }
-            else {
-                var response = self.jlanguage.getCall(phrase, res, callback);
-                if(response != null){
-                    phrase = ( response.response == "N/A" ? "" : phrase);
-                    self.jNerves.dataResponse(response, phrase, function(res){ callback(res); });
                 }
-            }
-        });
+            });
+        }
+        catch(ex){
+            callback( { jresponse: "Error calling convo: "+ ex});
+        }
     }
 
     directData(){ }

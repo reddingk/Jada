@@ -9,7 +9,6 @@ const Brain = require('./jada_3/jbrain.js');
 let jbrain = new Brain();
 
 // build request
-//console.log(process.argv);
 run(process.argv);
 
 // run function
