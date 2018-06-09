@@ -151,7 +151,7 @@ class JNERVESYSTEM {
 
         var tmpPhrase = response.fullPhrase.split(" ");
         var postPhrase = tmpPhrase.slice(tmpPhrase.indexOf("weather"));
-        var forIndex = postPhrase.indexOf("for");
+        var forIndex = self.additionalPhraseSlicers(postPhrase, ["for", "in"]);        
 
         if(forIndex >= 0){
             dataObj.location = postPhrase.slice(forIndex+1).join(" ");
@@ -185,7 +185,7 @@ class JNERVESYSTEM {
 
         var tmpPhrase = response.fullPhrase.split(" ");
         var postPhrase = tmpPhrase.slice(tmpPhrase.indexOf("forecast"));
-        var forIndex = postPhrase.indexOf("for");
+        var forIndex = self.additionalPhraseSlicers(postPhrase, ["for", "in"]); 
 
         if(forIndex >= 0){
             dataObj.location = postPhrase.slice(forIndex+1).join(" ");
@@ -257,7 +257,7 @@ class JNERVESYSTEM {
 
         var tmpPhrase = response.fullPhrase.split(" ");
         var postPhrase = tmpPhrase.slice(tmpPhrase.indexOf("details"));
-        var forIndex = postPhrase.indexOf("for");
+        var forIndex = self.additionalPhraseSlicers(postPhrase, ["for", "in"]); 
 
         if(forIndex >= 0){
             dataObj.location = postPhrase.slice(forIndex+1).join(" ");
@@ -836,6 +836,21 @@ class JNERVESYSTEM {
         catch(ex){
             
         }
+    }
+
+    /* Private functions */
+    additionalPhraseSlicers(phrase, splicers) {
+        var indexOf = -1;
+        try {
+            for(var i=0; i < splicers.length; i++){
+                indexOf = phrase.indexOf(splicers[i]);
+                if(indexOf >= 0) { break;}
+            }
+        }
+        catch(ex){
+            console.log(" x Error with Add Phrase Slicers");
+        }
+        return indexOf;
     }
 /*END*/
 }

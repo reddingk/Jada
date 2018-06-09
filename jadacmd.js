@@ -1,9 +1,5 @@
 'use strict';
-var mongoose = require('mongoose');
 var database = require('./jada_3/config/database');
-
-mongoose.Promise = global.Promise;
-mongoose.connect(database.remoteUrl, { useMongoClient: true });
 
 const Brain = require('./jada_3/jbrain.js');
 let jbrain = new Brain();

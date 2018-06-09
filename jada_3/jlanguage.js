@@ -33,7 +33,7 @@ class JLANGUAGE {
         var self = this;
 
         try{
-            mongoClient.connect(database.remoteUrl, self.mongoOptions, function(err, db){ 
+            mongoClient.connect(database.remoteUrl, self.mongoOptions, function(err, client){ 
                 if(err) {
                     //console.log(" Debug: Error Get All Phrases");
                     callback(self.offlineGet("all", []));
@@ -41,14 +41,13 @@ class JLANGUAGE {
                 else {
                     if(this.phraseLib == null || this.phraseLib.length == 0){
                         console.log(" > Getting Phrases From DB");
-                        db.collection('phrases', function(err, collection){
-                            collection.find(function(err, res){
-                                if(err){ err; }
-                                if(res == null|| res == undefined) { res = [];}
-                                this.phraseLib = res;
-                                callback(this.phraseLib);
-                            });
-                        });
+                        const db = client.db(database.dbName).collection('phrases');
+                        collection.find().toArray(function(err, res){
+                            if(err){ err; }
+                            if(res == null|| res == undefined) { res = [];}
+                            this.phraseLib = res;
+                            callback(this.phraseLib);
+                        });                        
                     }
                     else {
                         callback(this.phraseLib);
@@ -64,23 +63,22 @@ class JLANGUAGE {
         var self = this;
 
         try {
-            mongoClient.connect(database.remoteUrl, self.mongoOptions, function(err, db){
+            mongoClient.connect(database.remoteUrl, self.mongoOptions, function(err, client){
                 if(err) {
                     //console.log(" Debug: Error Get Full Phrase");
                     callback(self.offlineGet("full", []));
                 }
                 else {
-                    if(this.fullPhraseLib == null) {
+                    if(self.fullPhraseLib == null) {
                         console.log(" > Getting Full Phrases From DB");
-                        db.collection('phrases', function(err, collection){
-                            collection.find({ 'type' : 'phrase' }, function(err, res){
-                                if(res == null|| res == undefined) { res = [];}
-                                callback(res);
-                            });
-                        });                
+                        const db = client.db(database.dbName).collection('phrases');
+                        db.find({ 'type' : 'phrase' }).toArray(function(err, res){
+                            if(res == null|| res == undefined) { res = [];}
+                            callback(res);
+                        });                       
                     }
                     else {
-                        callback(this.fullPhraseLib);
+                        callback(self.fullPhraseLib);
                     }
                 }
             });
@@ -93,28 +91,27 @@ class JLANGUAGE {
     searchPhrase(wordList, callback) {
         var self = this;
         try {
-            mongoClient.connect(database.remoteUrl, self.mongoOptions, function(err, db){
+            mongoClient.connect(database.remoteUrl, self.mongoOptions, function(err, client){
                 if(err) {
                     //console.log(" Debug: Error Search Phrase");
                     callback(self.offlineGet("search", wordList));
                 }
-                else {                    
-                    db.collection('phrases', function(err, collection){
-                        /* Find all that
-                         * Not Phrase &&
-                         * [action in wordlist || additional_phrases in wordlist]
-                         */
+                else {  
+                    const db = client.db(database.dbName).collection('phrases');
+                    /* Find all that
+                     * Not Phrase &&
+                     * [action in wordlist || additional_phrases in wordlist]
+                     */
 
-                        collection.find({'$and': [
-                            {'type': { '$ne': 'phrase' }},
-                            {'$or': [
-                            {'action': {'$in': wordList}},
-                            {'additional_phrases': {'$elemMatch': {'$in': wordList}}}
-                            ]}
-                        ]}, function(err, res){
-                            if(res == null || res == undefined) { res = [];}
-                            callback(res);
-                        });
+                    db.find({'$and': [
+                        {'type': { '$ne': 'phrase' }},
+                        {'$or': [
+                        {'action': {'$in': wordList}},
+                        {'additional_phrases': {'$elemMatch': {'$in': wordList}}}
+                        ]}
+                    ]}).toArray(function(err, res){
+                        if(res == null || res == undefined) { res = [];}
+                        callback(res);
                     });
                 }
             });
@@ -183,7 +180,7 @@ class JLANGUAGE {
             }
         }
         catch(ex){
-            console.log(" > Error Processing Language [jl0]");
+            console.log(" > Error Processing Language [jl0]", ex);
         }
 
         return response;
