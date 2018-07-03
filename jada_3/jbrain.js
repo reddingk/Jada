@@ -35,15 +35,6 @@ class JBRAIN {
         var fullPhraseLibrary = null;
         
         self.dbActions(tmpStr, phrase, callback);
-
-        /*self.jlanguage.dbConnection(function(res){
-          if(res == true){
-            self.dbActions(tmpStr, phrase, callback);
-          }
-          else {
-            self.offlineActions(tmpStr, phrase, callback);
-          }
-        });*/
     }
 
     /* Direct Access to Functions */

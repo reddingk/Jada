@@ -11,15 +11,13 @@ var database = require('./config/database');
 var mongoClient = require('mongodb').MongoClient;
 
 const Tools = require('./jtools.js');
+const basedb = require("./config/basedb.json");
 
 class JLANGUAGE {
     constructor(){
         this.phraseLib = [];
         this.fullPhraseLib = null;
-        this.offlineFile = __dirname + '/config/basedb.json';
-        this.mongoOptions = { connectTimeoutMS: 500};
-        this.greetings = ["Hey", "Hello {0} how are things treating you", "I hope you are having a good day today", "How's life", "How's your day treating you {0}"];
-
+        this.mongoOptions = { connectTimeoutMS: 2000, socketTimeoutMS: 2000};
         this.jTools = new Tools();
     }
 
@@ -130,7 +128,6 @@ class JLANGUAGE {
         var res = [];
 
         try {
-            var basedb = JSON.parse(fs.readFileSync(self.offlineFile,'utf8'));
 
             switch(type){
                 case "search":
@@ -138,7 +135,7 @@ class JLANGUAGE {
                     var q2 = underscore.filter(q1, function(p){ return wordlist.includes(p.action); });
                     var q3 = underscore.filter(q1, function(p){ return p.additional_phrases && p.additional_phrases.some(function(ap) { return wordlist.includes(ap);}); });
 
-                    res = q2.concat(q3);    
+                    res = q2.concat(q3); 
                     break;
                 case "full":
                     res = underscore.where(basedb.phrases, {type: "phrases"});

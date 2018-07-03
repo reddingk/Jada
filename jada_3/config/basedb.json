@@ -20,4 +20,14 @@
         {"action":"replace","level":3,"response":"replaceLastAction","subactions":[{"action":"location","level":3,"response":"replaceUserSetting"},{"action":"relationship","level":3,"response":"replaceUserSetting"}]},
         {"action":"where","level":2,"subactions":[{"action":"am","level":2,"response":"locationGuide"},{"action":"is","level":2,"response":"locationGuide"}]},
         {"action":"marvel","level":4,"subactions":[{"action":"characters","level":4,"response":"marvelCharacter"}]}
-]}
+    ],
+    "greetings":[
+        "Hey", 
+        "Hello {0} how are things treating you", 
+        "I hope you are having a good day today", 
+        "How's life", 
+        "How's your day treating you {0}",
+        "Aloha",
+        "Greetings and salutations"
+    ]
+}

@@ -13,14 +13,14 @@ var md5 = require('md5');
 
 const Tools = require('./jtools.js');
 const Cells = require('./jcell.js');
+const basedb = require("./config/basedb.json");
 
 class JNERVESYSTEM {
     constructor(innerBrain){
         this.jbrain = innerBrain;
         this.jtools = new Tools();
         this.jcell = new Cells(innerBrain.settingFile);
-
-        this.greetPhrases = ["Hey", "Hello {0} how are things treating you", "I hope you are having a good day today", "How's life", "How's your day treating you {0}"];
+        this.greetPhrases = basedb.greetings;
     }
 
     /* Greetings */
