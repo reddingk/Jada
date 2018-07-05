@@ -9,11 +9,13 @@ var os = require('os');
 var underscore = require('underscore');
 
 const Tools = require('./jtools.js');
+const Eyes = require('./jeyes.js');
 const apiLib = require("./config/apiLib.json");
 
 class JCELL {  
     constructor(settingFile) {
         this.jtools = new Tools();
+        this.jeyes = new Eyes();
         this.settingFile = settingFile;
         this.cacheData = {"directions":{}};
     }

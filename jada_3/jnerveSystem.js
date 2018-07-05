@@ -13,6 +13,7 @@ var md5 = require('md5');
 
 const Tools = require('./jtools.js');
 const Cells = require('./jcell.js');
+const Eyes = require('./jeyes.js');
 const basedb = require("./config/basedb.json");
 
 class JNERVESYSTEM {
@@ -20,6 +21,7 @@ class JNERVESYSTEM {
         this.jbrain = innerBrain;
         this.jtools = new Tools();
         this.jcell = new Cells(innerBrain.settingFile);
+        this.jeyes = new Eyes();
         this.greetPhrases = basedb.greetings;
     }
 
@@ -825,6 +827,7 @@ class JNERVESYSTEM {
         }
     }
 
+    /* Marvel Characters */
     marvelCharacter(response, callback){
         var self = this;
         var finalResponse = null;
@@ -835,6 +838,34 @@ class JNERVESYSTEM {
         }
         catch(ex){
             
+        }
+    }
+
+    /* testCode */
+    testCode(response, callback){
+        var self = this;
+        var finalResponse = null;
+        var dataObj = {"type": null, "info":null};
+
+        try {
+            //var tst = self.jeyes.facialRecognition("C:\\Users\\krisr\\Pictures\\Wedding(AllenHouse)\\krisprep\\1P9A8305.jpg");
+            //callback({"jresponse": "Test: I Found " + tst.join(", ") + " faces."});
+
+            var faceNum = self.jeyes.facemarkFile("C:\\Users\\krisr\\Pictures\\Wedding(AllenHouse)\\bridalpartyportraits\\1P9A9171.jpg");
+            callback({"jresponse": "Test: I Found " + faceNum + " faces."});
+
+            //self.jeyes.liveCamera(function(ret){
+            //    callback({"jresponse": "Test Video Status: " + (ret == -100)});
+            //});
+
+            //self.jeyes.facemarkCamera(function(ret){
+            //    callback({"jresponse": "Test Video Status: " + (ret == -100)});
+            //});
+
+            
+        }
+        catch(ex){
+            callback({"jresponse": "There is something wrong with your Demo: " + ex});
         }
     }
 
