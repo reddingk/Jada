@@ -89,7 +89,6 @@ class JCELL {
                 }
                 else {                    
                     var url = self.jtools.stringFormat("{0}similar?q={1}&k={2}&type={3}&info={4}&limit={5}",[api.link, items.query.replace(" ", "+"), api.key, items.type, items.info, items.limit]);
-
                     request({ url: url, json: true}, function (error, res, body){
                         if(!error && res.statusCode === 200){
                             response.results = body;                                

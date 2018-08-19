@@ -69,14 +69,15 @@ class JNERVESYSTEM {
         self.jcell.getLocalDateTime({"type":"time"},
             function(res){
                 var finalResponse = null;
+                var timeRes = 0;
                 if(res.error == null && res.results != null){
-                    var timeRes = res.results;
+                    timeRes = res.results;
                     finalResponse = self.jtools.stringFormat("The time according to this machine is {0}", [timeRes]);
                 }
                 else {
                     finalResponse = "There was an error while retrieving the time, sorry check back later.";
                 }
-                callback({"jresponse": finalResponse});
+                callback({"jresponse": finalResponse, "jdata":timeRes});
         });    
     }
 
@@ -85,14 +86,15 @@ class JNERVESYSTEM {
         var self = this;   
         self.jcell.getLocalDateTime({"type":"date"}, function(res){
             var finalResponse = null;
+            var timeRes = 0;
             if(res.error == null){
-                var timeRes = res.results;
+                timeRes = res.results;
                 finalResponse = self.jtools.stringFormat("The date according to this machine is {0}", [timeRes]);
             }
             else {
                 finalResponse = "There was an error while retrieving the time, sorry check back later.";
             }
-            callback({"jresponse": finalResponse});
+            callback({"jresponse": finalResponse, "jdata":timeRes});
         });    
     }
 
@@ -101,7 +103,7 @@ class JNERVESYSTEM {
         var self = this;
         var objectList = ["media","books","movies","music","shows","games","authors"];
         var dataObj = {"type":"all", "query":"", "limit":10, "info":0};
-
+        
         // Parse phrase
         for(var i=0; i < objectList.length; i++){
             var objectPos = response.fullPhrase.indexOf(objectList[i]);
@@ -127,13 +129,14 @@ class JNERVESYSTEM {
         // Call API
         self.jcell.mediaCompare(dataObj, function(res){
             var finalResponse = null;
+            var resultsString = null;
             if(res.error == null && res.results != null){
                 if(res.results.Similar.Results.length == 0){
                     finalResponse = "Sorry there are no media suggestions for " + res.results.Similar.Info.map(function(el){ return el.Name; }).join(";") + ", maybe you have the wrong title(s)?";
                 }
                 else {
                     var inputString = res.results.Similar.Info.map(function(el){ return self.jtools.stringFormat("{0} ({1})", [el.Name, el.Type]); }).join(" & ");
-                    var resultsString = res.results.Similar.Results.map(function(el){ return self.jtools.stringFormat("{0} ({1})", [el.Name, el.Type]); }).join(", ");
+                    resultsString = res.results.Similar.Results.map(function(el){ return self.jtools.stringFormat("{0} ({1})", [el.Name, el.Type]); }).join(", ");
 
                     finalResponse = self.jtools.stringFormat("According to Tastekid for {0}. The following are sugguested that you checkout: {1}", [inputString, resultsString]);
                 }
@@ -141,7 +144,7 @@ class JNERVESYSTEM {
             else {
                 finalResponse = "There was an error while retrieving media compare data: " + res.error;
             }
-            callback({"jresponse": finalResponse});
+            callback({"jresponse": finalResponse, "japi":resultsString});
         });
     }
 
@@ -149,6 +152,7 @@ class JNERVESYSTEM {
     getWeatherCurrent(response, callback){
         var self = this;
         var finalResponse = null;
+        var apiResponse = null;
         var dataObj = {"type":"find"};
 
         var tmpPhrase = response.fullPhrase.split(" ");
@@ -162,6 +166,7 @@ class JNERVESYSTEM {
                 if(res.error == null && res.results != null){
                     if(res.results.count > 0) {
                         finalResponse = self.jtools.stringFormat("The current weather accourding to OpenWeather.com for {0} is: Tempurature of {1}, Humidity of {2}%, with a description of '{3}'", [res.results.list[0].name, res.results.list[0].main.temp, res.results.list[0].main.humidity, res.results.list[0].weather[0].description ]);
+                        apiResponse = res.results.list[0];
                     }
                     else {
                         finalResponse = self.jtools.stringFormat("Sorry we could not find the current weather for: {0}", [dataObj.location]);
@@ -170,12 +175,12 @@ class JNERVESYSTEM {
                 else {
                     finalResponse = "There was an error while retrieving current weather data: " + res.error;
                 }
-                callback({"jresponse": finalResponse});
+                callback({"jresponse": finalResponse, "japi":apiResponse });
             });
         }
         else {
             finalResponse = "Im not sure where you would like me to look";
-            callback({"jresponse": finalResponse});
+            callback({"jresponse": finalResponse, "japi":apiResponse});
         }
     }
 
@@ -183,6 +188,7 @@ class JNERVESYSTEM {
     getWeatherForecast(response, callback){
         var self = this;
         var finalResponse = null;
+        var apiResponse = null;
         var dataObj = {"type":"forecast"};
 
         var tmpPhrase = response.fullPhrase.split(" ");
@@ -213,7 +219,7 @@ class JNERVESYSTEM {
                                     dateStatus.name = lrgObj;
                                     dateStatus.count = avgStatus[lrgObj];
                                 }
-                                dateList.push(self.jtools.stringFormat(" |{0} : {1} degrees and '{2}'", [dateString, (avgTemp / dateNum).toFixed(2), dateStatus.name]));
+                                dateList.push(self.jtools.stringFormat("{0} : {1} degrees and '{2}'", [dateString, (avgTemp / dateNum).toFixed(2), dateStatus.name]));
 
                                 //Reset tmp Values
                                 dateString = newDate;
@@ -233,7 +239,8 @@ class JNERVESYSTEM {
                             }
                         } 
                         
-                        finalResponse = self.jtools.stringFormat("The weather forecast for the next few days accourding to OpenWeather.com for {0}: \n {1}",[res.results.city.name, dateList.join("\n")]);
+                        finalResponse = self.jtools.stringFormat("The weather forecast for the next few days accourding to OpenWeather.com for {0}: \n {1}",[res.results.city.name, dateList.join("\n | ")]);
+                        apiResponse = dateList;
                     }
                     else {
                         finalResponse = self.jtools.stringFormat("Sorry we could not find the weather forecast for: {0}", [dataObj.location]);
@@ -242,12 +249,12 @@ class JNERVESYSTEM {
                 else {
                     finalResponse = "There was an error while retrieving current weather data: " + res.error;
                 }
-                callback({"jresponse": finalResponse});
+                callback({"jresponse": finalResponse, "japi":apiResponse});
             });
         }
         else {
             finalResponse = "Im not sure where you would like me to look";
-            callback({"jresponse": finalResponse});
+            callback({"jresponse": finalResponse, "japi":apiResponse});
         }
     }
 
@@ -255,6 +262,7 @@ class JNERVESYSTEM {
     getWeatherDetailedForecast(response, callback){
         var self = this;
         var finalResponse = null;
+        var apiResponse = null;
         var dataObj = {"type":"forecast"};
 
         var tmpPhrase = response.fullPhrase.split(" ");
@@ -269,13 +277,15 @@ class JNERVESYSTEM {
                     if(res.results.list.length > 0) {  
                         var dateString = "";
                         finalResponse = self.jtools.stringFormat("The weather forecast for the next few days accourding to OpenWeather.com for {0}: ",[res.results.city.name]);
-                        
+                        apiResponse = res.results.list;
+
                         for(var i =0; i < res.results.list.length; i++){
                             var item = res.results.list[i];
                             var newDate = new Date(item.dt_txt);
                             if(newDate.toDateString() != dateString ){
                                 dateString = newDate.toDateString();
                                 finalResponse += self.jtools.stringFormat("\n\n|{0}\n [{1}]: {2} degrees and '{3}' ", [dateString, newDate.toLocaleTimeString(), item.main.temp_max, item.weather[0].description]);
+
                             }
                             else {
                                 finalResponse += self.jtools.stringFormat("\n [{0}]: {1} degrees and '{2}' ", [newDate.toLocaleTimeString(), item.main.temp_max, item.weather[0].description]);
@@ -290,12 +300,12 @@ class JNERVESYSTEM {
                 else {
                     finalResponse = "There was an error while retrieving current weather data: " + res.error;
                 }
-                callback({"jresponse": finalResponse});
+                callback({"jresponse": finalResponse, "japi":apiResponse});
             });
         }
         else {
             finalResponse = "Im not sure where you would like me to look";
-            callback({"jresponse": finalResponse});
+            callback({"jresponse": finalResponse, "japi":apiResponse});
         }
     }
 
@@ -396,6 +406,7 @@ class JNERVESYSTEM {
     getDirections(response, callback){
         var self = this;
         var finalResponse = null;
+        var apiResponse = null;
         var dataObj = {};               
 
         try {
@@ -420,6 +431,7 @@ class JNERVESYSTEM {
                         var legs = res.results.routes[0].legs[0];
                         var resultList = [];
                         
+                        apiResponse = legs;
                         resultList.push(self.jtools.stringFormat("It will take approximately {0} and {1} from '{2}' to '{3}': ", [legs.duration.text, legs.distance.text, legs.start_address, legs.end_address]));
                         for(var i in legs.steps){
                             var step = legs.steps[i];
@@ -430,17 +442,17 @@ class JNERVESYSTEM {
                     else {
                         finalResponse = self.jtools.stringFormat("Error Retrieving Directions: {0}", [res.error]);
                     }
-                    callback({"jresponse": finalResponse});
+                    callback({"jresponse": finalResponse, "japi":apiResponse});
                 });
             }
             else {
                 finalResponse = "Sorry I was not able to get the directions for you";
-                callback({"jresponse": finalResponse});
+                callback({"jresponse": finalResponse, "japi":apiResponse});
             }
         }
         catch(ex){
             finalResponse = "Sorry there was an error while getting the directions for you: " + ex;
-            callback({"jresponse": finalResponse});
+            callback({"jresponse": finalResponse, "japi":apiResponse});
         }
     }
 
@@ -848,11 +860,23 @@ class JNERVESYSTEM {
         var dataObj = {"type": null, "info":null};
 
         try {
-            //var tst = self.jeyes.facialRecognition("C:\\Users\\krisr\\Pictures\\Wedding(AllenHouse)\\krisprep\\1P9A8305.jpg");
+
+            //self.jeyes.motionTrackingCamera(function(ret){
+            //    callback({"jresponse": "Test Motion Video Status: " + (ret == -100)});
+            //});
+
+            var tst = self.jeyes._processRecognitionImgs("C:\\Users\\krisr\\Pictures\\ImgRecog","C:\\Users\\krisr\\Documents\\Development\\Personal\\Jada\\jada_3\\config\\data\\photoMemory");
+            
+            self.jeyes.faceRecognizeCamera(function(ret){
+                callback({"jresponse": "Facial Recognition Video Status: " + (ret == -100)});
+            });
+
+            //var tst = self.jeyes.facialRecognitionFile("C:\\Users\\krisr\\Pictures\\Wedding(AllenHouse)\\bridalpartyportraits\\1P9A9224.jpg");
+            //var tst = self.jeyes.facialRecognitionFile("C:\\Users\\krisr\\Pictures\\Saved Pictures\\t2.png");
             //callback({"jresponse": "Test: I Found " + tst.join(", ") + " faces."});
 
-            var faceNum = self.jeyes.facemarkFile("C:\\Users\\krisr\\Pictures\\Wedding(AllenHouse)\\bridalpartyportraits\\1P9A9171.jpg");
-            callback({"jresponse": "Test: I Found " + faceNum + " faces."});
+            //var faceNum = self.jeyes.facemarkFile("C:\\Users\\krisr\\Pictures\\Saved Pictures\\t3.PNG");
+            //callback({"jresponse": "Test: I Found " + faceNum + " faces."});
 
             //self.jeyes.liveCamera(function(ret){
             //    callback({"jresponse": "Test Video Status: " + (ret == -100)});
@@ -861,7 +885,6 @@ class JNERVESYSTEM {
             //self.jeyes.facemarkCamera(function(ret){
             //    callback({"jresponse": "Test Video Status: " + (ret == -100)});
             //});
-
             
         }
         catch(ex){
