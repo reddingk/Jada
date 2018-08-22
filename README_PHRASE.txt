@@ -27,6 +27,11 @@ node jadacmd.js [Phrase]
   {date}
       : Get the server machine date
 
+/*SPORTS SCHEDULE*/
+ {schedule} for **** [week] ****
+ **** {schedule} for [week] ****
+      : Get sport schedule for a specific week number
+
 /*MEDIA*/
   [number] {media, books, movies, music, authors, shows, games} [similar] [to] ****
       : Get similar media items to a specific media item

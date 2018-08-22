@@ -10,12 +10,14 @@ var underscore = require('underscore');
 
 const Tools = require('./jtools.js');
 const Eyes = require('./jeyes.js');
+const Lift = require('./jlift.js');
 const apiLib = require("./config/apiLib.json");
 
 class JCELL {  
     constructor(settingFile) {
         this.jtools = new Tools();
         this.jeyes = new Eyes();
+        this.jlift = new Lift(this.jtools);
         this.settingFile = settingFile;
         this.cacheData = {"directions":{}};
     }
@@ -119,6 +121,7 @@ class JCELL {
             try {
                 if(!self.checkParameterList(["type", "location"], items)){
                     response.error = "Missing Parameter";
+                    callback(response);
                 }
                 else {                    
                     var url = self.jtools.stringFormat("{0}{1}?q={2}&appid={3}&units=imperial", [api.link, items.type, items.location.replace(" ", "+"), api.key]);
@@ -192,6 +195,7 @@ class JCELL {
 
                 if(!self.checkParameterList(["toLoc","fromLoc","type"], items)){
                     response.error = "Missing Parameter";
+                    callback(response);
                 }
                 else {                    
                     if(items.toLoc in obj.locations){ items.toLoc = obj.locations[items.toLoc].address; }
@@ -449,6 +453,42 @@ class JCELL {
         callback(response);
     }
 
+    /* Get Sports Schedule */
+    getSportsSchedule(items, callback){
+        var self = this;
+        var response = {"error":null, "results":null};
+        self.saveLastAction("getSportsSchedule", items);
+
+        var sportsUrls = {
+            "nfl":"espn.com/nfl/schedule"
+        };
+
+        try {
+            if(!self.checkParameterList(["sport", "week"], items)){
+                response.error = "Missing Parameter";
+                callback(response);
+            }
+            else {
+                var sportStr = items.sport.toLowerCase();
+                if(sportStr in sportsUrls){                    
+                    this.jlift.sports[sportsUrls[sportStr]]({"url":sportsUrls[sportStr], "week":items.week},
+                    function(res){
+                        response.results = res;
+                        callback(response);
+                    });
+                }
+                else {
+                    response.error = "We can't get that sports schedule yet";
+                    callback(response);
+                }
+            }
+        }
+        catch(ex){
+            response.error = "Error getting sports schedule: " + ex;
+            callback(response);
+        }
+    }
+
     /* private methods */
     saveLastAction(method, data) {
         var self = this;
@@ -480,7 +520,7 @@ class JCELL {
         var self = this;
         var item = apiLib[name];
         return (item == undefined ? null : item);
-    }    
+    }
 }
 
 module.exports = JCELL;

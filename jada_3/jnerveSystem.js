@@ -98,6 +98,49 @@ class JNERVESYSTEM {
         });    
     }
 
+    /* Get Sports Schedules */
+    getSportsSchedule(response,callback){
+        var self = this;
+
+        /* Parse Phrase */
+        var tmpPhrase = response.fullPhrase.split(" ");
+        var scheduleIndex = tmpPhrase.indexOf("schedule");
+
+        var postPhrase = tmpPhrase.slice((scheduleIndex > 0 ? scheduleIndex -1:0));
+
+        scheduleIndex = postPhrase.indexOf("schedule");
+        var forIndex = self.additionalPhraseSlicers(postPhrase, ["for"]);
+        var weekIndex = self.additionalPhraseSlicers(postPhrase, ["week"]);
+        
+        var sportsVal = (forIndex+1 != weekIndex ? forIndex+1 :
+                            (forIndex-1 == scheduleIndex ? scheduleIndex-1 : -1));
+        var weekVal = (weekIndex +1 < postPhrase.length ? weekIndex+1 : 0);
+
+        if(sportsVal < 0){
+            callback({"jresponse":"Error figuring out what sport to get schedule for"});
+        }
+        else {
+            var cellData = {"sport":postPhrase[sportsVal], "week":postPhrase[weekVal]};
+            /* Request */
+            self.jcell.getSportsSchedule(cellData, function(res){
+                var tstFeedback = "";
+                if(res.error){
+                    tstFeedback = res.error;
+                }
+                else {
+                    for(var i=0; i < res.results.length; i++){
+                        tstFeedback += res.results[i].day + ": ";
+                        for(var j=0; j < res.results[i].games.length; j++){
+                            tstFeedback += "\n -" + res.results[i].games[j].awayTeam + " at " + res.results[i].games[j].homeTeam + " : " + res.results[i].games[j].gameInfo;
+                        }
+                        tstFeedback += "\n";
+                    }
+                }
+
+                callback({"jresponse": tstFeedback});
+            });
+        }
+    }
     /* Get TasteKid Results */
     getTastekidResults(response, callback){
         var self = this;
@@ -861,15 +904,15 @@ class JNERVESYSTEM {
 
         try {
 
-            //self.jeyes.motionTrackingCamera(function(ret){
-            //    callback({"jresponse": "Test Motion Video Status: " + (ret == -100)});
-            //});
+            /*self.jeyes.motionTrackingCamera(function(ret){
+                callback({"jresponse": "Test Motion Video Status: " + (ret == -100)});
+            });*/
 
-            var tst = self.jeyes._processRecognitionImgs("C:\\Users\\krisr\\Pictures\\ImgRecog","C:\\Users\\krisr\\Documents\\Development\\Personal\\Jada\\jada_3\\config\\data\\photoMemory");
+            //var tst = self.jeyes._processRecognitionImgs("C:\\Users\\krisr\\Pictures\\ImgRecog","C:\\Users\\krisr\\Documents\\Development\\Personal\\Jada\\jada_3\\config\\data\\photoMemory");
             
-            self.jeyes.faceRecognizeCamera(function(ret){
-                callback({"jresponse": "Facial Recognition Video Status: " + (ret == -100)});
-            });
+            //self.jeyes.faceRecognizeCamera(function(ret){
+            //    callback({"jresponse": "Facial Recognition Video Status: " + (ret == -100)});
+            //});
 
             //var tst = self.jeyes.facialRecognitionFile("C:\\Users\\krisr\\Pictures\\Wedding(AllenHouse)\\bridalpartyportraits\\1P9A9224.jpg");
             //var tst = self.jeyes.facialRecognitionFile("C:\\Users\\krisr\\Pictures\\Saved Pictures\\t2.png");
@@ -884,8 +927,7 @@ class JNERVESYSTEM {
 
             //self.jeyes.facemarkCamera(function(ret){
             //    callback({"jresponse": "Test Video Status: " + (ret == -100)});
-            //});
-            
+            //});          
         }
         catch(ex){
             callback({"jresponse": "There is something wrong with your Demo: " + ex});

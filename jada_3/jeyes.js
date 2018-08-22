@@ -20,6 +20,8 @@ class JEYES {
                             'dominique', 'nina', 'naomi', 'nicole', 'asia', 
                             'ashley', 'marquis', 'vince','khalin'];
     }
+
+    
     /* Motion Tracking */
     motionTrackingCamera(callback){
         var self = this;

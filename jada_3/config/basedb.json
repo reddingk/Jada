@@ -19,7 +19,8 @@
         {"action":"remember","level":3,"subactions":[{"action":"location","level":3,"response":"addUserSetting"},{"action":"relationship","level":3,"response":"addUserSetting"}]},
         {"action":"replace","level":3,"response":"replaceLastAction","subactions":[{"action":"location","level":3,"response":"replaceUserSetting"},{"action":"relationship","level":3,"response":"replaceUserSetting"}]},
         {"action":"where","level":2,"subactions":[{"action":"am","level":2,"response":"locationGuide"},{"action":"is","level":2,"response":"locationGuide"}]},
-        {"action":"marvel","level":4,"subactions":[{"action":"characters","level":4,"response":"marvelCharacter"}]}
+        {"action":"marvel","level":4,"subactions":[{"action":"characters","level":4,"response":"marvelCharacter"}]},
+        {"action":"schedule","level":2,"response":"getSportsSchedule"}
     ],
     "greetings":[
         "Hey", 
