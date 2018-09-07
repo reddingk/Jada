@@ -460,18 +460,19 @@ class JCELL {
         self.saveLastAction("getSportsSchedule", items);
 
         var sportsUrls = {
-            "nfl":"espn.com/nfl/schedule"
+            "nfl":"espn.com/nfl/schedule",
+            "nba":"espn.com/nba/schedule"
         };
 
         try {
-            if(!self.checkParameterList(["sport", "week"], items)){
+            if(!self.checkParameterList(["sport", "day_week"], items)){
                 response.error = "Missing Parameter";
                 callback(response);
             }
             else {
                 var sportStr = items.sport.toLowerCase();
                 if(sportStr in sportsUrls){                    
-                    this.jlift.sports[sportsUrls[sportStr]]({"url":sportsUrls[sportStr], "week":items.week},
+                    this.jlift.sports[sportsUrls[sportStr]]({"url":sportsUrls[sportStr], "day_week":items.day_week},
                     function(res){
                         response.results = res;
                         callback(response);

@@ -28,7 +28,6 @@ node jadacmd.js [Phrase]
       : Get the server machine date
 
 /*SPORTS SCHEDULE*/
- {schedule} for **** [week] ****
  **** {schedule} for [week] ****
       : Get sport schedule for a specific week number
 

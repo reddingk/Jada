@@ -15,6 +15,8 @@ class JEYES {
         this.facemarkModel = __dirname+"/config/data/lbfmodel.yaml";
         this.photoMemory = __dirname + "/config/data/photoMemory";
         this.PhoebeColor = new cv.Vec(4,205,252);
+        this.foundColor = new cv.Vec(102,51,0);
+
         this.imgResize = 80;
         this.nameMappings = ['grace', 'kris', 'jason', 'daphne', 'kaila', 
                             'dominique', 'nina', 'naomi', 'nicole', 'asia', 
@@ -145,6 +147,9 @@ class JEYES {
                     frame = camera.read();
                 }
 
+                // resize image
+                frame = self._sizeImg(frame);
+
                 // Stream Or View Locally
                 cv.imshow("Live Camera Frame", frame);
                 const key = cv.waitKey(1);
@@ -206,6 +211,7 @@ class JEYES {
             let done = false;
             var recogData = self._loadRecogTrainingData(); 
             var camera = new cv.VideoCapture(0);
+            //var camera = new cv.VideoCapture("http://10.0.0.10:8080/videofeed");
 
             const intvl = setInterval(function() {
                 let frame = camera.read();
@@ -218,6 +224,8 @@ class JEYES {
                 // Face Recognize Image
                 var retImg = self.faceRecogImg(frame, recogData, minDetections);
 
+                // Resize Img
+                retImg.img = self._sizeImg(retImg.img);
                 // Stream Or View Locally
                 cv.imshow("Facial Recognition Frame", retImg.img);
                 const key = cv.waitKey(1);
@@ -286,9 +294,11 @@ class JEYES {
                 var predition = recogData.lbph.predict(faceImg);
                 //const who = (result.numDetections[i] < minDetections ? "not sure?" : self.nameMappings[predition.label]);
                 const who = (predition.confidence > minDetections ? "not sure?" : self.nameMappings[predition.label]);
+                const displayColor = (predition.confidence > minDetections ? self.PhoebeColor: self.foundColor);
 
                 ret.names.push(who);
-                var rect = cv.drawDetection(recogImg, faceRect, { color: self.PhoebeColor, segmentFraction: 4 });
+                
+                var rect = cv.drawDetection(recogImg, faceRect, { color: displayColor, segmentFraction: 4 });
 
                 cv.drawTextBox(recogImg,
                     new cv.Point(rect.x, rect.y + rect.height + 10),
