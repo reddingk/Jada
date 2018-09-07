@@ -111,16 +111,16 @@ class JNERVESYSTEM {
         scheduleIndex = postPhrase.indexOf("schedule");
         var forIndex = self.additionalPhraseSlicers(postPhrase, ["for"]);
         var weekIndex = self.additionalPhraseSlicers(postPhrase, ["week"]);
+        weekIndex = (weekIndex < 0 ? forIndex+1 : weekIndex);
         
-        var sportsVal = (forIndex+1 != weekIndex ? forIndex+1 :
-                            (forIndex-1 == scheduleIndex ? scheduleIndex-1 : -1));
-        var weekVal = (weekIndex +1 < postPhrase.length ? weekIndex+1 : 0);
+        var sportsVal = (scheduleIndex > 0 ? scheduleIndex-1 : -1);
+        var weekVal = (weekIndex < postPhrase.length ? weekIndex : 0);
 
         if(sportsVal < 0){
             callback({"jresponse":"Error figuring out what sport to get schedule for"});
         }
         else {
-            var cellData = {"sport":postPhrase[sportsVal], "week":postPhrase[weekVal]};
+            var cellData = {"sport":postPhrase[sportsVal], "day_week":postPhrase[weekVal]};
             /* Request */
             self.jcell.getSportsSchedule(cellData, function(res){
                 var tstFeedback = "";
@@ -908,11 +908,11 @@ class JNERVESYSTEM {
                 callback({"jresponse": "Test Motion Video Status: " + (ret == -100)});
             });*/
 
-            //var tst = self.jeyes._processRecognitionImgs("C:\\Users\\krisr\\Pictures\\ImgRecog","C:\\Users\\krisr\\Documents\\Development\\Personal\\Jada\\jada_3\\config\\data\\photoMemory");
+            var tst = self.jeyes._processRecognitionImgs("C:\\Users\\krisr\\Pictures\\ImgRecog","C:\\Users\\krisr\\Documents\\Development\\Personal\\Jada\\jada_3\\config\\data\\photoMemory");
             
-            //self.jeyes.faceRecognizeCamera(function(ret){
-            //    callback({"jresponse": "Facial Recognition Video Status: " + (ret == -100)});
-            //});
+            self.jeyes.faceRecognizeCamera(function(ret){
+                callback({"jresponse": "Facial Recognition Video Status: " + (ret == -100)});
+            });
 
             //var tst = self.jeyes.facialRecognitionFile("C:\\Users\\krisr\\Pictures\\Wedding(AllenHouse)\\bridalpartyportraits\\1P9A9224.jpg");
             //var tst = self.jeyes.facialRecognitionFile("C:\\Users\\krisr\\Pictures\\Saved Pictures\\t2.png");
