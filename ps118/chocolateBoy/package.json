@@ -1,0 +1,16 @@
+{
+  "name": "chocolateBoy",
+  "version": "1.0.0",
+  "description": "Chocolate boy single node",
+  "main": "cocoboy.js",
+  "scripts": {
+    "start": "node cocoboy.js"
+  },
+  "author": "KRedd",
+  "license": "ISC",
+  "dependencies": {
+    "eventsource": "^1.0.7",
+    "os": "^0.1.1",
+    "socket.io-client": "^1.7.2"
+  }
+}

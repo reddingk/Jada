@@ -1,7 +1,8 @@
 var os = require('os');
 var util = require('util');
+var EventSource = require('eventSource')
 
-var srcLoc = '';
+var srcLoc = 'http://localhost:1003';
 var id = "CB-" + os.hostname();
 
 var srcURL = util.format('%s/jnetwork/connect/%s', srcLoc, id);

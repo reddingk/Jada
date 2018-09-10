@@ -3,3 +3,12 @@
 
 - Run Command Line Commands
    js:
+
+- Directory Tree
+    npm: directory-tree
+
+- Send File
+    npm: delivery.js
+
+- Location
+    js: 'use req.ip, then get address from ip'

@@ -7,31 +7,21 @@ var sse = {
         try {
             var connectionId = ("id" in req.params ? req.params.id : null);
 
-            if (connectionId !== null) {
+            if (connectionId !== null) {                
+                // Send Connected Status Back To Client
+                res.sse({data:'connected'});
 
-                req.socket.setTimeout(Number.MAX_VALUE);
-                res.writeHead(200, {
-                    'Content-Type': 'text/event-stream',
-                    'Cache-Control': 'no-cache',
-                    'Connection': 'keep-alive'
-                });
+                // Add client to Connection List
+                connections.addConnection(connectionId, res);
 
-                // Send connected status back to client
-                res.write({ "error": null, "data": "connected" });
-
-                (function (connections) {
-                    // Add client to Connection List
-                    connections.addConnection(connectionId, res);
-
-                    // Remove Connection when it disconnects
-                    req.on("close", function () {
-                        connections.removeConnection(connectionId);
-                    });
-                })(connectionId)
+                // Remove Connection when it disconnects
+                req.on("close", function () {
+                    connections.removeConnection(connectionId);
+                });             
             }
         }
         catch (ex) {
-            console.log("Error connected to J Network: ", ex);
+            console.log("Error connecting to J Network: ", ex);
         }
     },
     broadcast: function (req, res, connections) {
@@ -43,15 +33,18 @@ var sse = {
 
             if (broadcastId === null) {
                 var list = connections.getAll();
-                for (conn in list) {
+
+                for(var j =0; j < list.length; j++) {
+                    var conn = list[j];
                     if (conn.connection) {
-                        conn.connection.write({ "data": message });
+                        conn.connection.sse({ "data": message });
                     }
                 }
             }
             else {
                 var conn = connections.getConnection(broadcastId);
-                conn.connection.write({ "data": message });
+                conn.connection.sse({ "data": message });
+                conn.connection.end();
             }
 
             res.status(200).json({ "data": true });

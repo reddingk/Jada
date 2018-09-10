@@ -1,4 +1,3 @@
 node_modules/*
 ps118/libs/*
-ps118/utils/chocolateBoy/node_modules/*
-ps118/utils/phoebe/node_modules/*
+ps118/chocolateBoy/node_modules/*
