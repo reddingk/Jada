@@ -1,6 +1,7 @@
 {
   "ExpandedNodes": [
     "",
+    "\\jada_3",
     "\\network\\config",
     "\\network\\controllers",
     "\\network\\services",
@@ -8,6 +9,6 @@
     "\\ps118\\chocolateBoy",
     "\\ps118\\chocolateBoy\\cocoboy_3"
   ],
-  "SelectedNode": "\\ps118\\chocolateBoy\\info.txt",
+  "SelectedNode": "\\ps118\\chocolateBoy\\cocoboy_3\\ccells.js",
   "PreviewInSolutionExplorer": false
 }

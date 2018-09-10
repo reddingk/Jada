@@ -29,7 +29,7 @@ app.use('/japi', require('./api/controllers/routes.controller.js'));
 app.use('/jnetwork', require('./network/controllers/network.controller.js')(jconnections));
 
 // SOCKET CONNECTION
-//require('./network/server.config.js')(io);
+require('./network/controllers/netsock.config.js')(io, jconnections);
 
 http.listen(port, function(){
     console.log('Application is open on port ' + port);

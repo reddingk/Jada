@@ -11,12 +11,14 @@ var sse = {
                 // Send Connected Status Back To Client
                 res.sse({data:'connected'});
 
-                // Add client to Connection List
+                // Add client to Connection List & Broadcast New List
                 connections.addConnection(connectionId, res);
+                broadcastList(connections);
 
-                // Remove Connection when it disconnects
+                // Remove Connection when it Disconnects & Broadcast New List
                 req.on("close", function () {
                     connections.removeConnection(connectionId);
+                    broadcastList(connections);
                 });             
             }
         }
@@ -37,13 +39,13 @@ var sse = {
                 for(var j =0; j < list.length; j++) {
                     var conn = list[j];
                     if (conn.connection) {
-                        conn.connection.sse({ "data": message });
+                        conn.connection.sse({ "command": "broadcast", "data": message });
                     }
                 }
             }
             else {
                 var conn = connections.getConnection(broadcastId);
-                conn.connection.sse({ "data": message });
+                conn.connection.sse({ "command":"broadcast", "data": message });
                 conn.connection.end();
             }
 
@@ -74,3 +76,27 @@ var sse = {
 }
 
 module.exports = sse;
+
+/* Private Functions */
+
+// Broadcast Connection List
+function broadcastList(connections) {
+    var self = this;
+
+    try {
+        var list = connections.getAll();
+
+        for (var i = 0; i < list.length; i++) {
+            if (!list[i].connectionId.startsWith("CB-")) {
+                var conn = list[i];
+                if (conn.connection) {
+                    conn.connection.sse({ "command":"connectionList", "data": list });
+                }
+            }
+        }
+    }
+    catch (ex) {
+        var errorMsg = "Error broadcasting list: " + ex;
+        console.log(errorMsg);
+    }
+}

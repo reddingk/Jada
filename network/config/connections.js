@@ -14,10 +14,44 @@ class JConnection {
                 console.log(name, " updated network connection");
             }
             else {
-                self.connectionList[name] = { "connectionId":name, "connection": conn, "nickname": null };
+                self.connectionList[name] = { "connectionId":name, "connection": conn, "nickname": null, "socket": null };
                 console.log(name, " joined network");
             }
             status = true;
+        }
+        catch (ex) {
+            status = false;
+        }
+        return status;
+    }
+
+    // Add Socket Id to Object
+    addSocket(name, sockId) {
+        var self = this;
+        var status = false;
+        try {
+            if (name in self.connectionList) {
+                self.connectionList[name].socket = sockId;
+                console.log(name, " connected socket");
+                status = true;
+            }          
+        }
+        catch (ex) {
+            status = false;
+        }
+        return status;
+    }
+
+    // Remove Socket Id from Object
+    removeSocket(name) {
+        var self = this;
+        var status = false;
+        try {
+            if (name in self.connectionList) {
+                self.connectionList[name].socket = null;
+                console.log(name, " disconnected socket");
+                status = true;
+            }
         }
         catch (ex) {
             status = false;
