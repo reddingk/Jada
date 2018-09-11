@@ -1,6 +1,5 @@
 var express = require('express');
 var app = express();
-var io = null; //require('socket.io-client');
 
 // set ports
 var port = process.env.PORT || 2626;
@@ -18,7 +17,7 @@ var port = process.env.PORT || 2626;
 //app.use(methodOverride('X-HTTP-Method-Override'));
 
 // SOCKET CONNECTION
-require('./cocoboy_3/server.config.js')(io);
+require('./cocoboy_3/server.config.js');
 
 // start app
 //app.listen(port);
