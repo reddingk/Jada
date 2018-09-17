@@ -1,5 +1,6 @@
 'use strict';
 
+
 const CELLS = require('./ccells.js');
 
 class CNERVES {
@@ -43,6 +44,30 @@ class CNERVES {
         }
         catch(ex){
             ret.error = "error getting tree" + ex;
+            callback(ret);
+        }
+    }
+
+    /* Vid View */
+    phoebeView(data, callback){
+        var self = this;
+        var ret = { "id":null, "command":null, "filter":null, "filterStatus":false, "data":null, "error":null};
+
+        try {
+            ret.command = "phoebeView";
+            ret.id = data.id;
+            ret.filter = data.filter;
+            ret.filterStatus = true;
+
+            self.ccells.phoebeView(function(pRet){
+                if(pRet.error){ ret.error = pRet.error; }
+                else { ret.data = pRet.data; }
+
+                callback(ret);
+            });
+        }
+        catch(ex){
+            ret.error = "error getting view [2]" + ex;
             callback(ret);
         }
     }

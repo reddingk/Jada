@@ -5,6 +5,9 @@ let sseExpress = require('sse-express');
 // Network Services
 var sse = require('../services/sse.service');
 
+// Auth Services
+var jauth = require('../../security/services/auth.service');
+
 module.exports = function (connections) {
     // Connect to J Network
     router.get('/connect/:id', sseExpress(), function (req, res) {
@@ -23,5 +26,16 @@ module.exports = function (connections) {
         sse.getConnections(req, res, connections);
     });
 
+    // Add User to Network
+    router.post('/addUser', function(req, res){
+        jauth.validateUser(req.userId, req.token, connections, function(ret){
+            if(ret.statusCode > 0){
+                jauth.createUser(req.user.userId, req.user.password, req.user.name, connections, function(userret){
+                    res.status(200).json({ "data": userRet });
+                });
+            }
+        });
+    });
+    
     return router;
 }

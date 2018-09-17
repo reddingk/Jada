@@ -47,18 +47,18 @@ class JNERVESYSTEM {
         }
 
         if(tmpStr.length == 0) {
-            callback({ "todo":"", "jresponse": persGreeting, "japi": {"results":persGreeting } });
+            callback({ "todo":"", "jresponse": persGreeting, "jdata": {"results":persGreeting } });
         }
         else if(tmpStr == 1) {
             self.jbrain.convo(tmpStr[0], function(res){
               var finalResponse = persGreeting + ": " + res.jresponse;
-              callback({ "todo":"", "jresponse": finalResponse, "japi": {"results":res.japi } });
+              callback({ "todo":"", "jresponse": finalResponse, "jdata": {"results":res.jdata } });
             });
         }
         else {
             self.jbrain.convo(tmpStr.join(" "), function(res){
               var finalResponse = persGreeting + ": " + res.jresponse;
-              callback({ "todo":"", "jresponse": finalResponse, "japi": {"results":res.japi } });
+              callback({ "todo":"", "jresponse": finalResponse, "jdata": {"results":res.jdata } });
             });
         }
     }
@@ -123,21 +123,21 @@ class JNERVESYSTEM {
             var cellData = {"sport":postPhrase[sportsVal], "day_week":postPhrase[weekVal]};
             /* Request */
             self.jcell.getSportsSchedule(cellData, function(res){
-                var tstFeedback = "";
+                var schFeedback = "";
                 if(res.error){
-                    tstFeedback = res.error;
+                    schFeedback = res.error;
                 }
                 else {
                     for(var i=0; i < res.results.length; i++){
-                        tstFeedback += res.results[i].day + ": ";
+                        schFeedback += res.results[i].day + ": ";
                         for(var j=0; j < res.results[i].games.length; j++){
-                            tstFeedback += "\n -" + res.results[i].games[j].awayTeam + " at " + res.results[i].games[j].homeTeam + " : " + res.results[i].games[j].gameInfo;
+                            schFeedback += "\n -" + res.results[i].games[j].awayTeam + " at " + res.results[i].games[j].homeTeam + " : " + res.results[i].games[j].gameInfo;
                         }
-                        tstFeedback += "\n";
+                        schFeedback += "\n";
                     }
                 }
 
-                callback({"jresponse": tstFeedback});
+                callback({"jresponse": schFeedback, "jdata":res.results});
             });
         }
     }
@@ -187,7 +187,7 @@ class JNERVESYSTEM {
             else {
                 finalResponse = "There was an error while retrieving media compare data: " + res.error;
             }
-            callback({"jresponse": finalResponse, "japi":resultsString});
+            callback({"jresponse": finalResponse, "jdata":res.results.Similar});
         });
     }
 
@@ -218,12 +218,12 @@ class JNERVESYSTEM {
                 else {
                     finalResponse = "There was an error while retrieving current weather data: " + res.error;
                 }
-                callback({"jresponse": finalResponse, "japi":apiResponse });
+                callback({"jresponse": finalResponse, "jdata":apiResponse });
             });
         }
         else {
             finalResponse = "Im not sure where you would like me to look";
-            callback({"jresponse": finalResponse, "japi":apiResponse});
+            callback({"jresponse": finalResponse, "jdata":apiResponse});
         }
     }
 
@@ -292,12 +292,12 @@ class JNERVESYSTEM {
                 else {
                     finalResponse = "There was an error while retrieving current weather data: " + res.error;
                 }
-                callback({"jresponse": finalResponse, "japi":apiResponse});
+                callback({"jresponse": finalResponse, "jdata":apiResponse});
             });
         }
         else {
             finalResponse = "Im not sure where you would like me to look";
-            callback({"jresponse": finalResponse, "japi":apiResponse});
+            callback({"jresponse": finalResponse, "jdata":apiResponse});
         }
     }
 
@@ -343,12 +343,12 @@ class JNERVESYSTEM {
                 else {
                     finalResponse = "There was an error while retrieving current weather data: " + res.error;
                 }
-                callback({"jresponse": finalResponse, "japi":apiResponse});
+                callback({"jresponse": finalResponse, "jdata":apiResponse});
             });
         }
         else {
             finalResponse = "Im not sure where you would like me to look";
-            callback({"jresponse": finalResponse, "japi":apiResponse});
+            callback({"jresponse": finalResponse, "jdata":apiResponse});
         }
     }
 
@@ -485,17 +485,17 @@ class JNERVESYSTEM {
                     else {
                         finalResponse = self.jtools.stringFormat("Error Retrieving Directions: {0}", [res.error]);
                     }
-                    callback({"jresponse": finalResponse, "japi":apiResponse});
+                    callback({"jresponse": finalResponse, "jdata":apiResponse});
                 });
             }
             else {
                 finalResponse = "Sorry I was not able to get the directions for you";
-                callback({"jresponse": finalResponse, "japi":apiResponse});
+                callback({"jresponse": finalResponse, "jdata":apiResponse});
             }
         }
         catch(ex){
             finalResponse = "Sorry there was an error while getting the directions for you: " + ex;
-            callback({"jresponse": finalResponse, "japi":apiResponse});
+            callback({"jresponse": finalResponse, "jdata":apiResponse});
         }
     }
 
@@ -513,12 +513,12 @@ class JNERVESYSTEM {
                 else {
                     finalResponse = self.jtools.stringFormat("Error retrieving CPU ARCH: {0}", [res.error]);
                 }
-                callback({"jresponse": finalResponse});
+                callback({"jresponse": finalResponse, "jdata": res.results});
             });            
         }
         catch(ex){
             finalResponse = "Error retrieving CPU ARCH: " + ex;
-            callback({"jresponse": finalResponse});
+            callback({"jresponse": finalResponse, "jdata": null});
         }
     }
 
@@ -540,12 +540,12 @@ class JNERVESYSTEM {
                 else {
                     finalResponse = self.jtools.stringFormat("Error retrieving CPU INFO: {0}", [res.error]);
                 }
-                callback({"jresponse": finalResponse});
+                callback({"jresponse": finalResponse, "jdata":res.results});
             });            
         }
         catch(ex){
             finalResponse = "Error retrieving CPU INFO: " + ex;
-            callback({"jresponse": finalResponse});
+            callback({"jresponse": finalResponse, "jdata":null});
         }
     }
 
@@ -563,12 +563,12 @@ class JNERVESYSTEM {
                 else {
                     finalResponse = self.jtools.stringFormat("Error retrieving Computer Hostname: {0}", [res.error]);
                 }
-                callback({"jresponse": finalResponse});
+                callback({"jresponse": finalResponse, "jdata":res.results});
             });            
         }
         catch(ex){
             finalResponse = "Error retrieving Computer Hostname: " + ex;
-            callback({"jresponse": finalResponse});
+            callback({"jresponse": finalResponse, "jdata":null});
         }
     }
 
@@ -598,12 +598,12 @@ class JNERVESYSTEM {
                 else {
                     finalResponse = self.jtools.stringFormat("Error retrieving network information: {0}", [res.error]);
                 }
-                callback({"jresponse": finalResponse});
+                callback({"jresponse": finalResponse, "jdata":res.results});
             });            
         }
         catch(ex){
             finalResponse = "Error retrieving network information: " + ex;
-            callback({"jresponse": finalResponse});
+            callback({"jresponse": finalResponse, "jdata":null});
         }
     }
 
@@ -621,12 +621,12 @@ class JNERVESYSTEM {
                 else {
                     finalResponse = self.jtools.stringFormat("Error retrieving system release: {0}", [res.error]);
                 }
-                callback({"jresponse": finalResponse});
+                callback({"jresponse": finalResponse, "jdata":res.results});
             });            
         }
         catch(ex){
             finalResponse = "Error retrieving system release: " + ex;
-            callback({"jresponse": finalResponse});
+            callback({"jresponse": finalResponse, "jdata":null});
         }
     }
 
@@ -651,12 +651,12 @@ class JNERVESYSTEM {
                 else {
                     finalResponse = self.jtools.stringFormat("Error retrieving system memory: {0}", [res.error]);
                 }
-                callback({"jresponse": finalResponse});
+                callback({"jresponse": finalResponse, "jdata":res.results});
             });            
         }
         catch(ex){
             finalResponse = "Error retrieving system memory: " + ex;
-            callback({"jresponse": finalResponse});
+            callback({"jresponse": finalResponse, "jdata":null});
         }
     }
 
@@ -733,12 +733,12 @@ class JNERVESYSTEM {
                 else {
                     finalResponse = "sorry you didn't give me a name or nickname I could work with.";
                 }
-                callback({"jresponse": finalResponse});
+                callback({"jresponse": finalResponse, "jdata":res.results});
             });            
         }
         catch(ex){
             finalResponse = "error trying to find relationship: " + ex;
-            callback({"jresponse": finalResponse});
+            callback({"jresponse": finalResponse, "jdata":null});
         }
     }
 
@@ -775,12 +775,12 @@ class JNERVESYSTEM {
                 else {
                     finalResponse = "Sorry: " + res.error;
                 }
-                callback({"jresponse": finalResponse});
+                callback({"jresponse": finalResponse, "jdata":res.results});
             });
 
         }
         catch(ex){
-            callback({"jresponse": "There seems to be an issue with my location guide: " + ex});
+            callback({"jresponse": "There seems to be an issue with my location guide: " + ex, "jdata":null});
         }
     }
 

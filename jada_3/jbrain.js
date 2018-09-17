@@ -38,17 +38,17 @@ class JBRAIN {
     }
 
     /* Direct Access to Functions */
-    directData(functionName, items) {
+    directData(functionName, items, callback) {
       var self = this;
       var response = {};
       try {
         self.jCells[functionName](items, function(res){
-            return res;
+            callback(res);
         });
       }
       catch(ex){
         response.error = "Error calling directData function: "+ ex;
-        return response;
+        callback(response);
       }
     }
 

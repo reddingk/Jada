@@ -180,6 +180,7 @@ class JCELL {
         catch(ex){
             response.error = self.jtools.stringFormat("Error updating {0} to {1}: {2}", [item.item, item.newitem, ex]);
         }
+        callback(response);
     }
 
     /* get Directions */

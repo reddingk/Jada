@@ -1,6 +1,7 @@
 'use strict';
 
 var util = require('util');
+var jauth = require('../../security/services/auth.service');
 
 var sse = {
     connect: function (req, res, connections) {
@@ -27,29 +28,37 @@ var sse = {
         }
     },
     broadcast: function (req, res, connections) {
-        try {
-            /* TODO: VALIDATE USER */
-
-            var broadcastId = ("id" in req.body ? req.body.id : null);
-            var message = ("message" in req.body ? req.body.message : null);
-
-            if (broadcastId === null) {
-                var list = connections.getAll();
-
-                for(var j =0; j < list.length; j++) {
-                    var conn = list[j];
-                    if (conn.connection) {
-                        conn.connection.sse({ "command": "broadcast", "data": message });
-                    }
+        try {            
+            var userId = ("userId" in req.body ? req.body.userId : null);
+            var token = ("token" in req.body ? req.body.token : null); 
+            /* Validate User */
+            jauth.validateUser(userId, token, connections, function(ret){
+                if(ret.statusCode <= 0){ 
+                    res.status(400).json({ "error": ret.status, "data": false });
                 }
-            }
-            else {
-                var conn = connections.getConnection(broadcastId);
-                conn.connection.sse({ "command":"broadcast", "data": message });
-                conn.connection.end();
-            }
+                else {
+                    var broadcastId = ("id" in req.body ? req.body.id : null);
+                    var message = ("message" in req.body ? req.body.message : null);
 
-            res.status(200).json({ "data": true });
+                    if (broadcastId === null) {
+                        var list = connections.getAll();
+
+                        for(var j =0; j < list.length; j++) {
+                            var conn = list[j];
+                            if (conn.connection) {
+                                conn.connection.sse({ "command": "broadcast", "data": message });
+                            }
+                        }
+                    }
+                    else {
+                        var conn = connections.getConnection(broadcastId);
+                        conn.connection.sse({ "command":"broadcast", "data": message });
+                        conn.connection.end();
+                    }
+
+                    res.status(200).json({ "data": true });
+                }
+            });                       
         }
         catch (ex) {
             var errorMsg = "Error broadcasting message: " + ex;
@@ -59,13 +68,19 @@ var sse = {
     },
     getConnections: function (req, res, connections) {
         try {
-            var userId = ("uid" in req.body ? req.body.uid : null);
-
-            /* TODO: VALIDATE USER */
-
-            // Get List of Connections
-            var list = connections.getAll();
-            res.status(200).json({ "data": list });
+            var userId = ("userId" in req.body ? req.body.userId : null);
+            var token = ("token" in req.body ? req.body.token : null); 
+            /* Validate User */
+            jauth.validateUser(userId, token, connections, function(ret){
+                if(ret.statusCode <= 0){ 
+                    res.status(400).json({ "error": ret.status, "data": false });
+                }
+                else { 
+                    // Get List of Connections
+                    var list = connections.getAll();
+                    res.status(200).json({ "data": list });
+                }
+            });           
         }
         catch (ex) {
             var errorMsg = "Error retrieving list: " + ex;

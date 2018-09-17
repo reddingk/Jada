@@ -5,17 +5,19 @@ class JConnection {
         this.connectionList = {};
     }
     // Add Connection To List
-    addConnection(name, conn) {
+    addConnection(id, conn, nickname, token) {
         var self = this;
         var status = false;
         try {
-            if (name in self.connectionList) {
-                self.connectionList[name].connection = conn;
-                console.log(name, " updated network connection");
+            if (id in self.connectionList) {
+                self.connectionList[id].connection = conn;
+                self.connectionList[id].nickname = nickname;
+                self.connectionList[id].token = token;
+                console.log(id, " updated network connection");
             }
             else {
-                self.connectionList[name] = { "connectionId":name, "connection": conn, "nickname": null, "socket": null };
-                console.log(name, " joined network");
+                self.connectionList[id] = { "connectionId":id, "connection": conn, "nickname": nickname, "token":token, "socket": null };
+                console.log(id, " joined network");
             }
             status = true;
         }
@@ -25,14 +27,44 @@ class JConnection {
         return status;
     }
 
-    // Add Socket Id to Object
-    addSocket(name, sockId) {
+    // Remove Connection From List
+    removeConnection(id) {
         var self = this;
         var status = false;
         try {
-            if (name in self.connectionList) {
-                self.connectionList[name].socket = sockId;
-                console.log(name, " connected socket");
+            delete self.connectionList[id];            
+            console.log(id, " completely left network");
+            status = true;
+        }
+        catch (ex) {
+            status = false;
+        }
+        return status;
+    }
+
+    // Remove Connection From List
+    clearConnection(id) {
+        var self = this;
+        var status = false;
+        try {
+            self.connectionList[id].connection = null;
+            console.log(id, " left network");
+            status = true;
+        }
+        catch (ex) {
+            status = false;
+        }
+        return status;
+    }
+
+    // Add Socket Id to Object
+    addSocket(id, sockId) {
+        var self = this;
+        var status = false;
+        try {
+            if (id in self.connectionList) {
+                self.connectionList[id].socket = sockId;
+                console.log(id, " connected socket");
                 status = true;
             }          
         }
@@ -43,13 +75,13 @@ class JConnection {
     }
 
     // Remove Socket Id from Object
-    removeSocket(name) {
+    removeSocket(id) {
         var self = this;
         var status = false;
         try {
-            if (name in self.connectionList) {
-                self.connectionList[name].socket = null;
-                console.log(name, " disconnected socket");
+            if (id in self.connectionList) {
+                self.connectionList[id].socket = null;
+                console.log(id, " disconnected socket");
                 status = true;
             }
         }
@@ -59,28 +91,13 @@ class JConnection {
         return status;
     }
 
-    // Remove Connection From List
-    removeConnection(name) {
-        var self = this;
-        var status = false;
-        try {
-            delete self.connectionList[name];
-            console.log(name, " left network");
-            status = true;
-        }
-        catch (ex) {
-            status = false;
-        }
-        return status;
-    }
-
     // Return Connection
-    getConnection(name) {
+    getConnection(id) {
         var self = this;
         var ret = null;
 
         try {
-            ret = (name in self.connectionList ? self.connectionList[name] : null); 
+            ret = (id in self.connectionList ? self.connectionList[id] : null); 
         }
         catch (ex) {
             ret = null;

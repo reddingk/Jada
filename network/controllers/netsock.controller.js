@@ -1,3 +1,5 @@
+var dataFilter = require('../services/dataFilter.service');
+
 module.exports = function (io, connections) {
     // socket connection
     io.on('connection', function (socket) {
@@ -15,8 +17,10 @@ module.exports = function (io, connections) {
         socket.on('direct connect', function (info) {
             /* TODO: AUTHENTICATE USER */
             var connectionId = connections.getConnection(info.userId).socket;
-            if (connectionId) {
-                io.to(connectionId).emit('direct connect', info.data);
+            if (connectionId) {                
+                dataFilter.filterCheck(info, function(ret){
+                    io.to(connectionId).emit('direct connect', ret);
+                });                
             }
         });
     });
