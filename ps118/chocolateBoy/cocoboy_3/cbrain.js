@@ -1,13 +1,12 @@
 'use strict';
 
+const Nerves = require('./cnerves.js');
 var io = require('socket.io-client');
 var cfg = require('../config/config.json');
 
-const NERVES = require('./cnerves.js');
-
 class CBRAIN {
     constructor(name) {
-        this.cnerves = new NERVES();
+        this.cnerves = new Nerves();
         this.name = name;
         this.socket = null;
     }

@@ -28,9 +28,9 @@ module.exports = function (connections) {
 
     // Add User to Network
     router.post('/addUser', function(req, res){
-        jauth.validateUser(req.userId, req.token, connections, function(ret){
+        jauth.validateUser(req.body.userId, req.body.token, connections, function(ret){
             if(ret.statusCode > 0){
-                jauth.createUser(req.user.userId, req.user.password, req.user.name, connections, function(userret){
+                jauth.createUser(req.body.user.userId, req.body.user.password, req.body.user.name, connections, function(userRet){
                     res.status(200).json({ "data": userRet });
                 });
             }

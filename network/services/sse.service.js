@@ -10,7 +10,7 @@ var sse = {
 
             if (connectionId !== null) {                
                 // Send Connected Status Back To Client
-                res.sse({data:'connected'});
+                res.sse({data:{"command":"connection", "data":'connected'}});
 
                 // Add client to Connection List & Broadcast New List
                 connections.addConnection(connectionId, res);
@@ -52,7 +52,7 @@ var sse = {
                     }
                     else {
                         var conn = connections.getConnection(broadcastId);
-                        conn.connection.sse({ "command":"broadcast", "data": message });
+                        conn.connection.sse({data: { "command":"broadcast", "data": message }});
                         conn.connection.end();
                     }
 
@@ -100,12 +100,15 @@ function broadcastList(connections) {
 
     try {
         var list = connections.getAll();
+        var reduceList = list.map(r => ({connectionId: r.connectionId, nickname: r.nickname}));
 
+        var jsonObj = { "command":"connectionList", "data": reduceList };
+        
         for (var i = 0; i < list.length; i++) {
             if (!list[i].connectionId.startsWith("CB-")) {
                 var conn = list[i];
                 if (conn.connection) {
-                    conn.connection.sse({ "command":"connectionList", "data": list });
+                    conn.connection.sse({"data":jsonObj});
                 }
             }
         }
@@ -115,3 +118,5 @@ function broadcastList(connections) {
         console.log(errorMsg);
     }
 }
+
+

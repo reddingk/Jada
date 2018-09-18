@@ -5,6 +5,7 @@ const bcrypt = require('bcrypt');
 const UIDGenerator = require('uid-generator');
 var database = require('../../jada_3/config/database');
 var mongoClient = require('mongodb').MongoClient;
+const mongoOptions = { connectTimeoutMS: 2000, socketTimeoutMS: 2000};
 
 const uidgen = new UIDGenerator(); 
 const saltRounds = 15;
@@ -13,13 +14,13 @@ var auth = {
     createUser: function(user, password, name, connections, callback){
         var self = this;
         try {
-            self.getUserByUname(user, function(res){
+            getUserByUname(user, function(res){
                 if(res){
                     callback({"error":"User Already Exists"});
                 }
                 else {
                     var pwdHash = bcrypt.hashSync(password, saltRounds);
-                    self.addUser(user, pwdHash, name, callback);
+                    addUser(user, pwdHash, name, callback);
                 }
             }); 
         }
@@ -32,7 +33,7 @@ var auth = {
     loginUser: function(user, password, connections, callback){
         var self = this;
         try {
-            self.getUserByUname(user, function(res){
+            getUserByUname(user, function(res){
                 if(!res){
                     callback({"error":"Invalid User"});
                 }
@@ -100,7 +101,7 @@ module.exports =  auth;
 /* Get User From DB */
 function getUserByUname(uname, callback){
     try {
-        mongoClient.connect(database.remoteUrl, self.mongoOptions, function(err, client){
+        mongoClient.connect(database.remoteUrl, mongoOptions, function(err, client){
             const db = client.db(database.dbName).collection('users');
             db.find({ 'userId' : uname }).toArray(function(err, res){
                 var ret = null;
@@ -118,7 +119,7 @@ function getUserByUname(uname, callback){
 /* Add User to DB */
 function addUser(uname, pwd, name, callback){
     try {
-        mongoClient.connect(database.remoteUrl, self.mongoOptions, function(err, client){
+        mongoClient.connect(database.remoteUrl, mongoOptions, function(err, client){
             const db = client.db(database.dbName).collection('users');
             db.insert({"userId":uname, "pwd":pwd, "name":name });     
             callback({"status":true});                 

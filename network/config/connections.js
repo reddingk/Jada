@@ -1,5 +1,13 @@
 'use strict';
 
+/*
+  connectionId
+  nickname
+  token
+  socket
+  connection
+*/
+
 class JConnection {
     constructor() {
         this.connectionList = {};

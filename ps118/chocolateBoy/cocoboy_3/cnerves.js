@@ -1,11 +1,10 @@
 'use strict';
 
-
-const CELLS = require('./ccells.js');
+const Cells = require('./ccells.js');
 
 class CNERVES {
     constructor() {
-        this.ccells = new CELLS();
+        this.ccells = new Cells();
         this.socket = null;
     }
 
@@ -73,4 +72,4 @@ class CNERVES {
     }
 }
 
-module.export = CNERVES;
+module.exports = CNERVES;

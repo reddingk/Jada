@@ -10,6 +10,7 @@
   "license": "ISC",
   "dependencies": {
     "async": "^2.1.4",
+    "bcrypt": "^3.0.0",
     "body-parser": "^1.15.2",
     "bower": "^1.8.0",
     "cheerio": "^1.0.0-rc.2",
@@ -30,6 +31,7 @@
     "screen-info": "^1.0.1",
     "socket.io": "^1.7.2",
     "sse-express": "^2.0.2",
+    "uid-generator": "^1.0.0",
     "underscore": "^1.8.3"
   }
 }

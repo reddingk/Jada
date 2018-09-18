@@ -11,6 +11,7 @@
   "dependencies": {
     "directory-tree": "^2.1.0",
     "eventsource": "^1.0.7",
+    "node-webcam": "^0.4.4",
     "os": "^0.1.1",
     "socket.io-client": "^1.7.2"
   }
