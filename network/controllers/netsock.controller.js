@@ -23,5 +23,14 @@ module.exports = function (io, connections) {
                 });                
             }
         });
+
+        // socket direct connect
+        socket.on('spark connection', function (info) {
+            /* TODO: AUTHENTICATE USER */
+            var connectionId = connections.getConnection(info.userId);
+            if (connectionId && connectionId.connection && !connectionId.socket) {                                
+                connectionId.connection.sse({ "command": "sockControl", "data": "open" });                                             
+            }
+        });
     });
 }

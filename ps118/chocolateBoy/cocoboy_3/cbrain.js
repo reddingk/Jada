@@ -16,8 +16,8 @@ class CBRAIN {
         var self = this;
         var results = {"status":null};
         try {
-            if('status' in data && data.status){
-                switch(data.status.toLowerCase()){
+            if(data){
+                switch(data.toLowerCase()){
                     case 'open':
                         self.socket = io.connect(cfg.sockUrl, { query: "userid="+ self.name });
                         declareSocket(self.socket);
