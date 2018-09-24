@@ -15,6 +15,7 @@ class CBRAIN {
     sockControl(data, callback){
         var self = this;
         var results = {"status":null};
+
         try {
             if(data){
                 switch(data.toLowerCase()){
@@ -29,13 +30,14 @@ class CBRAIN {
                         break;
                 }
 
-                result.status = "compete";
+                results.status = "compete";
             }
         }
         catch(ex){
             results.status = "Error " + data.status + "ing Socket: " + ex;
+            console.log(result.status);
         }
-        callback(result);
+        callback(results);
     }
 }
 
@@ -64,7 +66,7 @@ function runCommand(command, data, callback) {
 function declareSocket(socket){
     
     socket.on('connect', function(){
-        console.log("connected to jnetwork");
+        console.log("connected sock to jnetwork");
     });
 
     socket.on('direct connect', function(data){

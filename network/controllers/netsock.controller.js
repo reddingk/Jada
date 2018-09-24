@@ -28,8 +28,9 @@ module.exports = function (io, connections) {
         socket.on('spark connection', function (info) {
             /* TODO: AUTHENTICATE USER */
             var connectionId = connections.getConnection(info.userId);
+
             if (connectionId && connectionId.connection && !connectionId.socket) {                                
-                connectionId.connection.sse({ "command": "sockControl", "data": "open" });                                             
+                connectionId.connection.sse({"data":{ "command": "sockControl", "data": "open" }});                                             
             }
         });
     });

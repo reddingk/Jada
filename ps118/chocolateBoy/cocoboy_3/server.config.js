@@ -11,7 +11,7 @@ var srcURL = util.format('%s/jnetwork/connect/%s', srcLoc, id);
 
 var eSource = new EventSource(srcURL);
 
-const jbrain = new BRAIN(id);
+var cbrain = new BRAIN(id);
 
 // When connection is made
 eSource.onopen = function () {
@@ -20,8 +20,10 @@ eSource.onopen = function () {
 
 // When connection message is recieved
 eSource.onmessage = function (e) {
-    if(e.command in jbrain){
-        jbrain[e.command](e.data, function(res){
+    var msgData = dataToJson(e.data);
+    
+    if(msgData.command in cbrain){
+        cbrain[msgData.command](msgData.data, function(res){
             console.log(res);
         });
     }
@@ -30,4 +32,13 @@ eSource.onmessage = function (e) {
 // When there is an error with connection
 eSource.onerror = function () {
     //console.log("error with jnetwork connection");
+}
+
+function dataToJson(dataObj){
+    var ret = {};
+    try {
+        ret = JSON.parse(dataObj);
+    }
+    catch(ex){}
+    return ret;
 }
