@@ -16,17 +16,187 @@ class JEYES {
         this.photoMemory = __dirname + "/config/data/photoMemory";
         this.PhoebeColor = new cv.Vec(4,205,252);
         this.foundColor = new cv.Vec(102,51,0);
+        this.bgSubtractor = new cv.BackgroundSubtractorMOG2();
 
         this.imgResize = 80;
         this.minDetections = 120;
-        this.nameMappings = ['grace', 'kris', 'jason', 'daphne', 'kaila', 
+        /*this.nameMappings = ['grace', 'kris', 'jason', 'daphne', 'kaila', 
                             'dominique', 'nina', 'naomi', 'nicole', 'asia', 
-                            'ashley', 'marquis', 'vince','khalin'];
+                            'ashley', 'marquis', 'vince','khalin'];*/
+        this.nameMappings = {};
                            
         this.recogData = _loadRecogTrainingData(this.photoMemory, this.nameMappings, this.imgResize, this.facialClassifier)  
     }
 
-    
+    /* EXTERNAL FUNCTIONS */
+    /* Motion Track MAT */
+    motionTrackImg(frame){
+        var self = this;
+        var ret = {"img":null,"error":null};
+
+        try {
+            // Track motion
+            const foreGroundMask = self.bgSubtractor.apply(frame);
+            const iterations = 2;
+            const dilated = foreGroundMask.dilate(
+                cv.getStructuringElement(cv.MORPH_ELLIPSE, new cv.Size(4, 4)),
+                new cv.Point(-1, -1),
+                iterations
+            );
+
+            const blurred = dilated.blur(new cv.Size(10, 10));
+            const thresholded = blurred.threshold(200, 255, cv.THRESH_BINARY);
+
+            const minPxSize = 4000;
+            var movingTargets = _drawRectAroundBlobs(thresholded, frame, minPxSize, self.PhoebeColor);
+
+            // Draw number of moving targets
+            frame.drawRectangle(
+                new cv.Point(10, 10), new cv.Point(70, 70),
+                { color: self.PhoebeColor, thickness: 2 }
+            );
+            frame.putText(
+                String(movingTargets),
+                new cv.Point(20, 60), cv.FONT_ITALIC, 2,
+                { color: self.PhoebeColor, thickness: 2 }
+            );
+            
+            // set return image
+            ret.img = frame;
+        }
+        catch(ex){
+            console.log("Error Tracking IMG: ", ex);
+            ret.error = ex;
+        }
+        return ret;
+    }
+
+    /* Facial Recognize MAT */
+    faceRecogImg(recogImg){
+        var self = this;
+        var ret = {"img":null, "names":[], "error":null};
+
+        try {  
+            const result = self.facialClassifier.detectMultiScale(recogImg.bgrToGray());
+                    
+            var nameList = Object.keys(self.nameMappings);
+
+            result.objects.forEach((faceRect, i) => {        
+                /*if (result.numDetections[i] < minDetections) { return; }*/
+                
+                const faceImg = recogImg.getRegion(faceRect).bgrToGray().resize(self.imgResize, self.imgResize);
+                //var predition = self.recogData.eigenRecognizer.predict(faceImg);
+                var predition = self.recogData.lbph.predict(faceImg);
+                //const who = (result.numDetections[i] < minDetections ? "not sure?" : nameList[predition.label]);
+                const who = (predition.confidence > self.minDetections ? "not sure?" : nameList[predition.label]);
+                const displayColor = (predition.confidence > self.minDetections ? self.PhoebeColor: self.foundColor);
+
+                ret.names.push(who);
+                
+                var rect = cv.drawDetection(recogImg, faceRect, { color: displayColor, segmentFraction: 4 });
+
+                cv.drawTextBox(recogImg,
+                    new cv.Point(rect.x, rect.y + rect.height + 10),
+                    [{ text: who, fontSize: 0.6 }], 0.4);
+                    //[{ text: who +" ["+predition.confidence+"]", fontSize: 0.6 }], 0.4);
+            });
+
+            ret.img = recogImg;
+        }
+        catch(ex){
+            console.log("Error Recognizing Imgs: ", ex);
+            ret.error = ex;
+        }
+        return ret;
+    }
+
+    /* Face Mark MAT */
+    facemarkImg(img, resize, facemark){
+        var self = this;
+        var ret = {"img":null, "total":0, "error":null};
+
+        try {
+            if (!cv.xmodules.face) {
+                throw new Error("opencv4nodejs compiled without face module");
+            }
+
+            if (!fs.existsSync(this.facemarkModel)) {
+                //https://raw.githubusercontent.com/kurnianggoro/GSOC2017/master/data/lbfmodel.yaml
+                throw new Error("Could not find landmarks model");
+            }
+
+            // resize image
+            var image = (resize ? _sizeImg(img): img);
+            
+            const gray = image.bgrToGray();
+            const faces = facemark.getFaces(gray);
+            
+            // use the detected faces to detect the landmarks
+            const faceLandmarks = facemark.fit(gray, faces);
+            
+            for (let i = 0; i < faceLandmarks.length; i++) {
+                const landmarks = faceLandmarks[i];
+                image = self._drawLandmarks(image, landmarks, true);
+            }
+
+            ret.total = faceLandmarks.length;
+            ret.img = image;
+        }
+        catch(ex){
+            console.log(" Debug: Error facemarking image: ", ex);
+            ret.error = ex;
+        }
+
+        return ret;
+    }
+
+    /* Update Facial Recognition Library */
+    updateRecognizeImg(img, facelist){
+        var self = this;
+        var status = false;
+
+        try {
+            for(var i =0; i < facelist.length; i++){
+                // crop mini img from lrg img
+                // if name in list
+                    // compare mini image to user images | process img | add image to photo lib | reload this.recogData
+                // else
+                    // add name to list | process img | add image to photo lib | reload this.recogData
+            }
+            status = true;
+        }
+        catch(ex){
+            console.log("Error updating Recog Lib: ", ex);
+            status = false;
+        }
+
+        return status;
+    }
+
+    /* Base64 Img to Mat Img*/
+    b64toMat(base64data){
+        try {
+            const buffer = Buffer.from(base64data,'base64');
+            const image = cv.imdecode(buffer);
+            return image;
+        }
+        catch(ex){
+            return null;
+        }
+    }
+
+    /* Base64 Img to Mat Img*/
+    matTob64(matImg){
+        try {
+            const outBase64 =  cv.imencode('.jpg', matImg).toString('base64');
+            return outBase64;
+        }
+        catch(ex){
+            return null;
+        }
+    }
+
+    /* INTERNAL FUNCTIONS */    
     /* Motion Tracking */
     motionTrackingCamera(callback){
         var self = this;
@@ -35,7 +205,6 @@ class JEYES {
             let done = false;
             var delay = 50;
 
-            const bgSubtractor = new cv.BackgroundSubtractorMOG2();
             var camera = new cv.VideoCapture(0);
             
             const intvl = setInterval(function() {
@@ -45,33 +214,12 @@ class JEYES {
                     camera.reset();
                     frame = camera.read();
                 }
-                // Track motion
-                const foreGroundMask = bgSubtractor.apply(frame);
-                const iterations = 2;
-                const dilated = foreGroundMask.dilate(
-                    cv.getStructuringElement(cv.MORPH_ELLIPSE, new cv.Size(4, 4)),
-                    new cv.Point(-1, -1),
-                    iterations
-                );
-                const blurred = dilated.blur(new cv.Size(10, 10));
-                const thresholded = blurred.threshold(200, 255, cv.THRESH_BINARY);
 
-                const minPxSize = 4000;
-                var movingTargets = _drawRectAroundBlobs(thresholded, frame, minPxSize, self.PhoebeColor);
-                
-                // Draw number of moving targets
-                frame.drawRectangle(
-                    new cv.Point(10, 10), new cv.Point(70, 70),
-                    { color: self.PhoebeColor, thickness: 2 }
-                );
-                frame.putText(
-                    String(movingTargets),
-                    new cv.Point(20, 60), cv.FONT_ITALIC, 2,
-                    { color: self.PhoebeColor, thickness: 2 }
-                );
+                // Motion Tracking
+                let retFrame = self.motionTrackImg(frame);
 
                 // Stream Or View Locally
-                cv.imshow("Motion Camera Frame", frame);
+                cv.imshow("Motion Camera Frame", retFrame);
                 
                 const key = cv.waitKey(delay);
                 done = key !== -1 && key !== 255;
@@ -240,104 +388,6 @@ class JEYES {
             console.log(" Debug: Error with live camera: ", ex);
         }
     }
-
-    /* Facial Recognize MAT */
-    faceRecogImg(recogImg){
-        var self = this;
-        var ret = {"img":null, "names":[]};
-
-        try {  
-            const result = self.facialClassifier.detectMultiScale(recogImg.bgrToGray());
-            
-            result.objects.forEach((faceRect, i) => {        
-                /*if (result.numDetections[i] < minDetections) { return; }*/
-                
-                const faceImg = recogImg.getRegion(faceRect).bgrToGray().resize(self.imgResize, self.imgResize);
-                //var predition = self.recogData.eigenRecognizer.predict(faceImg);
-                var predition = self.recogData.lbph.predict(faceImg);
-                //const who = (result.numDetections[i] < minDetections ? "not sure?" : self.nameMappings[predition.label]);
-                const who = (predition.confidence > self.minDetections ? "not sure?" : self.nameMappings[predition.label]);
-                const displayColor = (predition.confidence > self.minDetections ? self.PhoebeColor: self.foundColor);
-
-                ret.names.push(who);
-                
-                var rect = cv.drawDetection(recogImg, faceRect, { color: displayColor, segmentFraction: 4 });
-
-                cv.drawTextBox(recogImg,
-                    new cv.Point(rect.x, rect.y + rect.height + 10),
-                    [{ text: who, fontSize: 0.6 }], 0.4);
-                    //[{ text: who +" ["+predition.confidence+"]", fontSize: 0.6 }], 0.4);
-            });
-
-            ret.img = recogImg;
-        }
-        catch(ex){
-            console.log("Error Recognizing Imgs: ",ex);
-        }
-        return ret;
-    }
-
-    /* Face Mark MAT */
-    facemarkImg(img, resize, facemark){
-        var self = this;
-        var ret = {"img":null, "total":0};
-
-        try {
-            if (!cv.xmodules.face) {
-                throw new Error("opencv4nodejs compiled without face module");
-            }
-
-            if (!fs.existsSync(this.facemarkModel)) {
-                //https://raw.githubusercontent.com/kurnianggoro/GSOC2017/master/data/lbfmodel.yaml
-                throw new Error("Could not find landmarks model");
-            }
-
-            // resize image
-            var image = (resize ? _sizeImg(img): img);
-            
-            const gray = image.bgrToGray();
-            const faces = facemark.getFaces(gray);
-            
-            // use the detected faces to detect the landmarks
-            const faceLandmarks = facemark.fit(gray, faces);
-            
-            for (let i = 0; i < faceLandmarks.length; i++) {
-                const landmarks = faceLandmarks[i];
-                image = self._drawLandmarks(image, landmarks, true);
-            }
-
-            ret.total = faceLandmarks.length;
-            ret.img = image;
-        }
-        catch(ex){
-            console.log(" Debug: Error facemarking image: ", ex);
-        }
-
-        return ret;
-    }
-
-    /* Base64 Img to Mat Img*/
-    b64toMat(base64data){
-        try {
-            const buffer = Buffer.from(base64data,'base64');
-            const image = cv.imdecode(buffer);
-            return image;
-        }
-        catch(ex){
-            return null;
-        }
-    }
-
-    /* Base64 Img to Mat Img*/
-    matTob64(matImg){
-        try {
-            const outBase64 =  cv.imencode('.jpg', matImg).toString('base64');
-            return outBase64;
-        }
-        catch(ex){
-            return null;
-        }
-    }
 }
 
 module.exports = JEYES;
@@ -380,11 +430,39 @@ function _sizeImg(img){
     return retImg;
 } 
 
+/* Build Name Map */
+function _buildNameMap(photoMemory){
+    var nameObj = {};
+    try {       
+        const mapImgName = (name) => {
+            name = path.win32.basename(name, '.PNG');
+            name = name.split('-')[0];
+
+            if(!(name in nameObj)){ nameObj[name] = 1; }
+            else { nameObj[name] = nameObj[name] +1; }
+        };
+
+        const imgFiles = fs.readdirSync(photoMemory);
+
+        imgFiles
+        .map(file => path.resolve(photoMemory, file))
+        .map(mapImgName);
+    }
+    catch(ex){
+        console.log("Error building name map: ", ex);
+    }
+    return nameObj;
+}
+
 /* Load Recog Training Data */
 function _loadRecogTrainingData(photoMemory, nameMappings, imgResize, facialClassifier){
     var ret = { "lbph": new cv.LBPHFaceRecognizer(), "eigenRecognizer":new cv.EigenFaceRecognizer()};
 
     try {
+        // Build Name Mapping Object
+        nameMappings = (nameMappings == {} ? _buildNameMap(photoMemory) : nameMappings);        
+        var nameList = Object.keys(nameMappings);
+
         const imgFiles = fs.readdirSync(photoMemory);
                     
         // Get Face Images
@@ -410,7 +488,7 @@ function _loadRecogTrainingData(photoMemory, nameMappings, imgResize, facialClas
 
         // make labels
         const labels = imgFiles
-            .map(file => nameMappings.findIndex(name => file.includes(name)));
+            .map(file => nameList.findIndex(name => file.includes(name)));
 
         ret.lbph.train(trainImgs, labels);
         ret.eigenRecognizer.train(trainImgs, labels);

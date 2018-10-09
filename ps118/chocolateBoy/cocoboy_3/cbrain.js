@@ -20,6 +20,7 @@ class CBRAIN {
             if(data){
                 switch(data.toLowerCase()){
                     case 'open':
+                        /* Check if Connection is Active */
                         self.socket = io.connect(cfg.sockUrl, { query: "userid="+ self.name });
                         declareSocket(self.socket);
                         break;
