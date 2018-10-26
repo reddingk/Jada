@@ -6,7 +6,7 @@ module.exports = function (io, connections) {
         var userId = socket.handshake.query.userid;
 
         // add socket to connection item
-        connections.addSocket(userId, socket.Id);
+        connections.addSocket(userId, socket.id);
 
         // socket disconnect
         socket.on('disconnect', function () {
@@ -14,18 +14,24 @@ module.exports = function (io, connections) {
         });
 
         // socket direct connect
-        socket.on('direct connect', function (info) {
+        socket.on('direct connection', function (info) {
+            console.log(" [DEBUG]: Direct Connection");
+            console.log(info.userId);
+
             /* TODO: AUTHENTICATE USER */
+
             var connectionId = connections.getConnection(info.userId).socket;
             if (connectionId) {                
-                dataFilter.filterCheck(info, function(ret){
-                    io.to(connectionId).emit('direct connect', ret);
+                dataFilter.filterCheck(info.data, function(ret){
+                    //console.log(" [DEBUG]: con ", connectionId, " | ", ret);
+                    io.to(connectionId).emit('direct connection', ret);
                 });                
             }
         });
 
         // socket direct connect
         socket.on('spark connection', function (info) {
+            console.log(" [DEBUG]: Spark Connection");
             /* TODO: AUTHENTICATE USER */
             var connectionId = connections.getConnection(info.userId);
 

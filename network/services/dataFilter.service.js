@@ -7,7 +7,7 @@ var dataFilter =  {
     filterCheck: function(info,callback){
         try {
             if(!(info.filter && info.filterStatus)){
-                callback(info.data);
+                callback(info);
             }
             else {
                 switch(info.filter){

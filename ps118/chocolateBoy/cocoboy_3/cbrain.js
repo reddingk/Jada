@@ -6,7 +6,7 @@ var cfg = require('../config/config.json');
 
 class CBRAIN {
     constructor(name) {
-        this.cnerves = new Nerves();
+        this.cnerves = new Nerves(name);
         this.name = name;
         this.socket = null;
     }
@@ -22,7 +22,7 @@ class CBRAIN {
                     case 'open':
                         /* Check if Connection is Active */
                         self.socket = io.connect(cfg.sockUrl, { query: "userid="+ self.name });
-                        declareSocket(self.socket);
+                        declareSocket(self.socket, self.cnerves);
                         break;
                     case 'close':
                         self.socket.close();
@@ -46,14 +46,14 @@ module.exports = CBRAIN;
 
 /* Private Functions */
 /* Run Command */
-function runCommand(command, data, callback) {
+function runCommand(cNerves, command, data, callback) {
     var self = this;
     try {
-        if(!(command in self.cnerves)){
+        if(!(command in cNerves)){
            callback({"error": "Command is missing:"});
         }
         else {
-            self.cnerves[command](data, callback);
+            cNerves[command](data, callback);
         }
     }
     catch (ex) {
@@ -64,19 +64,21 @@ function runCommand(command, data, callback) {
 }
 
 /* Declare / setup Socket */
-function declareSocket(socket){
+function declareSocket(socket, cNerves){
     
     socket.on('connect', function(){
         console.log("connected sock to jnetwork");
     });
 
-    socket.on('direct connect', function(data){
+    socket.on('direct connection', function(data){
+        
         if(!data.command) {
-            socket.to(data.id).emit('direct connect', {"error":"no command"});
+            socket.emit('direct connection', {"error":"no command", "userId":data.userId});
         }
         else {
-            runCommand(data.command, data.data, function(res){
-                socket.to(data.id).emit('direct connect', res);
+            runCommand(cNerves, data.command, data, function(res){
+                console.log(" [DEBUG]:declare Sock: ", res.userId);
+                socket.emit('direct connection', res);
             });
         }
     });
