@@ -25,15 +25,16 @@ class CNERVES {
     /* Directory Tree */
     directoryTree(data, callback){
         var self = this;
-        var ret = { "userId":null, "command":null, "data":null, "error":null};
+        var ret = {"sID":null, "data": { "rID":null, "command":null, "data":null, "error":null}};
 
         try {
             ret.command = "directoryTree";
-            ret.userId = data.userId;
+            ret.sID = data.rID;
+            ret.data.rID = self.name;
 
             if(data.loc){
                 self.ccells.directoryTree(data.loc, function(res){
-                    ret.data = res;
+                    ret.data.data = res;
                     callback(ret);
                 });
             }
@@ -51,14 +52,14 @@ class CNERVES {
     /* Vid View */
     pheobeView(data, callback){
         var self = this;
-        var ret = { "userId":null, "data":{"userId":null, "command":null, "filter":null, "filterStatus":false, "data":null, "error":null}};
+        var ret = { "sID":null, "data":{"rID":null, "command":null, "filter":null, "filterStatus":false, "data":null, "error":null}};
 
         //console.log(" [DEBUG]: Pheobe-View :", data.userId);
         try {
             
-            ret.userId = data.userId;
+            ret.sID = data.rID;
             /*data*/
-            ret.data.userId = self.name;
+            ret.data.rID = self.name;
             ret.data.command = "pheobeView";
             ret.data.filter = data.filter;
             ret.data.filterStatus = true;

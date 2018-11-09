@@ -16,11 +16,11 @@ module.exports = function (io, connections) {
         // socket direct connect
         socket.on('direct connection', function (info) {
             console.log(" [DEBUG]: Direct Connection");
-            console.log(info.userId);
+            console.log(info.sID);
 
             /* TODO: AUTHENTICATE USER */
 
-            var connectionId = connections.getConnection(info.userId).socket;
+            var connectionId = connections.getConnection(info.sID).socket;
             if (connectionId) {                
                 dataFilter.filterCheck(info.data, function(ret){
                     //console.log(" [DEBUG]: con ", connectionId, " | ", ret);
@@ -33,7 +33,7 @@ module.exports = function (io, connections) {
         socket.on('spark connection', function (info) {
             console.log(" [DEBUG]: Spark Connection");
             /* TODO: AUTHENTICATE USER */
-            var connectionId = connections.getConnection(info.userId);
+            var connectionId = connections.getConnection(info.sID);
 
             if (connectionId && connectionId.connection && !connectionId.socket) {                                
                 connectionId.connection.sse({"data":{ "command": "sockControl", "data": "open" }});                                             

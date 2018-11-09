@@ -73,11 +73,11 @@ function declareSocket(socket, cNerves){
     socket.on('direct connection', function(data){
         
         if(!data.command) {
-            socket.emit('direct connection', {"error":"no command", "userId":data.userId});
+            socket.emit('direct connection', {"error":"no command", "sID":data.rID});
         }
         else {
             runCommand(cNerves, data.command, data, function(res){
-                console.log(" [DEBUG]:declare Sock: ", res.userId);
+                console.log(" [DEBUG]:declare Sock: ", res.sID);
                 socket.emit('direct connection', res);
             });
         }
