@@ -46,13 +46,13 @@ module.exports = CBRAIN;
 
 /* Private Functions */
 /* Run Command */
-function runCommand(cNerves, command, data, callback) {
-    var self = this;
+function runCommand(cNerves, command, data, socket, callback) {
     try {
         if(!(command in cNerves)){
            callback({"error": "Command is missing:"});
         }
         else {
+            cNerves.socket = socket;
             cNerves[command](data, callback);
         }
     }
@@ -70,14 +70,13 @@ function declareSocket(socket, cNerves){
         console.log("connected sock to jnetwork");
     });
 
-    socket.on('direct connection', function(data){
-        
+    socket.on('direct connection', function(data){        
         if(!data.command) {
-            socket.emit('direct connection', {"error":"no command", "sID":data.rID});
+            socket.emit('direct connection', {"sID":data.rID, "data":{"error":"no command"}});
         }
         else {
-            runCommand(cNerves, data.command, data, function(res){
-                console.log(" [DEBUG]:declare Sock: ", res.sID);
+            runCommand(cNerves, data.command, data, socket, function(res){
+                //console.log(" [DEBUG]:declare Sock: ", res.sID);
                 socket.emit('direct connection', res);
             });
         }

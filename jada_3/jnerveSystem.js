@@ -908,7 +908,7 @@ class JNERVESYSTEM {
                 callback({"jresponse": "Test Motion Video Status: " + (ret == -100)});
             });*/
 
-            var tst = self.jeyes._processRecognitionImgs("C:\\Users\\krisr\\Pictures\\ImgRecog","C:\\Users\\krisr\\Documents\\Development\\Personal\\Jada\\jada_3\\config\\data\\photoMemory");
+            //var tst = self.jeyes._processRecognitionImgs("C:\\Users\\krisr\\Pictures\\ImgRecog","C:\\Users\\krisr\\Documents\\Development\\Personal\\Jada\\jada_3\\config\\data\\photoMemory");
             
             self.jeyes.faceRecognizeCamera(function(ret){
                 callback({"jresponse": "Facial Recognition Video Status: " + (ret == -100)});

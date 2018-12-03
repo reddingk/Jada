@@ -1,13 +1,16 @@
 'use strict';
 
 var util = require('util');
-var jEyes = require('../../jada_3/jeyes');
+const Eyes = require('../../jada_3/jeyes');
+
+/* Class Decleration */
+const jEyes = new Eyes();
 
 var dataFilter =  {
     filterCheck: function(info,callback){
         try {
             if(!(info.filter && info.filterStatus)){
-                callback(info);
+                callback(info.data);
             }
             else {
                 switch(info.filter){
@@ -39,6 +42,6 @@ function j_faceRecog(img, callback){
         console.log("Error FaceRecog Service:", ex);
         retData = null;
     }
-
-    callback((retData != null? jEyes.matTob64(retData) : null));
+    
+    callback((retData != null? jEyes.matTob64(retData.img) : null));
 }

@@ -1,14 +1,18 @@
 'use strict';
 
+const fs = require('fs');
 const dirTree = require('directory-tree');
 const NodeWebcam = require( "node-webcam" );
+const cv = require("opencv4nodejs");
 
 class CCELLS {
     constructor() { 
-        this.peyes = NodeWebcam.create({
+        this.intvl = null;
+        this.peyes = new cv.VideoCapture(0);
+        /*NodeWebcam.create({
             callbackReturn: "base64",
             saveShots: false
-        });
+        });*/
     }
 
     /* dir tree */
@@ -31,19 +35,31 @@ class CCELLS {
         var ret = {"error":null, "data":null};
 
         try {
-
+            /*self.peyes.clear();
             self.peyes.capture("phoebe_view", function(err, pRet){
-                if(err){ ret.error = err; }
+                if(err){ ret.error = err; console.log("Error capture: ", ret.error);}
                 else { ret.data = pRet; }
 
                 callback(ret);
-            });
+            });*/
+
+            var matImg = self.peyes.read();
+
+            if (matImg.empty) {
+                self.peyes.reset();
+                matImg = self.peyes.read();
+            }
+
+            ret.data = cv.imencode('.jpg', matImg);
+            callback(ret);
         }
         catch(ex){
             ret.error = "error getting view" + ex;
+            console.log("Error catch: ", ret.error);
             callback(ret);
         }
     }
+
 }
 
 module.exports = CCELLS;

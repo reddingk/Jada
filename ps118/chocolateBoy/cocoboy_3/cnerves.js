@@ -63,11 +63,11 @@ class CNERVES {
             ret.data.command = "pheobeView";
             ret.data.filter = data.filter;
             ret.data.filterStatus = true;
-
+ 
             self.ccells.phoebeView(function(pRet){
-                if(pRet.data.error){ ret.error = pRet.error; }
+                if(pRet.error){ ret.data.error = pRet.error; }
                 else { ret.data.data = pRet.data; }
-
+                        
                 callback(ret);
             });
         }

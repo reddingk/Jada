@@ -23,7 +23,7 @@ class JEYES {
         /*this.nameMappings = ['grace', 'kris', 'jason', 'daphne', 'kaila', 
                             'dominique', 'nina', 'naomi', 'nicole', 'asia', 
                             'ashley', 'marquis', 'vince','khalin'];*/
-        this.nameMappings = {};
+        this.nameMappings = {"map":{},"list":[]};
                            
         this.recogData = _loadRecogTrainingData(this.photoMemory, this.nameMappings, this.imgResize, this.facialClassifier)  
     }
@@ -77,28 +77,24 @@ class JEYES {
         var ret = {"img":null, "names":[], "error":null};
 
         try {  
-            const result = self.facialClassifier.detectMultiScale(recogImg.bgrToGray());
-                    
-            var nameList = Object.keys(self.nameMappings);
 
-            result.objects.forEach((faceRect, i) => {        
-                /*if (result.numDetections[i] < minDetections) { return; }*/
-                
+            const result = self.facialClassifier.detectMultiScale(recogImg.bgrToGray());             
+
+            result.objects.forEach((faceRect, i) => {  
                 const faceImg = recogImg.getRegion(faceRect).bgrToGray().resize(self.imgResize, self.imgResize);
-                //var predition = self.recogData.eigenRecognizer.predict(faceImg);
+                
                 var predition = self.recogData.lbph.predict(faceImg);
-                //const who = (result.numDetections[i] < minDetections ? "not sure?" : nameList[predition.label]);
-                const who = (predition.confidence > self.minDetections ? "not sure?" : nameList[predition.label]);
+                
+                const who = (predition.confidence > self.minDetections ? "not sure?" : self.nameMappings.list[predition.label]);
                 const displayColor = (predition.confidence > self.minDetections ? self.PhoebeColor: self.foundColor);
 
                 ret.names.push(who);
                 
                 var rect = cv.drawDetection(recogImg, faceRect, { color: displayColor, segmentFraction: 4 });
-
+                
                 cv.drawTextBox(recogImg,
                     new cv.Point(rect.x, rect.y + rect.height + 10),
-                    [{ text: who, fontSize: 0.6 }], 0.4);
-                    //[{ text: who +" ["+predition.confidence+"]", fontSize: 0.6 }], 0.4);
+                    [{ text: (who ? who : "not sure?"), fontSize: 0.6 }], 0.4);
             });
 
             ret.img = recogImg;
@@ -107,6 +103,7 @@ class JEYES {
             console.log("Error Recognizing Imgs: ", ex);
             ret.error = ex;
         }
+
         return ret;
     }
 
@@ -174,8 +171,10 @@ class JEYES {
     }
 
     /* Base64 Img to Mat Img*/
-    b64toMat(base64data){
+    b64toMat(base64txt){
         try {
+            const base64data = base64txt.replace('data:image/jpeg;base64','')
+                .replace('data:image/png;base64','');
             const buffer = Buffer.from(base64data,'base64');
             const image = cv.imdecode(buffer);
             return image;
@@ -188,10 +187,13 @@ class JEYES {
     /* Base64 Img to Mat Img*/
     matTob64(matImg){
         try {
-            const outBase64 =  cv.imencode('.jpg', matImg).toString('base64');
-            return outBase64;
+            var outBase64 =  cv.imencode('.jpg', matImg).toString('base64');
+            var fullBase64 = (!outBase64.startsWith("data:image/jpeg;base64,") ? "data:image/jpeg;base64," + outBase64 : outBase64);
+
+            return fullBase64;
         }
         catch(ex){
+            console.log(" Error convert mat to base 64: ", ex);
             return null;
         }
     }
@@ -459,9 +461,8 @@ function _loadRecogTrainingData(photoMemory, nameMappings, imgResize, facialClas
     var ret = { "lbph": new cv.LBPHFaceRecognizer(), "eigenRecognizer":new cv.EigenFaceRecognizer()};
 
     try {
-        // Build Name Mapping Object
-        nameMappings = (nameMappings == {} ? _buildNameMap(photoMemory) : nameMappings);        
-        var nameList = Object.keys(nameMappings);
+        nameMappings.map = ((Object.keys(nameMappings.map).length === 0) ? _buildNameMap(photoMemory) : nameMappings.map);        
+        nameMappings.list = Object.keys(nameMappings.map);
 
         const imgFiles = fs.readdirSync(photoMemory);
                     
@@ -488,7 +489,7 @@ function _loadRecogTrainingData(photoMemory, nameMappings, imgResize, facialClas
 
         // make labels
         const labels = imgFiles
-            .map(file => nameList.findIndex(name => file.includes(name)));
+            .map(file => nameMappings.list.findIndex(name => file.includes(name)));
 
         ret.lbph.train(trainImgs, labels);
         ret.eigenRecognizer.train(trainImgs, labels);

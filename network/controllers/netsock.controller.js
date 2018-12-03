@@ -15,16 +15,15 @@ module.exports = function (io, connections) {
 
         // socket direct connect
         socket.on('direct connection', function (info) {
-            console.log(" [DEBUG]: Direct Connection");
-            console.log(info.sID);
 
             /* TODO: AUTHENTICATE USER */
 
-            var connectionId = connections.getConnection(info.sID).socket;
-            if (connectionId) {                
+            var connectionId = connections.getConnection(info.sID);
+            if (connectionId && connectionId.socket) {                
                 dataFilter.filterCheck(info.data, function(ret){
                     //console.log(" [DEBUG]: con ", connectionId, " | ", ret);
-                    io.to(connectionId).emit('direct connection', ret);
+                    var retObj = {"rID":info.data.rID, "command":info.data.command, "data":ret};
+                    io.to(connectionId.socket).emit('direct connection', retObj);
                 });                
             }
         });
