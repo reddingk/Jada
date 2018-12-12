@@ -26,7 +26,7 @@ class JEYES {
         this.nameMappings = {"map":{},"list":[]};
                            
         this.recogData = _loadRecogTrainingData(this.photoMemory, this.nameMappings, this.imgResize, this.facialClassifier)  
-        this.markData = _loadFacemark(self.facialClassifier);
+        this.markData = _loadFacemark(this.facialClassifier, this.facemarkModel);
     }
 
     /* EXTERNAL FUNCTIONS */
@@ -134,7 +134,7 @@ class JEYES {
             
             for (let i = 0; i < faceLandmarks.length; i++) {
                 const landmarks = faceLandmarks[i];
-                image = self._drawLandmarks(image, landmarks, true);
+                image = _drawLandmarks(image, landmarks, true);
             }
 
             ret.total = faceLandmarks.length;
@@ -397,13 +397,12 @@ module.exports = JEYES;
 /* Private Functions */
 
 /* Load Face Mark */
-function _loadFacemark(facialClassifier){
-    var self = this;
+function _loadFacemark(facialClassifier, facemarkModel){
     const facemark = new cv.FacemarkLBF();
     
     try {
         // create the facemark object with the landmarks model            
-        facemark.loadModel(self.facemarkModel);
+        facemark.loadModel(facemarkModel);
 
         // give the facemark object it's face detection callback
         facemark.setFaceDetector(frame => {
@@ -576,7 +575,6 @@ function _drawPolyline(img, landmarks, start, end, isClosed = false){
 
 /* Process Recognition Images */
 function _processRecognitionImgs(baseLoc, finalLoc, facialClassifier){
-    var self = this;
     var resizeMax = 350;
     try {
         // Read In file Location
