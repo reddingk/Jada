@@ -26,6 +26,7 @@ class JEYES {
         this.nameMappings = {"map":{},"list":[]};
                            
         this.recogData = _loadRecogTrainingData(this.photoMemory, this.nameMappings, this.imgResize, this.facialClassifier)  
+        this.markData = _loadFacemark(self.facialClassifier);
     }
 
     /* EXTERNAL FUNCTIONS */
@@ -108,7 +109,7 @@ class JEYES {
     }
 
     /* Face Mark MAT */
-    facemarkImg(img, resize, facemark){
+    facemarkImg(img, resize){
         var self = this;
         var ret = {"img":null, "total":0, "error":null};
 
@@ -117,7 +118,7 @@ class JEYES {
                 throw new Error("opencv4nodejs compiled without face module");
             }
 
-            if (!fs.existsSync(this.facemarkModel)) {
+            if (!fs.existsSync(self.facemarkModel)) {
                 //https://raw.githubusercontent.com/kurnianggoro/GSOC2017/master/data/lbfmodel.yaml
                 throw new Error("Could not find landmarks model");
             }
@@ -126,10 +127,10 @@ class JEYES {
             var image = (resize ? _sizeImg(img): img);
             
             const gray = image.bgrToGray();
-            const faces = facemark.getFaces(gray);
+            const faces = self.markData.getFaces(gray);
             
             // use the detected faces to detect the landmarks
-            const faceLandmarks = facemark.fit(gray, faces);
+            const faceLandmarks = self.markData.fit(gray, faces);
             
             for (let i = 0; i < faceLandmarks.length; i++) {
                 const landmarks = faceLandmarks[i];
@@ -268,7 +269,7 @@ class JEYES {
             // retrieve faces using the facemark face detector callback
             const img = cv.imread(file);
             // Facemark Image
-            var retImg = self.facemarkImg(img, true, _loadFacemark(self.facialClassifier));
+            var retImg = self.facemarkImg(img, true);
 
             if(retImg.img != null){
                 cv.imshowWait("Image Frame", retImg.img);
@@ -324,7 +325,6 @@ class JEYES {
         try{
             let done = false;
             var camera = new cv.VideoCapture(0);
-            const facemark = _loadFacemark(self.facialClassifier);
 
             const intvl = setInterval(function() {
                 let frame = camera.read();
@@ -335,7 +335,7 @@ class JEYES {
                 }
                 
                 // Facemark Image
-                var retImg = self.facemarkImg(frame, true, facemark);
+                var retImg = self.facemarkImg(frame, true);
 
                 // Stream Or View Locally
                 cv.imshow("Facemark Frame", retImg.img);
@@ -398,11 +398,12 @@ module.exports = JEYES;
 
 /* Load Face Mark */
 function _loadFacemark(facialClassifier){
+    var self = this;
     const facemark = new cv.FacemarkLBF();
-
+    
     try {
         // create the facemark object with the landmarks model            
-        facemark.loadModel(this.facemarkModel);
+        facemark.loadModel(self.facemarkModel);
 
         // give the facemark object it's face detection callback
         facemark.setFaceDetector(frame => {

@@ -17,6 +17,9 @@ var dataFilter =  {
                     case 'faceRecognition':
                         j_faceRecog(info.data, callback);
                         break;
+                    case 'faceMark':
+                        j_faceMark(info.data, callback);
+                        break;
                     default:
                         callback(info.data);
                         break;
@@ -40,6 +43,20 @@ function j_faceRecog(img, callback){
     }
     catch(ex){
         console.log("Error FaceRecog Service:", ex);
+        retData = null;
+    }
+    
+    callback((retData != null? jEyes.matTob64(retData.img) : null));
+}
+
+function j_faceMark(img, callback){
+    var retData = null;
+    try {
+        var matImg = jEyes.b64toMat(img);        
+        retData = (matImg != null ? jEyes.facemarkImg(matImg, true) : null);      
+    }
+    catch(ex){
+        console.log("Error Face Mark Service:", ex);
         retData = null;
     }
     
