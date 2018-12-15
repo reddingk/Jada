@@ -10,7 +10,7 @@
 
 class JConnection {
     constructor() {
-        this.connectionList = {};
+        this.connectionList = {};       
     }
     // Add Connection To List
     addConnection(id, conn, nickname, token) {
@@ -66,7 +66,7 @@ class JConnection {
     }
 
     // Add Socket Id to Object
-    addSocket(id, sockId) {
+    addSocket(id, token, sockId) {
         var self = this;
         var status = false;
         try {

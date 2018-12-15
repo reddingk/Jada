@@ -6,6 +6,10 @@ const UIDGenerator = require('uid-generator');
 var database = require('../../jada_3/config/database');
 var mongoClient = require('mongodb').MongoClient;
 const mongoOptions = { connectTimeoutMS: 2000, socketTimeoutMS: 2000};
+const Eyes = require('../../jada_3/jeyes');
+
+/* Class Decleration */
+const jEyes = new Eyes();
 
 const uidgen = new UIDGenerator(); 
 const saltRounds = 15;
@@ -14,13 +18,13 @@ var auth = {
     createUser: function(user, password, name, connections, callback){
         var self = this;
         try {
-            getUserByUname(user, function(res){
+            _getUserByUname(user, function(res){
                 if(res){
                     callback({"error":"User Already Exists"});
                 }
                 else {
                     var pwdHash = bcrypt.hashSync(password, saltRounds);
-                    addUser(user, pwdHash, name, callback);
+                    _addUser(user, pwdHash, name, callback);
                 }
             }); 
         }
@@ -33,23 +37,7 @@ var auth = {
     loginUser: function(user, password, connections, callback){
         var self = this;
         try {
-            getUserByUname(user, function(res){
-                if(!res){
-                    callback({"error":"Invalid User"});
-                }
-                else {
-                    bcrypt.compare(password, res.pwd, function(err, res){
-                        if(res){
-                            var token = uidgen.generateSync();
-                            connections.addConnection(res.userId, null, res.name, token);
-                            callback({"_id":res._id, "userId":res.userId, "name":res.name, "token":token});
-                        }
-                        else {
-                            callback({"error":"Invalid Password"})
-                        }
-                    });
-                }
-            });            
+            _loginUser(user, password, connections, callback);       
         }
         catch(ex){
             var err = util.format("Error Logging %s On: %s", user, ex);
@@ -71,7 +59,7 @@ var auth = {
         try {
             // test
             callback({"status":"Valid", "statusCode":1});
-            /*self.getUserByUname(user, function(res){
+            /*_getUserByUname(user, function(res){
                 var conn = connections.getConnection(user);
 
                 if(!res) {
@@ -93,13 +81,37 @@ var auth = {
             console.log(err);
             callback({"status":err, "statusCode":0});
         }
+    },
+    authSwitch(userObj, connections, callback){
+        try {
+            if(userObj){
+                switch(userObj.type){
+                    case 'faceMatch':
+                        _faceMatchUser(userObj, callback);
+                        break;
+                    case 'userLogin':
+                        _loginUser(userObj.user, userObj.password, connections, callback)
+                        break;
+                    default:
+                        break;
+                }
+            }
+            else {
+                callback({"status":"Invalid Auth Object", "statusCode":- 23});
+            }
+        }
+        catch(ex){
+            var err = util.format("Error Authetication User: %s", ex);
+            console.log(err);
+            callback({"status":err, "statusCode":0});
+        }
     }
 }
 
 module.exports =  auth;
 
 /* Get User From DB */
-function getUserByUname(uname, callback){
+function _getUserByUname(uname, callback){
     try {
         mongoClient.connect(database.remoteUrl, mongoOptions, function(err, client){
             const db = client.db(database.dbName).collection('users');
@@ -116,8 +128,26 @@ function getUserByUname(uname, callback){
     }
 }
 
+/* Get User From DB */
+function _getUserByFacename(facename, callback){
+    try {
+        mongoClient.connect(database.remoteUrl, mongoOptions, function(err, client){
+            const db = client.db(database.dbName).collection('users');
+            db.find({ 'facename' : facename }).toArray(function(err, res){
+                var ret = null;
+                if(res) { ret = res[0]; }                
+                callback(ret);
+            });                       
+        });
+    }
+    catch(ex){
+        console.log("Error Getting User By Facename ", facename," :", ex);
+        callback(null);
+    }
+}
+
 /* Add User to DB */
-function addUser(uname, pwd, name, callback){
+function _addUser(uname, pwd, name, callback){
     try {
         mongoClient.connect(database.remoteUrl, mongoOptions, function(err, client){
             const db = client.db(database.dbName).collection('users');
@@ -129,5 +159,68 @@ function addUser(uname, pwd, name, callback){
         var err = util.format("Error Adding User [%s] : %s",uname, ex);
         console.log(err);
         callback({"error":err, "status":false});
+    }
+}
+
+function _faceMatchUser(userObj, callback){
+    try {        
+        var matchNames = _getFaceRecogUsers(userObj.data);
+
+        if(matchNames && matchNames.length > 0){
+            _getUserByFacename(matchNames[0], function(ret){
+                callback({"username":(ret != null ? ret.userId : null)});
+            });
+        }
+        else {
+            callback({"username":null});
+        }
+    }
+    catch(ex){
+        var err = util.format("Error Matching User: %s", ex);
+        console.log(err);
+        callback({"status":err, "statusCode":0});
+    }
+}
+
+/* Face Recog Img */
+function _getFaceRecogUsers(img){
+    var retData = null;
+    try {
+        var matImg = jEyes.b64toMat(img);        
+        retData = (matImg != null ? jEyes.faceRecogImg(matImg) : null);      
+    }
+    catch(ex){
+        console.log("Error FaceRecog Service:", ex);
+        retData = null;
+    }
+    
+    return (retData != null? retData.names : []);
+}
+
+/* Login User */
+function _loginUser(user, password, connections, callback){
+    try {
+        _getUserByUname(user, function(res){
+            if(!res){
+                callback({"error":"Invalid User"});
+            }
+            else {
+                bcrypt.compare(password, res.pwd, function(err, res){
+                    if(res){
+                        var token = uidgen.generateSync();
+                        connections.addConnection(res.userId, null, res.name, token);
+                        callback({"_id":res._id, "userId":res.userId, "name":res.name, "token":token});
+                    }
+                    else {
+                        callback({"error":"Invalid Password"})
+                    }
+                });
+            }
+        });       
+    }
+    catch(ex){
+        var err = util.format("Error Login In User: %s", ex);
+        console.log(err);
+        callback({"status":err, "statusCode":0});
     }
 }

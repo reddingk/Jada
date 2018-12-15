@@ -1,12 +1,16 @@
 var dataFilter = require('../services/dataFilter.service');
 
+// Auth Services
+var jauth = require('../../security/services/auth.service');
+
 module.exports = function (io, connections) {
     // socket connection
     io.on('connection', function (socket) {
         var userId = socket.handshake.query.userid;
+        var userToken = socket.handshake.query.token;
 
         // add socket to connection item
-        connections.addSocket(userId, socket.id);
+        connections.addSocket(userId, token, socket.id);
 
         // socket disconnect
         socket.on('disconnect', function () {
@@ -26,7 +30,7 @@ module.exports = function (io, connections) {
             }
         });
 
-        // socket direct connect
+        // socket spark connection
         socket.on('spark connection', function (info) {
             console.log(" [DEBUG]: Spark Connection");
             /* TODO: AUTHENTICATE USER */
@@ -35,6 +39,16 @@ module.exports = function (io, connections) {
             if (connectionId && connectionId.connection && !connectionId.socket) {                                
                 connectionId.connection.sse({"data":{ "command": "sockControl", "data": "open" }});                                             
             }
+        });
+
+        // socket authenticate user
+        socket.on('jauth', function (info) {
+            console.log(" [DEBUG]: Authorize User");
+            
+            // Send Obj to Auth Service
+            jauth.authSwitch(info, connections, function(ret){
+                io.to(socket.id).emit('jauth', ret);
+            });
         });
     });
 }
