@@ -10,7 +10,7 @@ module.exports = function (io, connections) {
         var userToken = socket.handshake.query.token;
 
         // add socket to connection item
-        connections.addSocket(userId, token, socket.id);
+        connections.addSocket(userId, userToken, socket.id);
 
         // socket disconnect
         socket.on('disconnect', function () {
@@ -43,11 +43,14 @@ module.exports = function (io, connections) {
 
         // socket authenticate user
         socket.on('jauth', function (info) {
-            console.log(" [DEBUG]: Authorize User");
+            //console.log(" [DEBUG]: Authorize User");
             
             // Send Obj to Auth Service
             jauth.authSwitch(info, connections, function(ret){
-                io.to(socket.id).emit('jauth', ret);
+                var retObj = (info ? info : {"status":"invalid object", "statusCode":-2});
+                retObj.data = ret;
+                
+                io.to(socket.id).emit('jauth', retObj);
             });
         });
     });

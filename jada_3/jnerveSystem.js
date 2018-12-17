@@ -910,9 +910,9 @@ class JNERVESYSTEM {
 
             //var tst = self.jeyes._processRecognitionImgs("C:\\Users\\krisr\\Pictures\\ImgRecog","C:\\Users\\krisr\\Documents\\Development\\Personal\\Jada\\jada_3\\config\\data\\photoMemory");
             
-            self.jeyes.faceRecognizeCamera(function(ret){
-                callback({"jresponse": "Facial Recognition Video Status: " + (ret == -100)});
-            });
+            //self.jeyes.faceRecognizeCamera(function(ret){
+            //    callback({"jresponse": "Facial Recognition Video Status: " + (ret == -100)});
+            //});
 
             //var tst = self.jeyes.facialRecognitionFile("C:\\Users\\krisr\\Pictures\\Wedding(AllenHouse)\\bridalpartyportraits\\1P9A9224.jpg");
             //var tst = self.jeyes.facialRecognitionFile("C:\\Users\\krisr\\Pictures\\Saved Pictures\\t2.png");
@@ -927,7 +927,11 @@ class JNERVESYSTEM {
 
             //self.jeyes.facemarkCamera(function(ret){
             //    callback({"jresponse": "Test Video Status: " + (ret == -100)});
-            //});          
+            //});   
+            
+            self.jeyes.edgeDetectiongCamera(function(ret){
+                callback({"jresponse": "Test Video Status: " + (ret == -100)});
+            });
         }
         catch(ex){
             callback({"jresponse": "There is something wrong with your Demo: " + ex});

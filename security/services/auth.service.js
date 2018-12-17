@@ -90,7 +90,9 @@ var auth = {
                         _faceMatchUser(userObj, callback);
                         break;
                     case 'userLogin':
-                        _loginUser(userObj.user, userObj.password, connections, callback)
+                        if(userObj.data){
+                            _loginUser(userObj.data.userId, userObj.data.password, connections, callback)
+                        }
                         break;
                     default:
                         break;
@@ -165,14 +167,15 @@ function _addUser(uname, pwd, name, callback){
 function _faceMatchUser(userObj, callback){
     try {        
         var matchNames = _getFaceRecogUsers(userObj.data);
-
+        
         if(matchNames && matchNames.length > 0){
             _getUserByFacename(matchNames[0], function(ret){
-                callback({"username":(ret != null ? ret.userId : null)});
+                var retObj = (ret != null ? {"userId":ret.userId, "name":ret.name} : {"status":"no active user match", "statusCode":3});
+                callback(retObj);
             });
         }
         else {
-            callback({"username":null});
+            callback({"status":"no user found", "statusCode":2, "userId":null});
         }
     }
     catch(ex){
@@ -187,7 +190,7 @@ function _getFaceRecogUsers(img){
     var retData = null;
     try {
         var matImg = jEyes.b64toMat(img);        
-        retData = (matImg != null ? jEyes.faceRecogImg(matImg) : null);      
+        retData = (matImg != null ? jEyes.faceRecogImg(matImg) : null);   
     }
     catch(ex){
         console.log("Error FaceRecog Service:", ex);
@@ -205,8 +208,9 @@ function _loginUser(user, password, connections, callback){
                 callback({"error":"Invalid User"});
             }
             else {
-                bcrypt.compare(password, res.pwd, function(err, res){
-                    if(res){
+                //console.log(" [Debug PWD]: ", bcrypt.hashSync(password, saltRounds));
+                bcrypt.compare(password, res.pwd, function(err, resCmp){
+                    if(resCmp){
                         var token = uidgen.generateSync();
                         connections.addConnection(res.userId, null, res.name, token);
                         callback({"_id":res._id, "userId":res.userId, "name":res.name, "token":token});

@@ -9,6 +9,7 @@ const jEyes = new Eyes();
 var dataFilter =  {
     filterCheck: function(info,callback){
         try {
+            
             if(!(info.filter && info.filterStatus)){
                 callback(info.data);
             }
@@ -20,6 +21,8 @@ var dataFilter =  {
                     case 'faceMark':
                         j_faceMark(info.data, callback);
                         break;
+                    case 'edgeDetect':
+                        j_edgeDetect(info.data, callback);
                     default:
                         callback(info.data);
                         break;
@@ -27,7 +30,7 @@ var dataFilter =  {
             }
         }
         catch(ex){
-
+            console.log(" Error filter check: ", ex);
         }
     }
 }
@@ -57,6 +60,22 @@ function j_faceMark(img, callback){
     }
     catch(ex){
         console.log("Error Face Mark Service:", ex);
+        retData = null;
+    }
+    
+    callback((retData != null? jEyes.matTob64(retData.img) : null));
+}
+
+function j_edgeDetect(img, callback){
+    var retData = null;
+    try {
+        var matImg = jEyes.b64toMat(img);        
+        retData = (matImg != null ? jEyes.edgeDetectionImg(matImg) : null); 
+        
+        console.log((retData ? "Valid" : "Is Null"));
+    }
+    catch(ex){
+        console.log("Error Edge Detection Service:", ex);
         retData = null;
     }
     

@@ -20,9 +20,6 @@ class JEYES {
 
         this.imgResize = 80;
         this.minDetections = 120;
-        /*this.nameMappings = ['grace', 'kris', 'jason', 'daphne', 'kaila', 
-                            'dominique', 'nina', 'naomi', 'nicole', 'asia', 
-                            'ashley', 'marquis', 'vince','khalin'];*/
         this.nameMappings = {"map":{},"list":[]};
                            
         this.recogData = _loadRecogTrainingData(this.photoMemory, this.nameMappings, this.imgResize, this.facialClassifier)  
@@ -97,7 +94,7 @@ class JEYES {
                     new cv.Point(rect.x, rect.y + rect.height + 10),
                     [{ text: (who ? who : "not sure?"), fontSize: 0.6 }], 0.4);
             });
-
+            
             ret.img = recogImg;
         }
         catch(ex){
@@ -142,6 +139,25 @@ class JEYES {
         }
         catch(ex){
             console.log(" Debug: Error facemarking image: ", ex);
+            ret.error = ex;
+        }
+
+        return ret;
+    }
+
+    /* Edge Detection Img */
+    edgeDetectionImg(img){
+        var self = this;
+        var ret = {"img":null, "error":null};
+
+        try {
+            const gray = img.bgrToGray();
+            const cannyImg = img.canny(50, 100, 3, false);
+
+            ret.img = cannyImg;
+        }
+        catch(ex){
+            console.log(" Debug: Error edge detecting image: ", ex);
             ret.error = ex;
         }
 
@@ -388,6 +404,41 @@ class JEYES {
         }
         catch(ex){
             console.log(" Debug: Error with live camera: ", ex);
+        }
+    }
+
+    /* Edge Detection Camera */
+    edgeDetectiongCamera(callback){
+        var self = this;
+        
+        try{
+            let done = false;
+            var camera = new cv.VideoCapture(0);
+
+            const intvl = setInterval(function() {
+                let frame = camera.read();
+
+                if (frame.empty) {
+                    camera.reset();
+                    frame = camera.read();
+                }
+                
+                // Facemark Image
+                var retImg = self.edgeDetectionImg(frame);
+
+                // Stream Or View Locally
+                cv.imshow("Edge Detection Frame", retImg.img);
+                const key = cv.waitKey(1);
+
+                done = key !== -1 && key !== 255;
+                if (done) {
+                    clearInterval(intvl);
+                    callback(-100);
+                }
+            }, 0);
+        }
+        catch(ex){
+            console.log(" Debug: Error with edge detection camera: ", ex);
         }
     }
 }
