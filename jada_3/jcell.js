@@ -9,7 +9,7 @@ var os = require('os');
 var underscore = require('underscore');
 
 const Tools = require('./jtools.js');
-const Eyes = require('./jeyes.js');
+//const Eyes = require('./jeyes.js');
 const Lift = require('./jlift.js');
 const apiLib = require("./config/apiLib.json");
 

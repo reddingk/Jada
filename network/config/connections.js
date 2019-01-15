@@ -1,4 +1,5 @@
 'use strict';
+const iplocation = require("iplocation").default;
 
 /*
   connectionId
@@ -6,6 +7,7 @@
   token
   socket
   connection
+  location
 */
 
 class JConnection {
@@ -113,6 +115,30 @@ class JConnection {
         return ret;
     }
 
+    updateIPLocation(id, ip){
+        var self = this;        
+
+        try {
+            _getIpLocation(ip, function(res){
+                if(res.error){
+                    console.log("Error updating IP Location [", id,"](2):", res.error);                    
+                }
+                else {                    
+                    if(!(id in self.connectionList)) {
+                        console.log("Error updating IP Location [", id,"](2): No Id Found In Connection List");
+                    }
+                    else {
+                        self.connectionList[id].location = res.ret;
+                        console.log(" [DEBUG]: ", res.ret);
+                    }
+                }
+            });
+        }
+        catch (ex) {
+            console.log("Error updating IP Location [", id, "]:", ex);
+        }        
+    }
+
     // Return all connections
     getAll() {
         var self = this;
@@ -130,3 +156,26 @@ class JConnection {
 }
 
 module.exports = JConnection;
+
+/* Get Location from IP */
+function _getIpLocation(ip, callback){
+    try {
+        if(!ip){
+            callback({"error":"No a Valid IP", "ret":null});
+        }
+        else {
+            iplocation(ip, [], (error, res) => {  
+                if(error){
+                    callback({"error":error, "ret":null});
+                }
+                else {
+                    callback({"error":null, "ret":res});
+                }
+            });
+        }
+    }
+    catch(ex){
+        console.log("IP Loc Error: ", ex);
+        callback({"error":ex, "ret":null});
+    }
+}

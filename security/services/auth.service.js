@@ -3,9 +3,10 @@
 const util = require('util');
 const bcrypt = require('bcrypt');
 const UIDGenerator = require('uid-generator');
-var database = require('../../jada_3/config/database');
 var mongoClient = require('mongodb').MongoClient;
 const mongoOptions = { connectTimeoutMS: 2000, socketTimeoutMS: 2000};
+
+var database = require('../../jada_3/config/database');
 const Eyes = require('../../jada_3/jeyes');
 
 /* Class Decleration */
@@ -34,10 +35,10 @@ var auth = {
             callback({"error":err});
         }
     },
-    loginUser: function(user, password, connections, callback){
+    loginUser: function(user, password, ip, connections, callback){
         var self = this;
         try {
-            _loginUser(user, password, connections, callback);       
+            _loginUser(user, password, ip, connections, callback);       
         }
         catch(ex){
             var err = util.format("Error Logging %s On: %s", user, ex);
@@ -82,7 +83,7 @@ var auth = {
             callback({"status":err, "statusCode":0});
         }
     },
-    authSwitch(userObj, connections, callback){
+    authSwitch(userObj, connections, ip, callback){
         try {
             if(userObj){
                 switch(userObj.type){
@@ -91,7 +92,7 @@ var auth = {
                         break;
                     case 'userLogin':
                         if(userObj.data){
-                            _loginUser(userObj.data.userId, userObj.data.password, connections, callback)
+                            _loginUser(userObj.data.userId, userObj.data.password, ip, connections, callback)
                         }
                         break;
                     default:
@@ -201,7 +202,7 @@ function _getFaceRecogUsers(img){
 }
 
 /* Login User */
-function _loginUser(user, password, connections, callback){
+function _loginUser(user, password, ip, connections, callback){
     try {
         _getUserByUname(user, function(res){
             if(!res){
@@ -213,6 +214,8 @@ function _loginUser(user, password, connections, callback){
                     if(resCmp){
                         var token = uidgen.generateSync();
                         connections.addConnection(res.userId, null, res.name, token);
+                        connections.updateIPLocation(res.userId, ip);
+                        
                         callback({"_id":res._id, "userId":res.userId, "name":res.name, "token":token});
                     }
                     else {

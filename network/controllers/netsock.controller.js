@@ -8,9 +8,11 @@ module.exports = function (io, connections) {
     io.on('connection', function (socket) {
         var userId = socket.handshake.query.userid;
         var userToken = socket.handshake.query.token;
+        var ipAddress = socket.handshake.address;
 
         // add socket to connection item
         connections.addSocket(userId, userToken, socket.id);
+        connections.updateIPLocation(userId, ipAddress);
 
         // socket disconnect
         socket.on('disconnect', function () {
@@ -46,7 +48,7 @@ module.exports = function (io, connections) {
             //console.log(" [DEBUG]: Authorize User");
             
             // Send Obj to Auth Service
-            jauth.authSwitch(info, connections, function(ret){
+            jauth.authSwitch(info, connections, ipAddress, function(ret){
                 var retObj = (info ? info : {"status":"invalid object", "statusCode":-2});
                 retObj.data = ret;
                 

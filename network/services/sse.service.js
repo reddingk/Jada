@@ -13,7 +13,10 @@ var sse = {
                 res.sse({data:{"command":"connection", "data":'connected'}});
 
                 // Add client to Connection List & Broadcast New List
-                connections.addConnection(connectionId, res);
+                connections.addConnection(connectionId, null, res, null);
+                var ipAddress = (req.connection ? req.connection.remoteAddress : null);
+                connections.updateIPLocation(connectionId, ipAddress);
+
                 broadcastList(connections);
 
                 // Remove Connection when it Disconnects & Broadcast New List
