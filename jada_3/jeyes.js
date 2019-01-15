@@ -8,6 +8,8 @@ const cv = require("opencv4nodejs");
 const fs = require("fs");
 const path = require("path");
 const screen = require("screen-info");
+const modelLib = require("./config/data/modellib.json");
+const defaultCamPort = 1;
 
 class JEYES {
     constructor(){
@@ -21,6 +23,7 @@ class JEYES {
         this.imgResize = 80;
         this.minDetections = 120;
         this.nameMappings = {"map":{},"list":[]};
+        this.modelLibrary = modelLib;
                            
         this.recogData = _loadRecogTrainingData(this.photoMemory, this.nameMappings, this.imgResize, this.facialClassifier)  
         this.markData = _loadFacemark(this.facialClassifier, this.facemarkModel);
@@ -109,6 +112,12 @@ class JEYES {
     facemarkImg(img, resize){
         var self = this;
         var ret = {"img":null, "total":0, "error":null};
+        
+        var faceClassifierOpts = {
+            minSize: new cv.Size(30, 30),
+            scaleFactor: 1.126,
+            minNeighbors: 1,
+        }
 
         try {
             if (!cv.xmodules.face) {
@@ -124,8 +133,10 @@ class JEYES {
             var image = (resize ? _sizeImg(img): img);
             
             const gray = image.bgrToGray();
-            const faces = self.markData.getFaces(gray);
             
+            //const faces = self.markData.getFaces(gray);
+            const faces = self.facialClassifier.detectMultiScale(gray, faceClassifierOpts).objects;
+
             // use the detected faces to detect the landmarks
             const faceLandmarks = self.markData.fit(gray, faces);
             
@@ -161,6 +172,116 @@ class JEYES {
             ret.error = ex;
         }
 
+        return ret;
+    }
+
+    modelMapImg(img, searchFilter, filter){
+        var self = this;
+        var ret = {"img":null, "error":null};
+
+        try {
+            if(!(filter in self.modelLibrary)){
+                ret.error = "Not A Valid Model";
+            }
+            else {
+                var model = self.modelLibrary[filter];
+
+                if(!model.net){
+                    const cfgFile =  __dirname + "/config/data/imgModels/" + model.configFile;
+                    const weightsFile =  __dirname + "/config/data/imgModels/" + model.weightsFile;
+                    const labelsFile = __dirname + "/config/data/imgModels/" + model.labelFile;
+
+                    model.dataKey = fs.readFileSync(labelsFile).toString().split("\n");   
+                    
+                    // initialize darknet model from modelFile
+                    model.net = self.modelLibrary[filter].net = cv.readNetFromDarknet(cfgFile, weightsFile);
+                }
+                // initialize darknet model from modelFile
+                const allLayerNames = model.net.getLayerNames();
+                const unconnectedOutLayers = model.net.getUnconnectedOutLayers();
+
+                // determine only the *output* layer names that we need from YOLO
+                const layerNames = unconnectedOutLayers.map(layerIndex => {
+                    return allLayerNames[layerIndex - 1];
+                });
+
+                const size = new cv.Size(416, 416);
+                const vec3 = new cv.Vec(0, 0, 0);
+                const [imgHeight, imgWidth] = img.sizes;
+
+                const inputBlob = cv.blobFromImage(img, 1 / 255.0, size, vec3, true, false);
+                model.net.setInput(inputBlob);
+
+                //console.time("model.net.forward");
+                // forward pass input through entire network
+                const layerOutputs = model.net.forward(layerNames);
+                //console.timeEnd("model.net.forward");
+
+                let boxes = [];
+                let confidences = [];
+                let classIDs = [];
+
+                layerOutputs.forEach(mat => {
+                    const output = mat.getDataAsArray();
+                    output.forEach(detection => { 
+                        const scores = detection.slice(5);
+                        const maxScore = Math.max(...scores);
+                        const classId = scores.indexOf(maxScore);
+                        const confidence = scores[classId];
+
+                        //const classId = _indexOf(scores, maxScore);
+                        //const confidence = scores[classId][0];
+                        //console.log(" -> Con :",confidence, "scores: ", scores.length, " dec: ", detection.length, " id: ", classId);
+
+                        if (confidence > model.minConfidence) {
+                            const box = detection.slice(0, 4);
+
+                            const centerX = parseInt(box[0] * imgWidth);
+                            const centerY = parseInt(box[1] * imgHeight);
+                            const width = parseInt(box[2] * imgWidth);
+                            const height = parseInt(box[3] * imgHeight);
+
+                            const x = parseInt(centerX - width / 2);
+                            const y = parseInt(centerY - height / 2);
+
+                            boxes.push(new cv.Rect(x, y, width, height));
+                            confidences.push(confidence);
+                            classIDs.push(classId);
+
+                            const indices = cv.NMSBoxes(
+                                boxes, confidences,
+                                model.minConfidence, model.nmsThreshold
+                            );
+                            
+                            indices.forEach(i => { 
+                                var text = model.dataKey[classIDs[i]];
+                                text = text.replace(/(?:\\[rn]|[\r\n])/g,"");
+                                
+                                if(searchFilter.length == 0 || (searchFilter.indexOf(text) >= 0)){
+                                    const rect = boxes[i];
+
+                                    const pt1 = new cv.Point(rect.x, rect.y);
+                                    const pt2 = new cv.Point(rect.x + rect.width, rect.y + rect.height);
+                                    const org = new cv.Point(rect.x, rect.y + 15);
+                                    const fontFace = cv.FONT_HERSHEY_SIMPLEX;
+
+                                    // draw the rect for the object
+                                    img.drawRectangle(pt1, pt2, self.PhoebeColor, 2, 2);                                
+
+                                    // put text on the object
+                                    img.putText((!text ?  "???": text), org, fontFace, 0.6, self.PhoebeColor, 2);
+                                }
+                            });
+                        }
+                    });
+                });
+                ret.img = img;
+            }
+        }
+        catch(ex){
+            console.log(" Debug: Error library mapping image: ", ex);
+            ret.error = ex;
+        }
         return ret;
     }
 
@@ -215,7 +336,7 @@ class JEYES {
         }
     }
 
-    /* INTERNAL FUNCTIONS */    
+    /* INTERNAL FUNCTIONS */   
     /* Motion Tracking */
     motionTrackingCamera(callback){
         var self = this;
@@ -224,7 +345,7 @@ class JEYES {
             let done = false;
             var delay = 50;
 
-            var camera = new cv.VideoCapture(0);
+            var camera = new cv.VideoCapture(defaultCamPort);
             
             const intvl = setInterval(function() {
                 let frame = camera.read();
@@ -305,7 +426,7 @@ class JEYES {
         
         try{
             let done = false;
-            var camera = new cv.VideoCapture(0);
+            var camera = new cv.VideoCapture(defaultCamPort);
 
             const intvl = setInterval(function() {
                 let frame = camera.read();
@@ -340,7 +461,7 @@ class JEYES {
         
         try{
             let done = false;
-            var camera = new cv.VideoCapture(0);
+            var camera = new cv.VideoCapture(defaultCamPort);
 
             const intvl = setInterval(function() {
                 let frame = camera.read();
@@ -375,7 +496,7 @@ class JEYES {
 
         try{
             let done = false;
-            var camera = new cv.VideoCapture(0);
+            var camera = new cv.VideoCapture(defaultCamPort);
             //var camera = new cv.VideoCapture("http://10.0.0.10:8080/videofeed");
 
             const intvl = setInterval(function() {
@@ -413,7 +534,7 @@ class JEYES {
         
         try{
             let done = false;
-            var camera = new cv.VideoCapture(0);
+            var camera = new cv.VideoCapture(defaultCamPort);
 
             const intvl = setInterval(function() {
                 let frame = camera.read();
@@ -441,11 +562,67 @@ class JEYES {
             console.log(" Debug: Error with edge detection camera: ", ex);
         }
     }
+
+    /* Model Img Camera */
+    modelImgCamera(lib, searchFilter, callback){
+        var self = this;
+
+        try{
+            let done = false;
+            var camera = new cv.VideoCapture(defaultCamPort);
+            
+            const intvl = setInterval(function() {
+                let frame = camera.read();
+
+                if (frame.empty) {
+                    camera.reset();
+                    frame = camera.read();
+                }
+                
+                // Face Recognize Image
+                var retImg = self.modelMapImg(frame, searchFilter, lib);
+
+                if(retImg.error){
+                    done = true;
+                }
+                else{
+                    // Resize Img
+                    retImg.img = _sizeImg(retImg.img);
+                    // Stream Or View Locally
+                    cv.imshow("Facial Recognition Frame", retImg.img);
+                    const key = cv.waitKey(1);
+                    done = key !== -1 && key !== 255;
+                }
+               
+                if (done) {
+                    clearInterval(intvl);
+                    callback(-100);
+                }
+            }, 0);
+        }
+        catch(ex){
+            console.log(" Debug: Error with model camera: ", ex);
+        }
+    }
 }
 
 module.exports = JEYES;
 
 /* Private Functions */
+/* Special Index */
+function _indexOf(obj, val){
+    try {
+        for(var i =0; i < obj.length; i++){
+            if(obj[i] == val){
+                return i;
+            }
+        }
+    }
+    catch(ex){
+        console.log("Error getting special Index: ", ex);
+    }
+    return -1;
+}
 
 /* Load Face Mark */
 function _loadFacemark(facialClassifier, facemarkModel){
@@ -456,10 +633,10 @@ function _loadFacemark(facialClassifier, facemarkModel){
         facemark.loadModel(facemarkModel);
 
         // give the facemark object it's face detection callback
-        facemark.setFaceDetector(frame => {
+        /*facemark.setFaceDetector(frame => {
             const { objects } = facialClassifier.detectMultiScale(frame, 1.07);
             return objects;
-        });
+        });*/
     }
     catch(ex){
         console.log(" Debug: Error Loading Face Mark: ", ex);

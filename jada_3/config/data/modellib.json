@@ -1,0 +1,32 @@
+{
+    "stateid":{
+        "file":"stateid_caffe_train_iter_714.caffemodel",
+        "deployfile":"deploy.prototxt",
+        "minConfidence":0.4,
+        "datakey":["alabama","alaska","arizona","arkansas","california","colorado","connecticut","delaware","florida","georgia","hawaii","idaho","illinois","indiana","iowa","kansas","kentucky","lousiana","maine","maryland","massachusetts","michigan","minnesota","mississippi","missouri","montana","nebraska","nevada","new-hampshire","new-jersey","new-mexico","new-york","north-carolina","north-dakota","ohio","oklahoma","oregon","pennsylvania","rhode-island","south-carolina","south-dakota","tennessee","texas","utah","vermont","virginia","washington-dc","washington","west-virginia","wisconsin","wyoming"]
+    },
+    "jordans":{
+        "configFile":"js_small.cfg",
+        "weightsFile":"js_small.weights",
+        "labelFile":"js_label.txt",
+        "datakey":[],
+        "minConfidence":0.5,
+        "nmsThreshold":0.3
+    },
+    "jordans2":{
+        "configFile":"js2-voc.cfg",
+        "weightsFile":"js2-voc_100.weights",
+        "labelFile":"js_label.txt",
+        "datakey":[],
+        "minConfidence":0.5,
+        "nmsThreshold":0.3
+    },
+    "base":{
+        "configFile":"yolov3-tiny.cfg",
+        "weightsFile":"yolov3-tiny.weights",
+        "labelFile":"coco.names",
+        "datakey":[],
+        "minConfidence":0.5,
+        "nmsThreshold":0.3
+    }
+}

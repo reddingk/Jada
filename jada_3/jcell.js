@@ -16,7 +16,7 @@ const apiLib = require("./config/apiLib.json");
 class JCELL {  
     constructor(settingFile) {
         this.jtools = new Tools();
-        this.jeyes = new Eyes();
+        //this.jeyes = new Eyes();
         this.jlift = new Lift(this.jtools);
         this.settingFile = settingFile;
         this.cacheData = {"directions":{}};

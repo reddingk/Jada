@@ -903,7 +903,6 @@ class JNERVESYSTEM {
         var dataObj = {"type": null, "info":null};
 
         try {
-
             /*self.jeyes.motionTrackingCamera(function(ret){
                 callback({"jresponse": "Test Motion Video Status: " + (ret == -100)});
             });*/
@@ -929,8 +928,12 @@ class JNERVESYSTEM {
             //    callback({"jresponse": "Test Video Status: " + (ret == -100)});
             //});   
             
-            self.jeyes.edgeDetectiongCamera(function(ret){
-                callback({"jresponse": "Test Video Status: " + (ret == -100)});
+            //self.jeyes.edgeDetectiongCamera(function(ret){
+            //    callback({"jresponse": "Test Video Status: " + (ret == -100)});
+            //});
+            
+            self.jeyes.modelImgCamera("jordans2", [],function(ret){
+                callback({"jresponse": "Test Model Status: " + (ret == -100)});
             });
         }
         catch(ex){
