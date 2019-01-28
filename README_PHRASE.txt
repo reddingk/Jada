@@ -95,6 +95,13 @@ node jadacmd.js [Phrase]
   {replace}
       : Replacement action on last request the current list is
         -- Remember Location
+/* MAPS */
+{capital} [of] ****
+      : Get the capital of specific place
+[state] {capitals} [of] ****
+      : Get all of the state capitals of specific location
+{contries} [in] ****
+      : Get countries in specific continent
 
 /*Marvel Search*/
   {marvel} {characters} for ****
@@ -103,3 +110,5 @@ node jadacmd.js [Phrase]
 /*Easter Eggs*/
   {do you know the muffin man}
   {how are you}
+
+

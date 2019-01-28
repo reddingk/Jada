@@ -72,7 +72,7 @@ function j_edgeDetect(img, callback){
         var matImg = jEyes.b64toMat(img);        
         retData = (matImg != null ? jEyes.edgeDetectionImg(matImg) : null); 
         
-        console.log((retData ? "Valid" : "Is Null"));
+        //console.log(" [DEBUG]:", (retData ? "Valid" : "Is Null"));
     }
     catch(ex){
         console.log("Error Edge Detection Service:", ex);

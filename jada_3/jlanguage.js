@@ -40,7 +40,7 @@ class JLANGUAGE {
                     if(this.phraseLib == null || this.phraseLib.length == 0){
                         console.log(" > Getting Phrases From DB");
                         const db = client.db(database.dbName).collection('phrases');
-                        collection.find().toArray(function(err, res){
+                        db.find().toArray(function(err, res){
                             if(err){ err; }
                             if(res == null|| res == undefined) { res = [];}
                             this.phraseLib = res;

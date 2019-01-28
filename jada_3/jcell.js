@@ -7,18 +7,21 @@ var request = require('request');
 var fs = require('fs');
 var os = require('os');
 var underscore = require('underscore');
+var database = require('./config/database');
+var mongoClient = require('mongodb').MongoClient;
 
 const Tools = require('./jtools.js');
-//const Eyes = require('./jeyes.js');
+const Eyes = require('./jeyes.js');
 const Lift = require('./jlift.js');
 const apiLib = require("./config/apiLib.json");
 
 class JCELL {  
     constructor(settingFile) {
         this.jtools = new Tools();
-        //this.jeyes = new Eyes();
+        this.jeyes = new Eyes();
         this.jlift = new Lift(this.jtools);
         this.settingFile = settingFile;
+        this.mongoOptions = { connectTimeoutMS: 2000, socketTimeoutMS: 2000};
         this.cacheData = {"directions":{}};
     }
     
@@ -487,6 +490,107 @@ class JCELL {
         }
         catch(ex){
             response.error = "Error getting sports schedule: " + ex;
+            callback(response);
+        }
+    }
+
+    /* Get Map Countries By Continent */
+    getMapCountriesByContinent(items, callback){
+        var self = this;
+        var response = {"error":null, "results":null};
+        self.saveLastAction("getMapCountriesByContinent", items);
+
+        try {
+            if(!self.checkParameterList(["location"], items)){
+                response.error = "Missing Parameter";
+                callback(response);
+            }
+            else {
+                var getReturn = {'name':1,'capital':1,'countryCode':1,'continent':1,'states.name':1,'states.capital':1};
+                
+                mongoClient.connect(database.remoteUrl, self.mongoOptions, function(err, client){ 
+                    if(err) {
+                        response.error = "Error connecting to map DB"
+                        callback(response);
+                    }
+                    else {      
+                        const db = client.db(database.dbName).collection('locations'); 
+                                                               
+                        db.find({'continent': {'$regex': items.location }}, getReturn).toArray(function(err, res){
+
+                            if(err){response.error = err;}
+                            if(!res){res=[];}
+
+                            response.results = res;                                                        
+                            callback(response);
+                        });                                    
+                    }
+                });
+            }
+        }
+        catch(ex){
+            response.error = "Error getting maps capital info: " + ex;
+            callback(response);
+        }
+    }
+
+    /* Get Capital Data */
+    getMapCapital(items, callback){
+        var self = this;
+        var response = {"error":null, "results":null};
+        self.saveLastAction("getMapCapital", items);
+
+        try {
+            if(!self.checkParameterList(["location", "isState"], items)){
+                response.error = "Missing Parameter";
+                callback(response);
+            }
+            else {
+                //items.location = "United States of America";
+                var getQuery = (items.isState ? {'name': {'$regex': items.location } } : {'$or': [{'name':{'$regex':items.location}},{'states.name': {'$regex': items.location }}]});
+                var getReturn = {'name':1,'capital':1,'countryCode':1,'continent':1,'states.name':1,'states.capital':1};
+                
+
+                mongoClient.connect(database.remoteUrl, self.mongoOptions, function(err, client){ 
+                    if(err) {
+                        response.error = "Error connecting to map DB"
+                        callback(response);
+                    }
+                    else {      
+                        const db = client.db(database.dbName).collection('locations'); 
+                                                               
+                        db.find(getQuery,getReturn).toArray(function(err, res){
+
+                            if(err){response.error = err;}
+                            if(!res){res=[];}
+                                                        
+                            if(items.isState){
+                                // Return All
+                                response.results = res;
+                            }
+                            else {
+                                // Filter countries
+                                var tmpCountries = res.filter(function(item){ return item.name.indexOf(items.location) >= 0; }).map(item => ({name: item.name, capital:item.capital, countryCode:item.countryCode, type:"country"}));
+                                // Filter states
+                                var tmpCountryStates = res.filter(function(country){ return country.states.filter(function(item){ return item.name.indexOf(items.location)  >= 0; }).length > 0});
+                                
+                                var tmpStates = [];                                
+                                tmpCountryStates.forEach(function(stItem){ 
+                                    tmpStates = tmpStates.concat(stItem.states.filter(function(item){ return item.name.indexOf(items.location)  >= 0; }).map(itemMap => ({name: itemMap.name, capital:itemMap.capital, countryCode:stItem.countryCode, type:"state"})));
+                                });
+                                                                
+                                // Join Lists
+                                response.results = tmpCountries.concat(tmpStates);
+                            }
+
+                            callback(response);
+                        });                                    
+                    }
+                });
+            }
+        }
+        catch(ex){
+            response.error = "Error getting maps capital info: " + ex;
             callback(response);
         }
     }

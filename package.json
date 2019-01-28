@@ -17,6 +17,7 @@
     "del": "^2.2.0",
     "ejs": "^2.5.5",
     "express": "^4.14.0",
+    "iplocation": "^6.1.0",
     "language-tags": "^1.0.5",
     "md5": "^2.2.1",
     "method-override": "~2.0.2",

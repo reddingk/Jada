@@ -13,7 +13,7 @@ var md5 = require('md5');
 
 const Tools = require('./jtools.js');
 const Cells = require('./jcell.js');
-const Eyes = require('./jeyes.js');
+//const Eyes = require('./jeyes.js');
 const basedb = require("./config/basedb.json");
 
 class JNERVESYSTEM {
@@ -21,7 +21,7 @@ class JNERVESYSTEM {
         this.jbrain = innerBrain;
         this.jtools = new Tools();
         this.jcell = new Cells(innerBrain.settingFile);
-        this.jeyes = new Eyes();
+        //this.jeyes = new Eyes();
         this.greetPhrases = basedb.greetings;
     }
 
@@ -97,7 +97,82 @@ class JNERVESYSTEM {
             callback({"jresponse": finalResponse, "jdata":timeRes});
         });    
     }
+    /* Get Map Countries By Continent */
+    getMapCountriesByContinent(response, callback){
+        var self = this;
+        var finalResponse = null;
 
+        var tmpPhrase = response.fullPhrase.split(" ");
+        var contriesIndex = tmpPhrase.indexOf("countries");
+
+        if((tmpPhrase.length - (contriesIndex+1)) < 2){
+            callback({"jresponse":"Error figuring out where you want me to get capitals"});
+        }
+        else {
+            var postPhrase = tmpPhrase.slice(contriesIndex+2);
+            var cellData = {"location":postPhrase.join(" ")};
+
+            self.jcell.getMapCountriesByContinent(cellData, function(res){
+                if(res.error){
+                    finalResponse = "Sorry error getting results";
+                }
+                else {                    
+                    var countryList = res.results.map(item => (item.name+":"+item.countryCode));
+                    finalResponse = "Here is the continent information that I found: " + countryList.join(", ");                    
+                }
+                callback({"jresponse": finalResponse, "jdata":res, "jtype":"map"});
+            });
+        }
+    }
+
+    /* Get Map Capitals */
+    getMapCapital(response, callback){
+        var self = this;
+        var finalResponse = null;
+
+        /* Parse Phrase */
+        var tmpPhrase = response.fullPhrase.split(" ");
+        var capitalIndex = tmpPhrase.indexOf("capital");
+        var capitalsIndex = tmpPhrase.indexOf("capitals");
+
+        var capIndex = (capitalIndex > 0 ? capitalIndex : capitalsIndex);
+        var isStates = false;
+        
+        if(capIndex > 0 && tmpPhrase[capIndex -1] == "state") { isStates = true;}
+
+        if((tmpPhrase.length - (capIndex+1)) < 2){
+            callback({"jresponse":"Error figuring out where you want me to get capitals"});
+        }
+        else {
+            var postPhrase = tmpPhrase.slice(capIndex+2);
+            var cellData = {"location":postPhrase.join(" "), "isState":isStates};
+            self.jcell.getMapCapital(cellData, function(res){
+                
+                if(res.error){
+                    finalResponse = "Sorry error getting results";
+                }
+                else {
+                    if(isStates){
+                        var capList = [];
+                        // Parse state list
+                        for(var i =0; i < res.results.length; i++){
+                            var countryStates = [];
+                            for(var j =0; j < res.results[i].states.length; j++){
+                                countryStates.push(res.results[i].states[j].name+":"+res.results[i].states[j].capital.name);
+                            }
+                            capList.push(res.results[i].name + " | " + countryStates.join(", "));
+                        }
+                        finalResponse = "Here is the capital information that I found: " + capList.join(" "); 
+                    }
+                    else {
+                        var stateList = res.results.map(item => (item.name+":"+item.capital.name+":"+item.countryCode+":"+item.type));
+                        finalResponse = "Here is the capital information that I found: " + stateList.join(", ");
+                    }
+                }
+                callback({"jresponse": finalResponse, "jdata":res, "jtype":"map"});
+            });
+        }     
+    }
     /* Get Sports Schedules */
     getSportsSchedule(response,callback){
         var self = this;
@@ -903,36 +978,36 @@ class JNERVESYSTEM {
         var dataObj = {"type": null, "info":null};
 
         try {
-            /*self.jeyes.motionTrackingCamera(function(ret){
+            /*self.jcell.jeyes.motionTrackingCamera(function(ret){
                 callback({"jresponse": "Test Motion Video Status: " + (ret == -100)});
             });*/
 
-            //var tst = self.jeyes._processRecognitionImgs("C:\\Users\\krisr\\Pictures\\ImgRecog","C:\\Users\\krisr\\Documents\\Development\\Personal\\Jada\\jada_3\\config\\data\\photoMemory");
+            //var tst = self.jcell.jeyes._processRecognitionImgs("C:\\Users\\krisr\\Pictures\\ImgRecog","C:\\Users\\krisr\\Documents\\Development\\Personal\\Jada\\jada_3\\config\\data\\photoMemory");
             
-            //self.jeyes.faceRecognizeCamera(function(ret){
+            //self.jcell.jeyes.faceRecognizeCamera(function(ret){
             //    callback({"jresponse": "Facial Recognition Video Status: " + (ret == -100)});
             //});
 
-            //var tst = self.jeyes.facialRecognitionFile("C:\\Users\\krisr\\Pictures\\Wedding(AllenHouse)\\bridalpartyportraits\\1P9A9224.jpg");
-            //var tst = self.jeyes.facialRecognitionFile("C:\\Users\\krisr\\Pictures\\Saved Pictures\\t2.png");
+            //var tst = self.jcell.jeyes.facialRecognitionFile("C:\\Users\\krisr\\Pictures\\Wedding(AllenHouse)\\bridalpartyportraits\\1P9A9224.jpg");
+            //var tst = self.jcell.jeyes.facialRecognitionFile("C:\\Users\\krisr\\Pictures\\Saved Pictures\\t2.png");
             //callback({"jresponse": "Test: I Found " + tst.join(", ") + " faces."});
 
-            //var faceNum = self.jeyes.facemarkFile("C:\\Users\\krisr\\Pictures\\Saved Pictures\\t3.PNG");
+            //var faceNum = self.jcell.jeyes.facemarkFile("C:\\Users\\krisr\\Pictures\\Saved Pictures\\t3.PNG");
             //callback({"jresponse": "Test: I Found " + faceNum + " faces."});
 
-            //self.jeyes.liveCamera(function(ret){
+            //self.jcell.jeyes.liveCamera(function(ret){
             //    callback({"jresponse": "Test Video Status: " + (ret == -100)});
             //});
 
-            //self.jeyes.facemarkCamera(function(ret){
+            //self.jcell.jeyes.facemarkCamera(function(ret){
             //    callback({"jresponse": "Test Video Status: " + (ret == -100)});
             //});   
             
-            //self.jeyes.edgeDetectiongCamera(function(ret){
+            //self.jcell.jeyes.edgeDetectiongCamera(function(ret){
             //    callback({"jresponse": "Test Video Status: " + (ret == -100)});
             //});
             
-            self.jeyes.modelImgCamera("jordans2", [],function(ret){
+            self.jcell.jeyes.modelImgCamera("jordans3", [],function(ret){
                 callback({"jresponse": "Test Model Status: " + (ret == -100)});
             });
         }

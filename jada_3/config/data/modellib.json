@@ -21,6 +21,14 @@
         "minConfidence":0.5,
         "nmsThreshold":0.3
     },
+    "jordans3":{
+        "configFile":"jsv3-tiny.cfg",
+        "weightsFile":"jsv3-tiny_200.weights",
+        "labelFile":"js_label.txt",
+        "datakey":[],
+        "minConfidence":0.5,
+        "nmsThreshold":0.3
+    },
     "base":{
         "configFile":"yolov3-tiny.cfg",
         "weightsFile":"yolov3-tiny.weights",

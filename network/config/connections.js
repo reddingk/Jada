@@ -119,7 +119,7 @@ class JConnection {
         var self = this;        
 
         try {
-            _getIpLocation(ip, function(res){
+            /*_getIpLocation(ip, function(res){
                 if(res.error){
                     console.log("Error updating IP Location [", id,"](2):", res.error);                    
                 }
@@ -129,10 +129,10 @@ class JConnection {
                     }
                     else {
                         self.connectionList[id].location = res.ret;
-                        console.log(" [DEBUG]: ", res.ret);
+                        //console.log(" [DEBUG]: ", res.ret);
                     }
                 }
-            });
+            });*/
         }
         catch (ex) {
             console.log("Error updating IP Location [", id, "]:", ex);
