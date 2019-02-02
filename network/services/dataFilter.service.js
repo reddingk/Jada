@@ -1,10 +1,11 @@
 'use strict';
 
 var util = require('util');
-const Eyes = require('../../jada_3/jeyes');
+const Brain = require('../../jada_3/jbrain.js');
 
 /* Class Decleration */
-const jEyes = new Eyes();
+const jbrain = new Brain();
+const jEyes = jbrain.jCells.jeyes;
 
 var dataFilter =  {
     filterCheck: function(info,callback){
@@ -31,6 +32,20 @@ var dataFilter =  {
         }
         catch(ex){
             console.log(" Error filter check: ", ex);
+        }
+    },
+    jadaConvo: function(info, callback){
+        try {
+            var trimInput = jbrain.jlanguage.cleanPhrase(info.input.trim());  
+            jbrain.convo(trimInput, function(res){
+                callback(res);
+                //process.exit(0);
+            });
+        }
+        catch(ex){
+            var errorMsg = " Error with jada convo: "+ ex;
+            console.log(errorMsg);
+            callback({"error": errorMsg});
         }
     }
 }

@@ -1,7 +1,4 @@
 var dataFilter = require('../services/dataFilter.service');
-// Jada 
-const Brain = require('../../jada_3/jbrain');
-const jBrain = new Brain();
 
 // Auth Services
 var jauth = require('../../security/services/auth.service');
@@ -39,15 +36,13 @@ module.exports = function (io, connections) {
         socket.on('jada', function (info) {
 
             /* TODO: AUTHENTICATE USER */
-            var connectionId = connections.getConnection(info.sID);
+            var connectionId = connections.getConnection(info.rID);
 
             if (connectionId && connectionId.socket) {                                             
                 if(info.type == "phrase"){
-                    var trimInput =   jbrain.jlanguage.cleanPhrase(info.input.trim());  
-                    jbrain.convo(trimInput, function(res){
-                        var retObj = {"rID":info.data.rID, "input":info.input, "type":info.type,"data":res};
+                    dataFilter.jadaConvo(info, function(ret){
+                        var retObj = {"rID":info.rID, "input":info.input, "type":info.type,"data":ret};
                         io.to(connectionId.socket).emit('jada', retObj);
-                        //process.exit(0);
                     });
                 }   
                 else {
