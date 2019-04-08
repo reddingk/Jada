@@ -10,6 +10,10 @@ module.exports = function (io, connections) {
         var userToken = socket.handshake.query.token;
         var ipAddress = socket.handshake.address;
 
+        //console.log(" [Debug] socket: ");
+        //console.log(socket.handshake);
+        //console.log(socket.request);
+
         // add socket to connection item
         connections.addSocket(userId, userToken, socket.id);
         connections.updateIPLocation(userId, ipAddress);
