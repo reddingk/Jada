@@ -1007,9 +1007,14 @@ class JNERVESYSTEM {
             //    callback({"jresponse": "Test Video Status: " + (ret == -100)});
             //});
             
-            self.jcell.jeyes.modelImgCamera("jordans3", [],function(ret){
-                callback({"jresponse": "Test Model Status: " + (ret == -100)});
+            //self.jcell.jeyes.modelImgCamera("base", [], false, function(ret){
+            //    callback({"jresponse": "Test Model Status: " + (ret == -100)});
+            //});
+
+            var tst = self.jcell.jeyes.modelImgFile("base", [], "C:\\Users\\krisr\\Pictures\\test\\IMG13.png", true, function(ret){
+                callback({"jresponse": "Test: I Read " + ret});
             });
+            
         }
         catch(ex){
             callback({"jresponse": "There is something wrong with your Demo: " + ex});

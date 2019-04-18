@@ -5,6 +5,7 @@
  */
 
 const cv = require("opencv4nodejs");
+const tesseract = require('tesseract.js');
 const fs = require("fs");
 const path = require("path");
 const screen = require("screen-info");
@@ -177,7 +178,7 @@ class JEYES {
 
     modelMapImg(img, searchFilter, filter){
         var self = this;
-        var ret = {"img":null, "error":null};
+        var ret = {"img":null, "layers":[], "error":null};
 
         try {
             if(!(filter in self.modelLibrary)){
@@ -212,7 +213,6 @@ class JEYES {
                 const inputBlob = cv.blobFromImage(img, 1 / 255.0, size, vec3, true, false);
                 model.net.setInput(inputBlob);
 
-                //console.time("model.net.forward");
                 // forward pass input through entire network
                 const layerOutputs = model.net.forward(layerNames);
                 //console.timeEnd("model.net.forward");
@@ -228,10 +228,6 @@ class JEYES {
                         const maxScore = Math.max(...scores);
                         const classId = scores.indexOf(maxScore);
                         const confidence = scores[classId];
-
-                        //const classId = _indexOf(scores, maxScore);
-                        //const confidence = scores[classId][0];
-                        //console.log(" -> Con :",confidence, "scores: ", scores.length, " dec: ", detection.length, " id: ", classId);
 
                         if (confidence > model.minConfidence) {
                             const box = detection.slice(0, 4);
@@ -261,21 +257,23 @@ class JEYES {
                                     const rect = boxes[i];
 
                                     const pt1 = new cv.Point(rect.x, rect.y);
-                                    const pt2 = new cv.Point(rect.x + rect.width, rect.y + rect.height);
+                                    const pt2 = new cv.Point(rect.x + rect.width, rect.y + rect.height);                                                                  
                                     const org = new cv.Point(rect.x, rect.y + 15);
                                     const fontFace = cv.FONT_HERSHEY_SIMPLEX;
-
+                                    
                                     // draw the rect for the object
-                                    img.drawRectangle(pt1, pt2, self.PhoebeColor, 2, 2);                                
-
+                                    img.drawRectangle(pt1, pt2, self.PhoebeColor, 2, 2);
                                     // put text on the object
                                     img.putText((!text ?  "???": text), org, fontFace, 0.6, self.PhoebeColor, 2);
+                                    
+                                    // Set Return Image   
+                                    ret.layers.push({"rect":rect, "title":(!text ?  "???": text) });                                               
                                 }
                             });
                         }
                     });
                 });
-                ret.img = img;
+                ret.img = img; 
             }
         }
         catch(ex){
@@ -283,6 +281,43 @@ class JEYES {
             ret.error = ex;
         }
         return ret;
+    }
+
+    /* Read Image Text */
+    readImageText(img, callback){
+        var self = this;
+        var ret = {"txt":null, "error":null};
+         
+        try {
+            var readImg = img.img;
+            var rect = img.layers[0].rect;
+            
+            const cropped = new cv.Mat(readImg.rows, readImg.cols, readImg.type, [255, 255, 255]);
+            readImg.getRegion(rect).copyTo(cropped.getRegion(rect));
+
+            // Process Img                            
+            const imgToGry = cropped.bgrToGray();
+            const th1 = imgToGry.threshold(165, 255, cv.THRESH_BINARY);
+            const th2 = th1.adaptiveThreshold(255,cv.ADAPTIVE_THRESH_MEAN_C, cv.THRESH_BINARY,7,2);
+            const th3 = th2.adaptiveThreshold(255,cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY,7,2);
+            const filterRes = th3;
+
+            // Save Image                                    
+            var fileNm = __dirname+"\\fileCache\\"+Date.now() +".png";                                    
+            cv.imwrite(fileNm, filterRes);
+
+            tesseract.recognize(fileNm).then(function(result){
+                ret.txt = result.text;
+                // Delete TMP Img
+                fs.unlinkSync(fileNm);
+                callback(ret);
+            });
+        }
+        catch(ex){
+            console.log(" [Debug] Error Getting Image Text: ", ex);
+            ret.error = ex;
+            callback(ret);
+        }
     }
 
     /* Update Facial Recognition Library */
@@ -394,6 +429,41 @@ class JEYES {
         }
 
         return result.names;
+    }
+    /* Detect number of faces from image file */
+    modelImgFile(lib, searchFilter, file, reader, callback){
+        var self = this;
+        try {
+            if (!fs.existsSync(file)){
+                throw new Error("could not find file: " + file);
+            }
+            // retrieve faces using the facemark face detector callback
+            const img = cv.imread(file);
+                        
+            // Model Image
+            var retImg = self.modelMapImg(img, searchFilter, lib);
+                                
+            if(retImg && retImg.img){
+                // Resize Img & Show Img
+                cv.imshowWait("Model Image Frame", _sizeImg(retImg.img));
+            }
+
+            if(!reader){
+                callback("NO READER");
+            }
+            else {             
+                /* Read IMG LOGIC */                                                        
+                self.readImageText(retImg, function(dataRet){
+                    console.log(dataRet.txt);
+                    callback(dataRet.txt);
+                }); 
+            }
+            
+        }
+        catch(ex){
+            console.log("Demo Error: ", ex);
+            callback(-1);
+        }
     }
 
     /* Detect number of faces from image file */
@@ -564,7 +634,7 @@ class JEYES {
     }
 
     /* Model Img Camera */
-    modelImgCamera(lib, searchFilter, callback){
+    modelImgCamera(lib, searchFilter, reader, callback){
         var self = this;
 
         try{
@@ -579,7 +649,7 @@ class JEYES {
                     frame = camera.read();
                 }
                 
-                // Face Recognize Image
+                // Face Recognize Image                
                 var retImg = self.modelMapImg(frame, searchFilter, lib);
 
                 if(retImg.error){
@@ -589,15 +659,26 @@ class JEYES {
                     // Resize Img
                     retImg.img = _sizeImg(retImg.img);
                     // Stream Or View Locally
-                    cv.imshow("Facial Recognition Frame", retImg.img);
+                    cv.imshow("Model Recognition Camera", retImg.img);
                     const key = cv.waitKey(1);
                     done = key !== -1 && key !== 255;
                 }
-               
+                   
                 if (done) {
                     clearInterval(intvl);
                     callback(-100);
-                }
+                }    
+                
+                /* Read IMG LOGIC */
+                /*
+                    const cropped = new cv.Mat(img.rows, img.cols, img.type, [255, 255, 255]);
+                    img.getRegion(rect).copyTo(cropped.getRegion(rect));
+                                            
+                    self.readImageText(cropped, function(dataRet){
+                        console.log(dataRet);
+                        callback(dataRet);
+                    }); 
+                */
             }, 0);
         }
         catch(ex){
