@@ -28,7 +28,7 @@ module.exports = function (io, connections) {
 
             /* TODO: AUTHENTICATE USER */
             var connectionId = connections.getConnection(info.sID);
-            if (connectionId && connectionId.socket) {                
+            if (connectionId && connectionId.socket) {              
                 dataFilter.filterCheck(info.data, function(ret){                    
                     var retObj = {"rID":info.data.rID, "command":info.data.command, "data":ret};
                     io.to(connectionId.socket).emit('direct connection', retObj);

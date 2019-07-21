@@ -16,6 +16,7 @@ class JEYES {
     constructor(){
         this.facialClassifier = new cv.CascadeClassifier(cv.HAAR_FRONTALFACE_ALT2);
         this.facemarkModel = __dirname+"/config/data/lbfmodel.yaml";
+        this.textDetectionModel = __dirname+"/config/data/frozen_east_text_detection.pb";
         this.photoMemory = __dirname + "/config/data/photoMemory";
         this.PhoebeColor = new cv.Vec(4,205,252);
         this.foundColor = new cv.Vec(102,51,0);
@@ -28,6 +29,7 @@ class JEYES {
                            
         this.recogData = _loadRecogTrainingData(this.photoMemory, this.nameMappings, this.imgResize, this.facialClassifier)  
         this.markData = _loadFacemark(this.facialClassifier, this.facemarkModel);
+        this.textDetect = _loadTextDetection(this.textDetectionModel);
     }
 
     /* EXTERNAL FUNCTIONS */
@@ -215,8 +217,7 @@ class JEYES {
 
                 // forward pass input through entire network
                 const layerOutputs = model.net.forward(layerNames);
-                //console.timeEnd("model.net.forward");
-
+               
                 let boxes = [];
                 let confidences = [];
                 let classIDs = [];
@@ -284,34 +285,89 @@ class JEYES {
     }
 
     /* Read Image Text */
-    readImageText(img, callback){
+    readImageText(retImg, callback){
         var self = this;
-        var ret = {"txt":null, "error":null};
+        var ret = {"txt":null, "img":null, "error":null};
          
         try {
-            var readImg = img.img;
-            var rect = img.layers[0].rect;
-            
-            const cropped = new cv.Mat(readImg.rows, readImg.cols, readImg.type, [255, 255, 255]);
-            readImg.getRegion(rect).copyTo(cropped.getRegion(rect));
+            var txtList = [];
+            var img = ret.img = retImg.img;
+            // detect text in IMG
+            const SIZE = 320;
+            const outBlobNames = ['feature_fusion/Conv_7/Sigmoid','feature_fusion/concat_3',];
+            const MIN_CONFIDENCE = 0.5;
+            const NMS_THRESHOLD = 0.4;
 
-            // Process Img                            
-            const imgToGry = cropped.bgrToGray();
-            const th1 = imgToGry.threshold(165, 255, cv.THRESH_BINARY);
-            const th2 = th1.adaptiveThreshold(255,cv.ADAPTIVE_THRESH_MEAN_C, cv.THRESH_BINARY,7,2);
-            const th3 = th2.adaptiveThreshold(255,cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY,7,2);
-            const filterRes = th3;
+            const [imgHeight, imgWidth] = img.sizes;
+            const widthRatio = imgWidth / SIZE;
+            const heightRatio = imgHeight / SIZE;
 
-            // Save Image                                    
-            var fileNm = __dirname+"\\fileCache\\"+Date.now() +".png";                                    
-            cv.imwrite(fileNm, filterRes);
+            const inputBlob = cv.blobFromImage(img, 1, new cv.Size(SIZE, SIZE), new cv.Vec3(123.68, 116.78, 103.94), true, false);
+            this.textDetect.setInput(inputBlob);
+            const [scores, geometry] = this.textDetect.forward(outBlobNames);
+            const [boxes, confidences] = _decode(scores, geometry, MIN_CONFIDENCE);
+            const indices = cv.NMSBoxes(boxes, confidences, MIN_CONFIDENCE, NMS_THRESHOLD);
 
-            tesseract.recognize(fileNm).then(function(result){
-                ret.txt = result.text;
-                // Delete TMP Img
-                fs.unlinkSync(fileNm);
-                callback(ret);
+            indices.forEach((i) => {
+                const rect = boxes[i];
+                var fixedX = (rect.x * widthRatio) - ((rect.x * widthRatio)*.02);
+                var fixedY = rect.y * heightRatio - ((rect.y * heightRatio)*.02);
+                var fixedW = rect.width * widthRatio + ((rect.width * widthRatio)*.1);
+                var fixedH = rect.height * heightRatio + ((rect.height * heightRatio)*.4);
+
+                const imgRect = new cv.Rect(fixedX, fixedY, fixedW, fixedH);
+                
+                // Crop Image
+                var cropped = new cv.Mat(img.rows, img.cols, img.type, [255, 255, 255]);
+                img.getRegion(imgRect).copyTo(cropped.getRegion(imgRect));
+                
+                // Upscale image
+                const upscaleImg = cropped.rescale(3);
+                
+                // Process Img                 
+                const imgToGry = upscaleImg.bgrToGray();
+                const th1 = imgToGry.threshold(170, 255, cv.THRESH_BINARY);
+                const th2 = th1.adaptiveThreshold(255,cv.ADAPTIVE_THRESH_MEAN_C, cv.THRESH_BINARY,7,2);
+                const th3 = th2.adaptiveThreshold(255,cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY,7,2);
+                const filterRes =  th3;
+                
+                 
+                /*const imgToGry = upscaleImg.bgrToGray();
+                const th1 = imgToGry.threshold(100, 255, cv.THRESH_BINARY_INV);
+                const filterRes =  th1;
+                */
+
+                // Save Image                                    
+                var fileNm = __dirname+"\\fileCache\\"+Date.now() +".png";                                    
+                cv.imwrite(fileNm, filterRes);
+
+                // TEST
+                cv.imwrite(__dirname+"\\fileCache\\"+i +"-"+Date.now() +"th0.png", imgToGry);
+                cv.imwrite(__dirname+"\\fileCache\\"+i +"-"+Date.now() +"th1.png", th1);
+                cv.imwrite(__dirname+"\\fileCache\\"+i +"-"+Date.now() +"th2.png", th2);
+
+                tesseract.recognize(fileNm).then(function(result){
+                    // Delete TMP Img
+                    //fs.unlinkSync(fileNm);
+                    txtList.push({"text":result.text, "id":i});
+                    console.log(i,"] ",result.text);
+
+                    if(txtList.length >= indices.length){
+                        ret.txt = txtList.sort(function(a,b){ return a.id - b.id; }).map(function(item){ return item.text; }).join(",");
+                        callback(ret);
+                    }
+                });
+
+                //const pt1 = new cv.Point(imgRect.x, imgRect.y);
+                //const pt2 = new cv.Point(imgRect.x + imgRect.width, imgRect.y + imgRect.height);                                                                  
+                                    
+                // draw the rect for the object
+                //img.drawRectangle(pt1, pt2, self.PhoebeColor, 2, 2);
             });
+
+            //ret.img = img;
+            //cv.imshowWait("TEST FINAL Frame", _sizeImg(ret.img)); 
+            //callback(ret);
         }
         catch(ex){
             console.log(" [Debug] Error Getting Image Text: ", ex);
@@ -454,7 +510,6 @@ class JEYES {
             else {             
                 /* Read IMG LOGIC */                                                        
                 self.readImageText(retImg, function(dataRet){
-                    console.log(dataRet.txt);
                     callback(dataRet.txt);
                 }); 
             }
@@ -666,19 +721,18 @@ class JEYES {
                    
                 if (done) {
                     clearInterval(intvl);
-                    callback(-100);
+                    //callback(-100);
+                    /* Read IMG LOGIC */
+                    if(!reader){
+                        callback("NO READER [2]");
+                    }
+                    else {             
+                        /* Read IMG LOGIC */                                                        
+                        self.readImageText(retImg, function(dataRet){
+                            callback(dataRet.txt);
+                        }); 
+                    }
                 }    
-                
-                /* Read IMG LOGIC */
-                /*
-                    const cropped = new cv.Mat(img.rows, img.cols, img.type, [255, 255, 255]);
-                    img.getRegion(rect).copyTo(cropped.getRegion(rect));
-                                            
-                    self.readImageText(cropped, function(dataRet){
-                        console.log(dataRet);
-                        callback(dataRet);
-                    }); 
-                */
             }, 0);
         }
         catch(ex){
@@ -703,6 +757,52 @@ function _indexOf(obj, val){
         console.log("Error getting special Index: ", ex);
     }
     return -1;
+}
+/* Decoder for Text Detection */
+function _decode(scores, geometry, MIN_CONFIDENCE) {
+    const [numRows, numCols] = scores.sizes.slice(2);
+    const boxes = [];
+    const confidences = [];
+  
+    for (let y = 0; y < numRows; y += 1) {
+      for (let x = 0; x < numCols; x += 1) {
+        const score = scores.at([0, 0, y, x]);
+  
+        if (score < MIN_CONFIDENCE) {
+          continue;
+        }
+  
+        const offsetX = x * 4;
+        const offsetY = y * 4;
+        const angle = geometry.at([0, 4, y, x]);
+        const cos = Math.cos(angle);
+        const sin = Math.sin(angle);
+  
+        const h = geometry.at([0, 0, y, x]) + geometry.at([0, 2, y, x]);
+        const w = geometry.at([0, 1, y, x]) + geometry.at([0, 3, y, x]);
+  
+        const endX = offsetX + (cos * geometry.at([0, 1, y, x])) + (sin * geometry.at([0, 2, y, x]));
+        const endY = offsetY - (sin * geometry.at([0, 1, y, x])) + (cos * geometry.at([0, 2, y, x]));
+        const startX = endX - w;
+        const startY = endY - h;
+  
+        boxes.push(new cv.Rect(startX, startY, endX - startX, endY - startY,));
+        confidences.push(score);
+      }
+    }
+  
+    return [boxes, confidences];
+}
+/* Load Text Detection Model */
+function _loadTextDetection(textDetectModel){
+    var ret;
+    try {
+        ret = cv.readNetFromTensorflow(textDetectModel);
+    }
+    catch(ex){
+        console.log("Error Loading Text Detection Model: ",ex);
+    }
+    return ret;
 }
 
 /* Load Face Mark */

@@ -80,6 +80,7 @@ class JConnection {
         }
         catch (ex) {
             status = false;
+            console.log("Error adding socket: ", ex);
         }
         return status;
     }
@@ -97,6 +98,7 @@ class JConnection {
         }
         catch (ex) {
             status = false;
+            console.log("Error removing socket: ", ex);
         }
         return status;
     }
@@ -111,6 +113,7 @@ class JConnection {
         }
         catch (ex) {
             ret = null;
+            console.log("Error getting connection: ", ex);
         }
         return ret;
     }
