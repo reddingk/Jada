@@ -32,7 +32,7 @@
     "screen-info": "^1.0.1",
     "socket.io": "^1.7.2",
     "sse-express": "^2.0.2",
-    "tesseract.js": "^1.0.14",
+    "tesseract.js": "^1.0.19",
     "uid-generator": "^1.0.0",
     "underscore": "^1.8.3"
   }
