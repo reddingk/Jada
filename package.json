@@ -20,7 +20,7 @@
     "language-tags": "^1.0.5",
     "md5": "^2.2.1",
     "method-override": "~2.0.2",
-    "mongodb": "^3.0.10",
+    "mongodb": "^3.3.4",
     "mongoose": "^4.4.12",
     "opencv4nodejs": "^4.14.0",
     "opn": "^4.0.2",
@@ -31,7 +31,7 @@
     "screen-info": "^1.0.1",
     "socket.io": "^1.7.2",
     "sse-express": "^2.0.2",
-    "tesseract.js": "^1.0.14",
+    "tesseract.js": "^1.0.19",
     "uid-generator": "^1.0.0",
     "underscore": "^1.8.3"
   }
