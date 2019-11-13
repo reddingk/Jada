@@ -2,12 +2,9 @@ const Brain = require('../../jada_3/jbrain.js');
 let jbrain = new Brain();
 
 module.exports = {
-    postPhrase: function(req, res){
-        var input = (req.body && req.body.phrase ? req.body.phrase : 'hey');
+    postPhrase: function(input, callback){
         var trimInput =   jbrain.jlanguage.cleanPhrase(input.trim());
 
-        jbrain.convo(trimInput, function(ret){
-            res.status(200).json(ret);
-        });
+        jbrain.convo(trimInput, callback(ret));
     }
 }
