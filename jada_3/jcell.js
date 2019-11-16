@@ -521,7 +521,8 @@ class JCELL {
                             if(err){response.error = err;}
                             if(!res){res=[];}
 
-                            response.results = res;                                                        
+                            response.results = res; 
+                            client.close();                                                       
                             callback(response);
                         });                                    
                     }
@@ -582,7 +583,7 @@ class JCELL {
                                 // Join Lists
                                 response.results = tmpCountries.concat(tmpStates);
                             }
-
+                            client.close();
                             callback(response);
                         });                                    
                     }

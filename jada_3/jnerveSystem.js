@@ -982,11 +982,17 @@ class JNERVESYSTEM {
                 callback({"jresponse": "Test Motion Video Status: " + (ret == -100)});
             });*/
 
-            //var tst = self.jcell.jeyes._processRecognitionImgs("C:\\Users\\krisr\\Pictures\\ImgRecog","C:\\Users\\krisr\\Documents\\Development\\Personal\\Jada\\jada_3\\config\\data\\photoMemory");
+            /*var tst = self.jcell.jeyes.processRecognitionImgs(
+                "C:\\Users\\krisr\\Pictures\\ImgRecognitionTest\\ImgRecog5",
+                "C:\\Users\\krisr\\Pictures\\ImgRecognitionTest\\Processed",
+                function(ret){
+                    console.log(ret);
+                    callback({"jresponse": "completed"});
+            });*/
             
-            //self.jcell.jeyes.faceRecognizeCamera(function(ret){
-            //    callback({"jresponse": "Facial Recognition Video Status: " + (ret == -100)});
-            //});
+            self.jcell.jeyes.faceRecognizeCamera(function(ret){
+                callback({"jresponse": "Facial Recognition Video Status: " + (ret == -100)});
+            });
 
             //var tst = self.jcell.jeyes.facialRecognitionFile("C:\\Users\\krisr\\Pictures\\Wedding(AllenHouse)\\bridalpartyportraits\\1P9A9224.jpg");
             //var tst = self.jcell.jeyes.facialRecognitionFile("C:\\Users\\krisr\\Pictures\\Saved Pictures\\t2.png");
@@ -1007,9 +1013,9 @@ class JNERVESYSTEM {
             //    callback({"jresponse": "Test Video Status: " + (ret == -100)});
             //});
             
-            self.jcell.jeyes.modelImgCamera("base", [], true, function(ret){
-                callback({"jresponse": "Test Model Status: " + ret });
-            });
+            //self.jcell.jeyes.modelImgCamera("base", [], true, function(ret){
+            //    callback({"jresponse": "Test Model Status: " + ret });
+            //});
 
             //var tst = self.jcell.jeyes.modelImgFile("base", [], "C:\\Users\\krisr\\Pictures\\test\\IMG13.png", true, function(ret){
             //    callback({"jresponse": "Test: I Read " + ret});

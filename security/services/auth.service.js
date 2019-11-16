@@ -120,7 +120,8 @@ function _getUserByUname(uname, callback){
             const db = client.db(database.dbName).collection('users');
             db.find({ 'userId' : uname }).toArray(function(err, res){
                 var ret = null;
-                if(res) { ret = res[0]; }                
+                if(res) { ret = res[0]; }    
+                client.close();            
                 callback(ret);
             });                       
         });
@@ -138,7 +139,8 @@ function _getUserByFacename(facename, callback){
             const db = client.db(database.dbName).collection('users');
             db.find({ 'facename' : facename }).toArray(function(err, res){
                 var ret = null;
-                if(res) { ret = res[0]; }                
+                if(res) { ret = res[0]; }  
+                client.close();              
                 callback(ret);
             });                       
         });
@@ -154,7 +156,8 @@ function _addUser(uname, pwd, name, callback){
     try {
         mongoClient.connect(database.remoteUrl, mongoOptions, function(err, client){
             const db = client.db(database.dbName).collection('users');
-            db.insert({"userId":uname, "pwd":pwd, "name":name });     
+            db.insert({"userId":uname, "pwd":pwd, "name":name }); 
+            client.close();    
             callback({"status":true});                 
         });
     }

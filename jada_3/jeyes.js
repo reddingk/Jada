@@ -18,6 +18,7 @@ class JEYES {
         this.facemarkModel = __dirname+"/config/data/lbfmodel.yaml";
         this.textDetectionModel = __dirname+"/config/data/frozen_east_text_detection.pb";
         this.photoMemory = __dirname + "/config/data/photoMemory";
+        this.imgIndexModel = __dirname + "/config/data/imgIndex.json";
         this.PhoebeColor = new cv.Vec(4,205,252);
         this.foundColor = new cv.Vec(102,51,0);
         this.bgSubtractor = new cv.BackgroundSubtractorMOG2();
@@ -25,9 +26,10 @@ class JEYES {
         this.imgResize = 80;
         this.minDetections = 120;
         this.nameMappings = {"map":{},"list":[]};
+        this.imgIndex = {"data":{}};
         this.modelLibrary = modelLib;
                            
-        this.recogData = _loadRecogTrainingData(this.photoMemory, this.nameMappings, this.imgResize, this.facialClassifier)  
+        this.recogData = _loadRecogTrainingData(this.photoMemory, this.imgIndex, this.nameMappings, this.imgResize, this.facialClassifier, this.imgIndexModel)  
         this.markData = _loadFacemark(this.facialClassifier, this.facemarkModel);
         this.textDetect = _loadTextDetection(this.textDetectionModel);
     }
@@ -74,14 +76,68 @@ class JEYES {
         }
         return ret;
     }
+    /* Process Recognition Img */
+    processRecognitionImgs(sourcePath, destinationPath, callback){
+        var self = this;
+        var ret = { "error":"", "processedImgs":0, "unprocessedImgs":0 };
+        var resizeMax = 350;
 
+        try {
+            // Read In file Location
+            const imgFiles = fs.readdirSync(sourcePath);
+
+            // Process All Imgs
+            for(var i =0; i < imgFiles.length; i++){
+                var filePath = path.resolve(sourcePath, imgFiles[i]);
+                var imgMat = _sizeImg(cv.imread(filePath));
+                var grayImg = imgMat.bgrToGray();
+
+                console.log("File ", i, ":",filePath);
+                const faceResults = self.facialClassifier.detectMultiScale(grayImg);
+
+                if (!faceResults.objects.length) {
+                    ret.unprocessedImgs = ret.unprocessedImgs + 1;
+                }
+                else {
+                    faceResults.objects.forEach((faceRect, j) => { 
+                        const faceImg = grayImg.getRegion(faceRect).resize(self.imgResize, self.imgResize);
+                        var displayImg = imgMat.getRegion(faceRect);
+
+                        var predition = self.recogData.lbph.predict(faceImg);
+                        const who = (predition.confidence > self.minDetections ? null : self.nameMappings.list[predition.label]);
+
+                        var imgNm = "";
+                        if(who == null){
+                            // Unrecognized Face
+                            imgNm = Date.now() + j;
+                        }
+                        else {
+                            // Recognized Face
+                            self.nameMappings.map[who] = self.nameMappings.map[who] + 1;
+                            imgNm = who + "-" + self.nameMappings.map[who];
+                        }
+
+
+                        // Save Image                                    
+                        var fileNm = destinationPath+"\\"+imgNm +".png";                                                     
+                        cv.imwrite(fileNm, displayImg.resizeToMax(resizeMax));    
+                    });
+                    ret.processedImgs = ret.processedImgs + 1;
+                }
+            }
+        }
+        catch(ex){
+            console.log("Error Processing Recognizing Imgs: ", ex);
+            ret.error = ex;
+        }
+        callback(ret);
+    }
     /* Facial Recognize MAT */
     faceRecogImg(recogImg){
         var self = this;
         var ret = {"img":null, "names":[], "error":null};
 
         try {  
-
             const result = self.facialClassifier.detectMultiScale(recogImg.bgrToGray());             
 
             result.objects.forEach((faceRect, i) => {  
@@ -89,8 +145,12 @@ class JEYES {
                 
                 var predition = self.recogData.lbph.predict(faceImg);
                 
-                const who = (predition.confidence > self.minDetections ? "not sure?" : self.nameMappings.list[predition.label]);
+                const who = (predition.confidence > self.minDetections ? "not sure?" : _getImgInfo(self.nameMappings.list[predition.label], self.imgIndex.data));
                 const displayColor = (predition.confidence > self.minDetections ? self.PhoebeColor: self.foundColor);
+
+                /*if(predition.confidence <= self.minDetections) {
+                    console.log("Name: ",who, " - ", predition.confidence,"%");
+                }*/
 
                 ret.names.push(who);
                 
@@ -840,7 +900,31 @@ function _sizeImg(img){
     }
     return retImg;
 } 
+/* Get Image Info */
+function _getImgInfo(imgId, imgIndex){
+    var ret = "--";
+    try {
+        
+        if(Object.keys(imgIndex).length > 0) {
+            var imgObj = (imgId in imgIndex ? imgIndex[imgId] : null);
+            
+            if(imgObj == null){
+                ret = "[Invalid ID]";
+            }
+            else {
+                ret = imgObj.firstname + " " + imgObj.lastname;
+            }
+        }
+        else {
+            ret = "NA [C003]";
+        }
+    }
+    catch(ex){
+        console.log("Error getting Img Info: ",ex);
+    }
 
+    return ret;
+}
 /* Build Name Map */
 function _buildNameMap(photoMemory){
     var nameObj = {};
@@ -866,13 +950,17 @@ function _buildNameMap(photoMemory){
 }
 
 /* Load Recog Training Data */
-function _loadRecogTrainingData(photoMemory, nameMappings, imgResize, facialClassifier){
+function _loadRecogTrainingData(photoMemory, imgIndex, nameMappings, imgResize, facialClassifier, imgIndexModel){
     var ret = { "lbph": new cv.LBPHFaceRecognizer(), "eigenRecognizer":new cv.EigenFaceRecognizer()};
 
     try {
         nameMappings.map = ((Object.keys(nameMappings.map).length === 0) ? _buildNameMap(photoMemory) : nameMappings.map);        
         nameMappings.list = Object.keys(nameMappings.map);
 
+        // Load Img Index 
+        imgIndex.data = (fs.existsSync(imgIndexModel) ? require(imgIndexModel) : {});
+
+        // Load Files
         const imgFiles = fs.readdirSync(photoMemory);
                     
         // Get Face Images
@@ -884,6 +972,16 @@ function _loadRecogTrainingData(photoMemory, nameMappings, imgResize, facialClas
             return grayImg.getRegion(faceRects[0]);
         };
 
+        // Test Images
+        /*imgFiles.forEach(function(imgF){
+            var tmpfile = path.resolve(photoMemory, imgF);
+            var tmpMat = cv.imread(tmpfile);
+            const tmpfaceRects = facialClassifier.detectMultiScale(tmpMat.bgrToGray()).objects;
+            if(!tmpfaceRects.length){
+                console.log("no faces in: ", imgF);
+            }
+        });*/
+        
         const trainImgs = imgFiles
             // get absolute file path
             .map(file => path.resolve(photoMemory, file))

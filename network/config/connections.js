@@ -12,7 +12,9 @@ const iplocation = require("iplocation").default;
 
 class JConnection {
     constructor() {
-        this.connectionList = {};       
+        this.connectionList = {
+            "ktest":{"connection":null, "nickname":"Test Man", "token":"J6968MjfCFaeMHMt8kDAA1"}
+        };       
     }
     // Add Connection To List
     addConnection(id, conn, nickname, token) {

@@ -44,10 +44,12 @@ class JLANGUAGE {
                             if(err){ err; }
                             if(res == null|| res == undefined) { res = [];}
                             this.phraseLib = res;
+                            client.close();
                             callback(this.phraseLib);
                         });                        
                     }
                     else {
+                        client.close();
                         callback(this.phraseLib);
                     }
                 }
@@ -72,10 +74,12 @@ class JLANGUAGE {
                         const db = client.db(database.dbName).collection('phrases');
                         db.find({ 'type' : 'phrase' }).toArray(function(err, res){
                             if(res == null|| res == undefined) { res = [];}
+                            client.close();
                             callback(res);
                         });                       
                     }
                     else {
+                        client.close();
                         callback(self.fullPhraseLib);
                     }
                 }
@@ -109,6 +113,7 @@ class JLANGUAGE {
                         ]}
                     ]}).toArray(function(err, res){
                         if(res == null || res == undefined) { res = [];}
+                        client.close();
                         callback(res);
                     });
                 }
