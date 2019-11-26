@@ -7,7 +7,9 @@ var path = require('path');
 var bodyParser = require('body-parser');
 var methodOverride = require('method-override');
 var mongoose = require('mongoose');
-var database = require('./jada_/config/database');
+require('dotenv').config();
+var database = { connectionString: process.env.DatabaseConnectionString, dbName: process.env.DatabaseName }
+
 
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
@@ -16,7 +18,7 @@ var io = require('socket.io')(http);
 
 // config files
 mongoose.Promise = global.Promise;
-mongoose.connect(database.remoteUrl);
+mongoose.connect(database.connectionString);
 
 // set ports
 var port = process.env.PORT || 1003;

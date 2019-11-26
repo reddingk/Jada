@@ -7,7 +7,8 @@
 
 var underscore = require('underscore');
 var fs = require('fs');
-var database = require('./config/database');
+require('dotenv').config();
+var database = { connectionString: process.env.DatabaseConnectionString, dbName: process.env.DatabaseName }
 var mongoClient = require('mongodb').MongoClient;
 
 const Tools = require('./jtools.js');
@@ -31,7 +32,7 @@ class JLANGUAGE {
         var self = this;
 
         try{
-            mongoClient.connect(database.remoteUrl, self.mongoOptions, function(err, client){ 
+            mongoClient.connect(database.connectionString, self.mongoOptions, function(err, client){ 
                 if(err) {
                     //console.log(" Debug: Error Get All Phrases");
                     callback(self.offlineGet("all", []));
@@ -63,7 +64,7 @@ class JLANGUAGE {
         var self = this;
 
         try {
-            mongoClient.connect(database.remoteUrl, self.mongoOptions, function(err, client){
+            mongoClient.connect(database.connectionString, self.mongoOptions, function(err, client){
                 if(err) {
                     //console.log(" Debug: Error Get Full Phrase");
                     callback(self.offlineGet("full", []));
@@ -93,7 +94,7 @@ class JLANGUAGE {
     searchPhrase(wordList, callback) {
         var self = this;
         try {
-            mongoClient.connect(database.remoteUrl, self.mongoOptions, function(err, client){
+            mongoClient.connect(database.connectionString, self.mongoOptions, function(err, client){
                 if(err) {
                     //console.log(" Debug: Error Search Phrase");
                     callback(self.offlineGet("search", wordList));

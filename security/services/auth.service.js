@@ -6,7 +6,9 @@ const UIDGenerator = require('uid-generator');
 var mongoClient = require('mongodb').MongoClient;
 const mongoOptions = { connectTimeoutMS: 2000, socketTimeoutMS: 2000};
 
-var database = require('../../jada_3/config/database');
+require('dotenv').config();
+var database = { connectionString: process.env.DatabaseConnectionString, dbName: process.env.DatabaseName }
+
 const Eyes = require('../../jada_3/jeyes');
 
 /* Class Decleration */
@@ -116,7 +118,7 @@ module.exports =  auth;
 /* Get User From DB */
 function _getUserByUname(uname, callback){
     try {
-        mongoClient.connect(database.remoteUrl, mongoOptions, function(err, client){
+        mongoClient.connect(database.connectionString, mongoOptions, function(err, client){
             const db = client.db(database.dbName).collection('users');
             db.find({ 'userId' : uname }).toArray(function(err, res){
                 var ret = null;
@@ -135,7 +137,7 @@ function _getUserByUname(uname, callback){
 /* Get User From DB */
 function _getUserByFacename(facename, callback){
     try {
-        mongoClient.connect(database.remoteUrl, mongoOptions, function(err, client){
+        mongoClient.connect(database.connectionString, mongoOptions, function(err, client){
             const db = client.db(database.dbName).collection('users');
             db.find({ 'facename' : facename }).toArray(function(err, res){
                 var ret = null;
@@ -154,7 +156,7 @@ function _getUserByFacename(facename, callback){
 /* Add User to DB */
 function _addUser(uname, pwd, name, callback){
     try {
-        mongoClient.connect(database.remoteUrl, mongoOptions, function(err, client){
+        mongoClient.connect(database.connectionString, mongoOptions, function(err, client){
             const db = client.db(database.dbName).collection('users');
             db.insert({"userId":uname, "pwd":pwd, "name":name }); 
             client.close();    

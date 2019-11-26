@@ -3,3 +3,4 @@ ps118/libs/*
 ps118/chocolateBoy/node_modules/*
 jada_3/config/data/imgModels/*
 jada_3/config/data/photoMemory/*
+.env

@@ -8,7 +8,9 @@ var fs = require('fs');
 // configuration
 
 // database config files
-var database = require('./jada_3/config/database');
+require('dotenv').config();
+var database = { connectionString: process.env.DatabaseConnectionString, dbName: process.env.DatabaseName }
+
 
 const readline = require('readline');
 const rl = readline.createInterface({

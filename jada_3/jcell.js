@@ -7,8 +7,10 @@ var request = require('request');
 var fs = require('fs');
 var os = require('os');
 var underscore = require('underscore');
-var database = require('./config/database');
 var mongoClient = require('mongodb').MongoClient;
+
+require('dotenv').config();
+var database = { connectionString: process.env.DatabaseConnectionString, dbName: process.env.DatabaseName }
 
 const Tools = require('./jtools.js');
 const Eyes = require('./jeyes.js');
@@ -93,7 +95,7 @@ class JCELL {
                     response.error = "Missing Parameter";
                 }
                 else {                    
-                    var url = self.jtools.stringFormat("{0}similar?q={1}&k={2}&type={3}&info={4}&limit={5}",[api.link, items.query.replace(" ", "+"), api.key, items.type, items.info, items.limit]);
+                    var url = self.jtools.stringFormat("{0}similar?q={1}&k={2}&type={3}&info={4}&limit={5}",[api.link, items.query.replace(" ", "+"), process.env.TASTEKID_KEY, items.type, items.info, items.limit]);
                     request({ url: url, json: true}, function (error, res, body){
                         if(!error && res.statusCode === 200){
                             response.results = body;                                
@@ -127,7 +129,7 @@ class JCELL {
                     callback(response);
                 }
                 else {                    
-                    var url = self.jtools.stringFormat("{0}{1}?q={2}&appid={3}&units=imperial", [api.link, items.type, items.location.replace(" ", "+"), api.key]);
+                    var url = self.jtools.stringFormat("{0}{1}?q={2}&appid={3}&units=imperial", [api.link, items.type, items.location.replace(" ", "+"), process.env.OPENWEATHER_KEY]);
                     
                     request({ url: url, json: true}, function (error, res, body){
                         if(!error && res.statusCode === 200){
@@ -212,7 +214,7 @@ class JCELL {
                         callback(response);
                     }
                     else {
-                        var url = self.jtools.stringFormat("{0}?key={1}&origin={2}&destination={3}&mode={4}",[api.link, api.key, items.fromLoc.replace(/\s/g,"+"), items.toLoc.replace(/\s/g,"+"), items.type]);
+                        var url = self.jtools.stringFormat("{0}?key={1}&origin={2}&destination={3}&mode={4}",[api.link, process.env.GOOGLEMAPS_KEY, items.fromLoc.replace(/\s/g,"+"), items.toLoc.replace(/\s/g,"+"), items.type]);
 
                         request({ url: url, json: true}, function (error, res, body){                        
                             if(!error && res.statusCode === 200){
@@ -508,7 +510,7 @@ class JCELL {
             else {
                 var getReturn = {'name':1,'capital':1,'countryCode':1,'continent':1,'states.name':1,'states.capital':1};
                 
-                mongoClient.connect(database.remoteUrl, self.mongoOptions, function(err, client){ 
+                mongoClient.connect(database.connectionString, self.mongoOptions, function(err, client){ 
                     if(err) {
                         response.error = "Error connecting to map DB"
                         callback(response);
@@ -552,7 +554,7 @@ class JCELL {
                 var getReturn = {'name':1,'capital':1,'countryCode':1,'continent':1,'states.name':1,'states.capital':1};
                 
 
-                mongoClient.connect(database.remoteUrl, self.mongoOptions, function(err, client){ 
+                mongoClient.connect(database.connectionString, self.mongoOptions, function(err, client){ 
                     if(err) {
                         response.error = "Error connecting to map DB"
                         callback(response);

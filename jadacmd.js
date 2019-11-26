@@ -1,5 +1,7 @@
 'use strict';
-var database = require('./jada_3/config/database');
+require('dotenv').config();
+var database = { connectionString: process.env.DatabaseConnectionString, dbName: process.env.DatabaseName }
+
 
 const Brain = require('./jada_3/jbrain.js');
 let jbrain = new Brain();
