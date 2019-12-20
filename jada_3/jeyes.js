@@ -8,7 +8,7 @@ const cv = require("opencv4nodejs");
 const tesseract = require('tesseract.js');
 const fs = require("fs");
 const path = require("path");
-const screen = require("screen-info");
+//const screen = require("screen-info");
 const modelLib = require("./config/data/modellib.json");
 const defaultCamPort = 1;
 
@@ -509,8 +509,11 @@ class JEYES {
                 // Motion Tracking
                 let retFrame = self.motionTrackImg(frame);
 
+                // Resize Img
+                //retFrame.img = _sizeImg(retFrame.img);
+
                 // Stream Or View Locally
-                cv.imshow("Motion Camera Frame", retFrame);
+                cv.imshow("Motion Camera Frame", retFrame.img);
                 
                 const key = cv.waitKey(delay);
                 done = key !== -1 && key !== 255;
@@ -846,7 +849,7 @@ function _decode(scores, geometry, MIN_CONFIDENCE) {
         const startX = endX - w;
         const startY = endY - h;
   
-        boxes.push(new cv.Rect(startX, startY, endX - startX, endY - startY,));
+        boxes.push(new cv.Rect(startX, startY, endX - startX, endY - startY));
         confidences.push(score);
       }
     }
@@ -891,7 +894,7 @@ function _sizeImg(img){
     var retImg;
     
     try {
-        const mainScreen = screen.main();
+        const mainScreen = { "width":1032 }; /*screen.main();*/
         retImg = (mainScreen.width < img.cols ? _sizeImg(img.rescale(.7)): img);
     }
     catch(ex){

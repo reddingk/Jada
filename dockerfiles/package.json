@@ -1,0 +1,38 @@
+{
+  "name": "jada",
+  "version": "1.0.0",
+  "description": "The brain behind the Jaden personal assistant",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "author": "Kris Redding",
+  "license": "ISC",
+  "dependencies": {
+    "async": "^2.1.4",
+    "bcrypt": "^3.0.0",
+    "body-parser": "^1.15.2",
+    "cheerio": "^1.0.0-rc.2",
+    "del": "^2.2.0",
+    "dotenv": "^8.2.0",
+    "ejs": "^2.5.5",
+    "express": "^4.14.0",
+    "iplocation": "^6.1.0",
+    "language-tags": "^1.0.5",
+    "md5": "^2.2.1",
+    "method-override": "~2.0.2",
+    "mongodb": "^3.3.4",
+    "mongoose": "^4.4.12",
+    "opencv4nodejs": "^4.14.0",
+    "opn": "^4.0.2",
+    "readline": "^1.3.0",
+    "request": "^2.88.0",
+    "run-sequence": "^1.2.1",
+    "say": "^0.9.1",
+    "socket.io": "^1.7.2",
+    "sse-express": "^2.0.2",
+    "tesseract.js": "^1.0.19",
+    "uid-generator": "^1.0.0",
+    "underscore": "^1.8.3"
+  }
+}

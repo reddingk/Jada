@@ -47,18 +47,18 @@ class JNERVESYSTEM {
         }
 
         if(tmpStr.length == 0) {
-            callback({ "todo":"", "jresponse": persGreeting, "jdata": {"results":persGreeting } });
+            callback({ "todo":"", "jresponse": persGreeting, "jtype":"greeting", "jdata": {"results":persGreeting } });
         }
         else if(tmpStr == 1) {
             self.jbrain.convo(tmpStr[0], function(res){
               var finalResponse = persGreeting + ": " + res.jresponse;
-              callback({ "todo":"", "jresponse": finalResponse, "jdata": {"results":res.jdata } });
+              callback({ "todo":"", "jresponse": finalResponse, "jtype":"greeting", "jdata": {"results":res.jdata } });
             });
         }
         else {
             self.jbrain.convo(tmpStr.join(" "), function(res){
               var finalResponse = persGreeting + ": " + res.jresponse;
-              callback({ "todo":"", "jresponse": finalResponse, "jdata": {"results":res.jdata } });
+              callback({ "todo":"", "jresponse": finalResponse, "jtype":"greeting", "jdata": {"results":res.jdata } });
             });
         }
     }
@@ -77,7 +77,7 @@ class JNERVESYSTEM {
                 else {
                     finalResponse = "There was an error while retrieving the time, sorry check back later.";
                 }
-                callback({"jresponse": finalResponse, "jdata":timeRes});
+                callback({"jresponse": finalResponse, "jtype":"time", "jdata":timeRes});
         });    
     }
 
@@ -94,7 +94,7 @@ class JNERVESYSTEM {
             else {
                 finalResponse = "There was an error while retrieving the time, sorry check back later.";
             }
-            callback({"jresponse": finalResponse, "jdata":timeRes});
+            callback({"jresponse": finalResponse, "jtype":"date", "jdata":timeRes});
         });    
     }
     /* Get Map Countries By Continent */
@@ -212,7 +212,7 @@ class JNERVESYSTEM {
                     }
                 }
 
-                callback({"jresponse": schFeedback, "jdata":res.results});
+                callback({"jresponse": schFeedback, "jtype":"sports", "jdata":res.results});
             });
         }
     }
@@ -262,7 +262,7 @@ class JNERVESYSTEM {
             else {
                 finalResponse = "There was an error while retrieving media compare data: " + res.error;
             }
-            callback({"jresponse": finalResponse, "jdata":res.results.Similar});
+            callback({"jresponse": finalResponse,  "jtype":"media", "jdata":res.results.Similar});
         });
     }
 
@@ -293,12 +293,12 @@ class JNERVESYSTEM {
                 else {
                     finalResponse = "There was an error while retrieving current weather data: " + res.error;
                 }
-                callback({"jresponse": finalResponse, "jdata":apiResponse });
+                callback({"jresponse": finalResponse, "jtype":"weather", "jdata":apiResponse });
             });
         }
         else {
             finalResponse = "Im not sure where you would like me to look";
-            callback({"jresponse": finalResponse, "jdata":apiResponse});
+            callback({"jresponse": finalResponse, "jtype":"weather", "jdata":apiResponse});
         }
     }
 
@@ -367,12 +367,12 @@ class JNERVESYSTEM {
                 else {
                     finalResponse = "There was an error while retrieving current weather data: " + res.error;
                 }
-                callback({"jresponse": finalResponse, "jdata":apiResponse});
+                callback({"jresponse": finalResponse, "jtype":"weather", "jdata":apiResponse});
             });
         }
         else {
             finalResponse = "Im not sure where you would like me to look";
-            callback({"jresponse": finalResponse, "jdata":apiResponse});
+            callback({"jresponse": finalResponse, "jtype":"weather", "jdata":apiResponse});
         }
     }
 
@@ -418,12 +418,12 @@ class JNERVESYSTEM {
                 else {
                     finalResponse = "There was an error while retrieving current weather data: " + res.error;
                 }
-                callback({"jresponse": finalResponse, "jdata":apiResponse});
+                callback({"jresponse": finalResponse, "jtype":"weather", "jdata":apiResponse});
             });
         }
         else {
             finalResponse = "Im not sure where you would like me to look";
-            callback({"jresponse": finalResponse, "jdata":apiResponse});
+            callback({"jresponse": finalResponse, "jtype":"weather", "jdata":apiResponse});
         }
     }
 
@@ -990,9 +990,9 @@ class JNERVESYSTEM {
                     callback({"jresponse": "completed"});
             });*/
             
-            self.jcell.jeyes.faceRecognizeCamera(function(ret){
+            /*self.jcell.jeyes.faceRecognizeCamera(function(ret){
                 callback({"jresponse": "Facial Recognition Video Status: " + (ret == -100)});
-            });
+            });*/
 
             //var tst = self.jcell.jeyes.facialRecognitionFile("C:\\Users\\krisr\\Pictures\\Wedding(AllenHouse)\\bridalpartyportraits\\1P9A9224.jpg");
             //var tst = self.jcell.jeyes.facialRecognitionFile("C:\\Users\\krisr\\Pictures\\Saved Pictures\\t2.png");
@@ -1020,6 +1020,10 @@ class JNERVESYSTEM {
             //var tst = self.jcell.jeyes.modelImgFile("base", [], "C:\\Users\\krisr\\Pictures\\test\\IMG13.png", true, function(ret){
             //    callback({"jresponse": "Test: I Read " + ret});
             //});
+
+            self.jcell.jeyes.motionTrackingCamera(function(ret){
+                callback({"jresponse": "Motion Tracking Camera Status: " + (ret == -100)});
+            });
             
         }
         catch(ex){
