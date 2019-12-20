@@ -20,7 +20,7 @@
     "iplocation": "^6.1.0",
     "language-tags": "^1.0.5",
     "md5": "^2.2.1",
-    "method-override": "~2.0.2",
+    "method-override": "~3.0.0",
     "mongodb": "^3.3.4",
     "mongoose": "^4.4.12",
     "opencv4nodejs": "^4.14.0",
