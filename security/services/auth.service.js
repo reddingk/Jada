@@ -62,22 +62,26 @@ var auth = {
         try {
             // test
             callback({"status":"Valid", "statusCode":1});
-            /*_getUserByUname(user, function(res){
-                var conn = connections.getConnection(user);
 
-                if(!res) {
-                    callback({"status":"Invalid User", "statusCode":-1});
-                }
-                else if(!conn){
-                    callback({"status":"User Not Connected", "statusCode":-2});
-                }
-                else if(token != conn.token){
-                    callback({"status":"Invalid Token", "statusCode":-3});
-                }
-                else {
-                    callback({"status":"Valid", "statusCode":1});
-                }                
-            });*/
+            if(connections == null){
+                var connectionId = connections.getConnection(token);
+
+                callback({"status":(connectionId ? true : false), "statusCode":1, "userId": connectionId });                
+            }
+            else {
+                // Search DB
+                _getUserByUname(user.uname, function(res){ 
+                    if(!res) {
+                        callback({"status":false, "statusCode":-1, "userId": null });
+                    }
+                    else if(user.uid != res.uid) {
+                        callback({"status":false, "statusCode":-1, "userId": null });
+                    }
+                    else {
+                        callback({"status":true, "statusCode":1, "userId": res });
+                    }
+                });
+            }            
         }
         catch(ex){
             var err = util.format("Error Validating: %s", ex);
