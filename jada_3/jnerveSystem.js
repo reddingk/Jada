@@ -306,7 +306,7 @@ class JNERVESYSTEM {
     getWeatherForecast(response, callback){
         var self = this;
         var finalResponse = null;
-        var apiResponse = null;
+        var apiResponse = {};
         var dataObj = {"type":"forecast"};
 
         var tmpPhrase = response.fullPhrase.split(" ");
@@ -365,8 +365,8 @@ class JNERVESYSTEM {
                             }
                         } 
                         
-                        finalResponse = self.jtools.stringFormat("The weather forecast for the next few days accourding to OpenWeather.com for {0}: \n {1}",[res.results.city.name, displayList.join("\n | ")]);
-                        apiResponse = dateList;
+                        finalResponse = self.jtools.stringFormat("The weather forecast for the next few days according to OpenWeather.com for {0}: \n {1}",[res.results.city.name, dateList.join("\n | ")]);
+                        apiResponse = { dateList: dateList, resultList: res.results.list };
                     }
                     else {
                         finalResponse = self.jtools.stringFormat("Sorry we could not find the weather forecast for: {0}", [dataObj.location]);
