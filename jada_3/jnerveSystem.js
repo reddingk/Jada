@@ -324,40 +324,48 @@ class JNERVESYSTEM {
                         var dateNum = 0;
                         var avgTemp = 0;
                         var avgStatus = {}; 
-                        var dateList = [];                        
+                        var dateList = [];
+                        var displayList = [];
+                        var tmpData = {};
 
                         for(var i =0; i < res.results.list.length; i++){
                             var item = res.results.list[i];
-                            var newDate = (new Date(item.dt_txt)).toDateString();
+                            var newDate = (new Date(item.dt_txt)).toDateString();                 
                             if(newDate != dateString ) {
-                                var dateStatus = {"name":null, "count": 0};     
-                                var lrgObj = Object.keys(avgStatus).reduce(function(a, b){ return avgStatus[a] > avgStatus[b] ? a : b });
+                                var dateStatus = {"data":null, "num": 0};     
+                                var lrgObj = Object.keys(avgStatus).reduce(function(a, b){ return avgStatus[a].num > avgStatus[b].num ? a : b });
                                 
                                 if(lrgObj != null){
-                                    dateStatus.name = lrgObj;
-                                    dateStatus.count = avgStatus[lrgObj];
+                                    dateStatus = avgStatus[lrgObj];
                                 }
-                                dateList.push(self.jtools.stringFormat("{0} : {1} degrees and '{2}'", [dateString, (avgTemp / dateNum).toFixed(2), dateStatus.name]));
+                                // Set Days Data
+                                tmpData = {dt_txt:dateString, main:{temp:(avgTemp / dateNum).toFixed(2)}, weather:[dateStatus.data]};
+                                
+                                // Store Days Data
+                                displayList.push(self.jtools.stringFormat("{0} : {1} degrees and '{2}'", [dateString, (avgTemp / dateNum).toFixed(2), dateStatus.data.main]));
+                                dateList.push(tmpData);
 
+                                // Reset Data
+                                tmpData = {dt_txt:"", main:{temp:0}, weather:[]};
                                 //Reset tmp Values
                                 dateString = newDate;
                                 avgTemp = 0;                                
                                 dateNum = 0;
                                 avgStatus = {};
                             }
-                            else{
+                            else {
                                 dateNum +=1.0;
                                 avgTemp += parseFloat(item.main.temp_max);
                                 if(item.weather[0].main in avgStatus){
-                                    avgStatus[item.weather[0].main] += 1;
+                                    avgStatus[item.weather[0].main].num += 1;
                                 }
                                 else {
-                                    avgStatus[item.weather[0].main] = 1;
+                                    avgStatus[item.weather[0].main] = {data:item.weather[0], num:1};
                                 }
                             }
                         } 
                         
-                        finalResponse = self.jtools.stringFormat("The weather forecast for the next few days accourding to OpenWeather.com for {0}: \n {1}",[res.results.city.name, dateList.join("\n | ")]);
+                        finalResponse = self.jtools.stringFormat("The weather forecast for the next few days accourding to OpenWeather.com for {0}: \n {1}",[res.results.city.name, displayList.join("\n | ")]);
                         apiResponse = dateList;
                     }
                     else {
