@@ -6,7 +6,8 @@ var talk = require('../services/talk.service');
 function convoRout(req, res){ 
     try {
         var input = (req.body && req.body.phrase ? req.body.phrase : 'hey');
-        talk.postPhrase(input, function(ret){
+        var userId = (req.body && req.body.userId ? req.body.userId : '');
+        talk.postPhrase(input, userId, function(ret){
             res.status(200).json(ret);
         });
     }

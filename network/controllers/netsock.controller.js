@@ -44,7 +44,7 @@ module.exports = function (io, connections) {
 
             if (connectionId && connectionId.socket) {                                             
                 if(info.type == "phrase"){
-                    dataFilter.jadaConvo(info, function(ret){
+                    dataFilter.jadaConvo(info, connectionId.nickname, function(ret){
                         var retObj = {"rID":info.rID, "input":info.input, "type":info.type,"data":ret};
                         io.to(connectionId.socket).emit('jada', retObj);
                     });

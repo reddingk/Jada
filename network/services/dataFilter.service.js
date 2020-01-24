@@ -34,10 +34,10 @@ var dataFilter =  {
             console.log(" Error filter check: ", ex);
         }
     },
-    jadaConvo: function(info, callback){
+    jadaConvo: function(info, userId, callback){
         try {
             var trimInput = jbrain.jlanguage.cleanPhrase(info.input.trim());  
-            jbrain.convo(trimInput, function(res){
+            jbrain.convo(trimInput, userId, function(res){
                 callback(res);
                 //process.exit(0);
             });
