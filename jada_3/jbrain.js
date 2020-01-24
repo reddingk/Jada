@@ -9,8 +9,7 @@ const Nerves = require('./jnerves.js');
 var phraseDB = require('./config/models/phrases');
 
 class JBRAIN {
-    constructor() {
-        this.settingFile = __dirname + '/config/settings.json';
+    constructor() {        
         this.jlanguage = new Language();
         this.jNerves = new Nerves(this);
         this.jCells = this.jNerves.jnervesystem.jcell;
@@ -27,14 +26,14 @@ class JBRAIN {
     polly(phrase) { console.log("You entered in " + phrase);};
 
     /* Jada conversation function */
-    convo(phrase, callback) {
+    convo(phrase, userId, callback) {
         var self = this;
         
         var tmpStr = phrase.split(" ");
         var phraseLibrary = null;
         var fullPhraseLibrary = null;
         
-        self.dbActions(tmpStr, phrase, callback);
+        self.dbActions(tmpStr, phrase, userId, callback);
     }
 
     /* Direct Access to Functions */
@@ -54,7 +53,7 @@ class JBRAIN {
 
     /* Internal functions */
     /* Database Actions */
-    dbActions(tmpStr, phrase, callback){
+    dbActions(tmpStr, phrase, userId, callback){
       var self = this;
       
       self.jlanguage.searchPhrase(tmpStr, function(res){
@@ -67,7 +66,7 @@ class JBRAIN {
 
                   if(response != null){
                       phrase = ( response.response == "N/A" ? "" : phrase);
-                      self.jNerves.dataResponse(response, phrase, function(res){ callback(res); });
+                      self.jNerves.dataResponse(response, phrase, userId, function(res){ callback(res); });
                   }
               });
           }
@@ -75,7 +74,7 @@ class JBRAIN {
               var response = self.jlanguage.getCall(phrase, res, callback);
               if(response != null){
                   phrase = ( response.response == "N/A" ? "" : phrase);
-                  self.jNerves.dataResponse(response, phrase, function(res){ callback(res); });
+                  self.jNerves.dataResponse(response, phrase, userId, function(res){ callback(res); });
               }
           }
       });

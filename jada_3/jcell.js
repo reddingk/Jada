@@ -9,7 +9,10 @@ var os = require('os');
 var underscore = require('underscore');
 
 require('dotenv').config();
+const settingLoc = process.env.CONFIG_LOC + "/settingsdb.json";
+const settingdb = require(settingLoc);
 const locationdb = require(process.env.CONFIG_LOC + "/locationdb.json");
+const db = require(process.env.CONFIG_LOC + "/db.json");
 
 const Tools = require('./jtools.js');
 const Eyes = require('./jeyes.js');
@@ -17,11 +20,10 @@ const Lift = require('./jlift.js');
 const apiLib = require("./config/apiLib.json");
 
 class JCELL {  
-    constructor(settingFile) {
+    constructor() {
         this.jtools = new Tools();
         this.jeyes = new Eyes();
-        this.jlift = new Lift(this.jtools);
-        this.settingFile = settingFile;
+        this.jlift = new Lift(this.jtools);        
         this.mongoOptions = { connectTimeoutMS: 2000, socketTimeoutMS: 2000};
         this.cacheData = {"directions":{}};
     }
@@ -155,13 +157,13 @@ class JCELL {
         var response = {"error":null, "results":null};
         self.saveLastAction("getChangedSetting", items);
         
-        try {
-            var obj = JSON.parse(fs.readFileSync(self.settingFile,'utf8'));
-
-            if(!self.checkParameterList(["item", "newitem"], items)){
+        try {            
+            if(!self.checkParameterList(["item", "newitem", "userId"], items)){
                 response.error = "Missing Parameter";
             }
             else {
+                var obj = this.jtools.getUserData(items.userId);
+
                 switch(item.item){
                     case "fullname":
                         obj.name.fullname = item.newitem;
@@ -176,8 +178,8 @@ class JCELL {
                         break;
                 }
 
-                // Chang Setting in DataBase
-                fs.writeFileSync(self.settingFile, JSON.stringify(obj), {"encoding":'utf8'});
+                // Change Setting in DataBase                
+                this.jtools.updateUserData(items.userId, obj);
                 response.results = { "updated":true, "item":item.item, "newState":item.newitem};
             }
         }
@@ -196,7 +198,7 @@ class JCELL {
         
         if(api != null){
             try {        
-                var obj = JSON.parse(fs.readFileSync(self.settingFile,'utf8'));
+                var obj = this.jtools.getUserData(items.userId);
 
                 if(!self.checkParameterList(["toLoc","fromLoc","type"], items)){
                     response.error = "Missing Parameter";
@@ -287,11 +289,11 @@ class JCELL {
         self.saveLastAction("getRelationship", items);
         
         try {
-            if(!self.checkParameterList(["type","searchName"], items)){
+            if(!self.checkParameterList(["type","searchName", "userId"], items)){
                 response.error = "Missing Parameter";
             }
             else {
-                var obj = JSON.parse(fs.readFileSync(self.settingFile,'utf8'));
+                var obj = this.jtools.getUserData(items.userId);
                 var userRelationships = obj.relationships;
                 var relationships = [];
 
@@ -349,7 +351,7 @@ class JCELL {
                     }
                 }
                 else if(items.type == "other"){
-                    var obj = JSON.parse(fs.readFileSync(self.settingFile,'utf8'));
+                    var obj = this.jtools.getUserData(items.userId);
  
                     response.results = {"type":"other", "location": obj.locations[items.searchName]};
                     callback(response);
@@ -377,7 +379,7 @@ class JCELL {
                 response.error = "Missing Parameter";
             }
             else {
-                var obj = JSON.parse(fs.readFileSync(self.settingFile,'utf8'));
+                var obj = this.jtools.getUserData(items.userId);
 
                 if(items.type == "location"){
                     if(items.info.name in obj.locations){                        
@@ -385,7 +387,8 @@ class JCELL {
                     }
                     else {                        
                         obj.locations[items.info.name] = {"name":items.info.name, "address":items.info.address};
-                        fs.writeFileSync(self.settingFile, JSON.stringify(obj), {"encoding":'utf8'});
+                        
+                        self.jtools.updateUserData(items.userId, obj);
                         response.results = {"status":true, "type":"location", "data":null};
                     }
                 }
@@ -399,7 +402,7 @@ class JCELL {
                             var reIndex = obj.relationships.findIndex(i => i.name == items.info.name);
                             obj.relationships[reIndex].title[items.info.title] = true;
                             
-                            fs.writeFileSync(self.settingFile, JSON.stringify(obj), {"encoding":'utf8'});
+                            self.jtools.updateUserData(items.userId, obj);
                             response.results = {"status":true, "type":"relationship", "data":null};
                         }
                     }
@@ -408,7 +411,7 @@ class JCELL {
                         newRel.title[items.info.title] = true;
                         
                         obj.relationships.push(newRel);
-                        fs.writeFileSync(self.settingFile, JSON.stringify(obj), {"encoding":'utf8'});
+                        self.jtools.updateUserData(items.userId, obj);
                         response.results = {"status":true, "type":"relationship", "data":null};
                     }
                 }
@@ -428,14 +431,14 @@ class JCELL {
         var self = this;
         var response = {"error":null, "results":null};
         var prev = self.saveLastAction("replaceLastAction", items);
-        var obj = JSON.parse(fs.readFileSync(self.settingFile,'utf8'));
+        var obj = self.jtools.getUserData(items.userId);        
 
         try {
             if(prev != null && prev.method == "addUserSetting"){
                 if(prev.data.type == "location") {
                     if(prev.data.info.name in obj.locations) {
                         obj.locations[prev.data.info.name] = {"name": prev.data.info.name, "address": prev.data.info.address};
-                        fs.writeFileSync(self.settingFile, JSON.stringify(obj), {"encoding":'utf8'});
+                        self.jtools.updateUserData(items.userId, obj);
 
                         response.results = { "status":true, "type":"location", "data": prev.data.info};
                     }
@@ -586,10 +589,10 @@ class JCELL {
         var prevResponse = null;
 
         try {
-            var obj = JSON.parse(fs.readFileSync(self.settingFile,'utf8'));        
+            var obj = this.jtools.getUserData(items.userId);        
             prevResponse = obj.lastAction;
             obj.lastAction = {"method":method, "data":data};
-            fs.writeFileSync(self.settingFile, JSON.stringify(obj), {"encoding":'utf8'});
+            self.jtools.updateUserData(items.userId, obj);
         }
         catch(ex){
             console.log("save Last Action Error: " + ex);
@@ -607,11 +610,10 @@ class JCELL {
         return true;
     }
 
-    getApiItem(name){
-        var self = this;
+    getApiItem(name){        
         var item = apiLib[name];
         return (item == undefined ? null : item);
-    }
+    }    
 }
 
 module.exports = JCELL;

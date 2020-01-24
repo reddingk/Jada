@@ -9,25 +9,25 @@ var fs = require('fs');
 const NerveSystem = require('./jnerveSystem.js');
 
 class JNERVES {
-    constructor(brain){
-      this.settingFile = brain.settingFile;
+    constructor(brain){      
       this.jnervesystem = new NerveSystem(brain);
     }
 
-    dataResponse(response, fullPhrase, callback) {
+    dataResponse(response, fullPhrase, userId, callback) {
         var self = this;
         var finalResponse = { "todo":"", "jresponse": "I have nothing for you sorry"};
 
         if(response == null) { callback(finalResponse); }
         else{
-            response.fullPhrase = fullPhrase;
-            var obj = JSON.parse(fs.readFileSync(self.settingFile,'utf8'));
+            response.fullPhrase = fullPhrase;            
+            var obj = this.jnervesystem.jtools.getUserData(userId);
 
             response.obj = obj;
             response.prevResponse = response.obj.lastAction;
             response.obj.lastAction = {"response":response, "fullPhrase":fullPhrase};
-            //fs.writeFileSync(self.settingFile, JSON.stringify(obj), {"encoding":'utf8'});
-                        
+            response.userId = userId;            
+            //this.jnervesystem.jtools.updateUserData(userId, obj);
+
             if(!(response.response in self.jnervesystem)){
                 finalResponse.jresponse = "I feel like you were close to asking me something, you may be missing something when you mentioned '" + response.action+"'. ";
                 callback(finalResponse);

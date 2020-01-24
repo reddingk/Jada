@@ -6,7 +6,8 @@ const UIDGenerator = require('uid-generator');
 var underscore = require('underscore');
 
 require('dotenv').config();
-const db = require(process.env.CONFIG_LOC + "/db.json");
+var dbLoc = process.env.CONFIG_LOC + "/db.json";
+const db = require(dbLoc);
 
 const Eyes = require('../../jada_3/jeyes');
 
@@ -71,13 +72,13 @@ var auth = {
                 // Search DB
                 _getUserByUname(user.uname, function(res){ 
                     if(!res) {
-                        callback({"status":false, "statusCode":-1, "userId": null });
+                        callback({"status":"user not found", "statusCode":-1, "user": null });
                     }
                     else if(user.uid != res.uid) {
-                        callback({"status":false, "statusCode":-1, "userId": null });
+                        callback({"status":"invalid id", "statusCode":-2, "user": null });
                     }
                     else {
-                        callback({"status":true, "statusCode":1, "userId": res });
+                        callback({"status":"valid", "statusCode":1, "user": res });
                     }
                 });
             }            
@@ -85,7 +86,7 @@ var auth = {
         catch(ex){
             var err = util.format("Error Validating: %s", ex);
             console.log(err);
-            callback({"status":err, "statusCode":0});
+            callback({"status":err, "statusCode":0, "user":null });
         }
     },
     authSwitch(userObj, connections, ip, callback){
@@ -157,6 +158,8 @@ function _addUser(uname, pwd, name, callback){
             }
             // Add User 
             db.users.push({"id":tmpId, "userId":uname, "pwd":pwd, "name":name, "faceId":null });
+            fs.writeFileSync(dbLoc, JSON.stringify(db), {"encoding":'utf8'});
+
             callback({"status":true});  
         }
     }

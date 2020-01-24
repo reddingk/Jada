@@ -18,7 +18,7 @@ function run(args){
         var input = args.splice(2).join(" ");    
         var trimInput =   jbrain.jlanguage.cleanPhrase(input.trim());                
 
-        jbrain.convo(trimInput, function(res){
+        jbrain.convo(trimInput, 'kredding', function(res){
             var output = res.jresponse + "\n";
             console.log(output);
             process.exit(0);

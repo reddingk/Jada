@@ -5,12 +5,9 @@ let jbrain = new Brain();
 
 var say = require('say');
 var fs = require('fs');
+
 // configuration
-
-// database config files
 require('dotenv').config();
-var database = { connectionString: process.env.DatabaseConnectionString, dbName: process.env.DatabaseName }
-
 
 const readline = require('readline');
 const rl = readline.createInterface({
@@ -18,7 +15,7 @@ const rl = readline.createInterface({
   output: process.stdout
 });
 
-var settings = JSON.parse(fs.readFileSync(jbrain.settingFile,'utf8'));
+var settings = jbrain.jCells.jtools.getUserData('kredding');
 
 if(settings.voice == "on") {rl.setPrompt('|jada| -v- > '); }
 else {rl.setPrompt('|jada| --- > '); }
@@ -28,12 +25,11 @@ rl.prompt();
 
 rl.on('line', (input) => {
 
-  jbrain.convo( jbrain.jlanguage.cleanPhrase(input.trim()), function(res) {
-
+  jbrain.convo(jbrain.jlanguage.cleanPhrase(input.trim()), 'kredding', function(res) {
     var output = res.jresponse + "\n";
     if(output != "") {
       console.log(output);
-      settings = JSON.parse(fs.readFileSync(jbrain.settingFile,'utf8'));
+      settings = jbrain.jCells.jtools.getUserData('kredding');
       // check voice setting to read to user
       if(settings.voice == "on") {
         var speechout = output.replace(/\n/g, " ");

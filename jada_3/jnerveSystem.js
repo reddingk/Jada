@@ -20,7 +20,7 @@ class JNERVESYSTEM {
     constructor(innerBrain){
         this.jbrain = innerBrain;
         this.jtools = new Tools();
-        this.jcell = new Cells(innerBrain.settingFile);
+        this.jcell = new Cells();
         //this.jeyes = new Eyes();
         this.greetPhrases = basedb.greetings;
     }
@@ -50,13 +50,13 @@ class JNERVESYSTEM {
             callback({ "todo":"", "jresponse": persGreeting, "jtype":"greeting", "jdata": {"results":persGreeting } });
         }
         else if(tmpStr == 1) {
-            self.jbrain.convo(tmpStr[0], function(res){
+            self.jbrain.convo(tmpStr[0], response.userId, function(res){
               var finalResponse = persGreeting + ": " + res.jresponse;
               callback({ "todo":"", "jresponse": finalResponse, "jtype":"greeting", "jdata": {"results":res.jdata } });
             });
         }
         else {
-            self.jbrain.convo(tmpStr.join(" "), function(res){
+            self.jbrain.convo(tmpStr.join(" "), response.userId, function(res){
               var finalResponse = persGreeting + ": " + res.jresponse;
               callback({ "todo":"", "jresponse": finalResponse, "jtype":"greeting", "jdata": {"results":res.jdata } });
             });
