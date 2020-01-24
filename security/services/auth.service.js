@@ -3,11 +3,10 @@
 const util = require('util');
 const bcrypt = require('bcrypt');
 const UIDGenerator = require('uid-generator');
-var mongoClient = require('mongodb').MongoClient;
-const mongoOptions = { connectTimeoutMS: 2000, socketTimeoutMS: 2000};
+var underscore = require('underscore');
 
 require('dotenv').config();
-var database = { connectionString: process.env.DatabaseConnectionString, dbName: process.env.DatabaseName }
+const db = require(process.env.CONFIG_LOC + "/db.json");
 
 const Eyes = require('../../jada_3/jeyes');
 
@@ -122,15 +121,8 @@ module.exports =  auth;
 /* Get User From DB */
 function _getUserByUname(uname, callback){
     try {
-        mongoClient.connect(database.connectionString, mongoOptions, function(err, client){
-            const db = client.db(database.dbName).collection('users');
-            db.find({ 'userId' : uname }).toArray(function(err, res){
-                var ret = null;
-                if(res) { ret = res[0]; }    
-                client.close();            
-                callback(ret);
-            });                       
-        });
+        var ret = underscore.where(db.users, {userId: uname});
+        callback((ret ? ret[0] : null));
     }
     catch(ex){
         console.log("Error Getting User ", uname," :", ex);
@@ -141,15 +133,8 @@ function _getUserByUname(uname, callback){
 /* Get User From DB */
 function _getUserByFacename(facename, callback){
     try {
-        mongoClient.connect(database.connectionString, mongoOptions, function(err, client){
-            const db = client.db(database.dbName).collection('users');
-            db.find({ 'facename' : facename }).toArray(function(err, res){
-                var ret = null;
-                if(res) { ret = res[0]; }  
-                client.close();              
-                callback(ret);
-            });                       
-        });
+        var ret = underscore.where(db.users, {faceId: facename});
+        callback((ret ? ret[0] : null));
     }
     catch(ex){
         console.log("Error Getting User By Facename ", facename," :", ex);
@@ -160,12 +145,20 @@ function _getUserByFacename(facename, callback){
 /* Add User to DB */
 function _addUser(uname, pwd, name, callback){
     try {
-        mongoClient.connect(database.connectionString, mongoOptions, function(err, client){
-            const db = client.db(database.dbName).collection('users');
-            db.insert({"userId":uname, "pwd":pwd, "name":name }); 
-            client.close();    
-            callback({"status":true});                 
-        });
+        var ret = underscore.where(db.users, {userId: uname});
+        
+        if(ret){
+            callback({"status":false });
+        }
+        else {
+            var tmpId = 0;
+            while(tmpId == 0 || underscore.where(db.users, {id: tmpId})) {
+                tmpId = Math.floor(Math.random() * Math.floor(process.env.MAXID));
+            }
+            // Add User 
+            db.users.push({"id":tmpId, "userId":uname, "pwd":pwd, "name":name, "faceId":null });
+            callback({"status":true});  
+        }
     }
     catch(ex){
         var err = util.format("Error Adding User [%s] : %s",uname, ex);

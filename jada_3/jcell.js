@@ -7,10 +7,9 @@ var request = require('request');
 var fs = require('fs');
 var os = require('os');
 var underscore = require('underscore');
-var mongoClient = require('mongodb').MongoClient;
 
 require('dotenv').config();
-var database = { connectionString: process.env.DatabaseConnectionString, dbName: process.env.DatabaseName }
+const locationdb = require(process.env.CONFIG_LOC + "/locationdb.json");
 
 const Tools = require('./jtools.js');
 const Eyes = require('./jeyes.js');
@@ -510,25 +509,11 @@ class JCELL {
             else {
                 var getReturn = {'name':1,'capital':1,'countryCode':1,'continent':1,'states.name':1,'states.capital':1};
                 
-                mongoClient.connect(database.connectionString, self.mongoOptions, function(err, client){ 
-                    if(err) {
-                        response.error = "Error connecting to map DB"
-                        callback(response);
-                    }
-                    else {      
-                        const db = client.db(database.dbName).collection('locations'); 
-                                                               
-                        db.find({'continent': {'$regex': items.location }}, getReturn).toArray(function(err, res){
-
-                            if(err){response.error = err;}
-                            if(!res){res=[];}
-
-                            response.results = res; 
-                            client.close();                                                       
-                            callback(response);
-                        });                                    
-                    }
-                });
+                var regex = "/" + items.location + "/i";
+                var ret = underscore.filter(locationdb, function(obj){ return obj.continent.match(regex);});
+                
+                response.results = ret;
+                callback(response);
             }
         }
         catch(ex){
@@ -549,47 +534,44 @@ class JCELL {
                 callback(response);
             }
             else {
-                //items.location = "United States of America";
                 var getQuery = (items.isState ? {'name': {'$regex': items.location } } : {'$or': [{'name':{'$regex':items.location}},{'states.name': {'$regex': items.location }}]});
                 var getReturn = {'name':1,'capital':1,'countryCode':1,'continent':1,'states.name':1,'states.capital':1};
                 
+                var regex = "/" + items.location + "/i";
+                var ret = ( items.isState ?
+                            underscore.filter(locationdb, function(obj){ return obj.name.match(regex);}) :
+                            underscore.filter(locationdb, function(obj){ 
+                                var stateName = false;
+                                for(var i =0; i < states.length; i++){
+                                    if(states.name.match(regex)){
+                                        stateName = true;
+                                        break;
+                                    }
+                                }
 
-                mongoClient.connect(database.connectionString, self.mongoOptions, function(err, client){ 
-                    if(err) {
-                        response.error = "Error connecting to map DB"
-                        callback(response);
-                    }
-                    else {      
-                        const db = client.db(database.dbName).collection('locations'); 
-                                                               
-                        db.find(getQuery,getReturn).toArray(function(err, res){
+                                return stateName || obj.name.match(regex);
+                            })
+                          );
+                if(items.isState){
+                    // Return All
+                    response.results = ret;
+                }
+                else {
+                    // Filter countries
+                    var tmpCountries = ret.filter(function(item){ return item.name.indexOf(items.location) >= 0; }).map(item => ({name: item.name, capital:item.capital, countryCode:item.countryCode, type:"country"}));
+                    // Filter states
+                    var tmpCountryStates = ret.filter(function(country){ return country.states.filter(function(item){ return item.name.indexOf(items.location)  >= 0; }).length > 0});
+                    
+                    var tmpStates = [];                                
+                    tmpCountryStates.forEach(function(stItem){ 
+                        tmpStates = tmpStates.concat(stItem.states.filter(function(item){ return item.name.indexOf(items.location)  >= 0; }).map(itemMap => ({name: itemMap.name, capital:itemMap.capital, countryCode:stItem.countryCode, type:"state"})));
+                    });
+                                                    
+                    // Join Lists
+                    response.results = tmpCountries.concat(tmpStates);
+                }
 
-                            if(err){response.error = err;}
-                            if(!res){res=[];}
-                                                        
-                            if(items.isState){
-                                // Return All
-                                response.results = res;
-                            }
-                            else {
-                                // Filter countries
-                                var tmpCountries = res.filter(function(item){ return item.name.indexOf(items.location) >= 0; }).map(item => ({name: item.name, capital:item.capital, countryCode:item.countryCode, type:"country"}));
-                                // Filter states
-                                var tmpCountryStates = res.filter(function(country){ return country.states.filter(function(item){ return item.name.indexOf(items.location)  >= 0; }).length > 0});
-                                
-                                var tmpStates = [];                                
-                                tmpCountryStates.forEach(function(stItem){ 
-                                    tmpStates = tmpStates.concat(stItem.states.filter(function(item){ return item.name.indexOf(items.location)  >= 0; }).map(itemMap => ({name: itemMap.name, capital:itemMap.capital, countryCode:stItem.countryCode, type:"state"})));
-                                });
-                                                                
-                                // Join Lists
-                                response.results = tmpCountries.concat(tmpStates);
-                            }
-                            client.close();
-                            callback(response);
-                        });                                    
-                    }
-                });
+                callback(response);
             }
         }
         catch(ex){

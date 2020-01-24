@@ -8,11 +8,9 @@
 var underscore = require('underscore');
 var fs = require('fs');
 require('dotenv').config();
-var database = { connectionString: process.env.DatabaseConnectionString, dbName: process.env.DatabaseName }
-var mongoClient = require('mongodb').MongoClient;
+const basedb = require(process.env.CONFIG_LOC + "/basedb.json");
 
 const Tools = require('./jtools.js');
-const basedb = require("./config/basedb.json");
 
 class JLANGUAGE {
     constructor(){
@@ -32,29 +30,7 @@ class JLANGUAGE {
         var self = this;
 
         try{
-            mongoClient.connect(database.connectionString, self.mongoOptions, function(err, client){ 
-                if(err) {
-                    //console.log(" Debug: Error Get All Phrases");
-                    callback(self.offlineGet("all", []));
-                }
-                else {
-                    if(this.phraseLib == null || this.phraseLib.length == 0){
-                        console.log(" > Getting Phrases From DB");
-                        const db = client.db(database.dbName).collection('phrases');
-                        db.find().toArray(function(err, res){
-                            if(err){ err; }
-                            if(res == null|| res == undefined) { res = [];}
-                            this.phraseLib = res;
-                            client.close();
-                            callback(this.phraseLib);
-                        });                        
-                    }
-                    else {
-                        client.close();
-                        callback(this.phraseLib);
-                    }
-                }
-            });
+            callback(self.offlineGet("all", []));
         }  
         catch(ex){
             //callback(null);
@@ -64,27 +40,7 @@ class JLANGUAGE {
         var self = this;
 
         try {
-            mongoClient.connect(database.connectionString, self.mongoOptions, function(err, client){
-                if(err) {
-                    //console.log(" Debug: Error Get Full Phrase");
-                    callback(self.offlineGet("full", []));
-                }
-                else {
-                    if(self.fullPhraseLib == null) {
-                        console.log(" > Getting Full Phrases From DB");
-                        const db = client.db(database.dbName).collection('phrases');
-                        db.find({ 'type' : 'phrase' }).toArray(function(err, res){
-                            if(res == null|| res == undefined) { res = [];}
-                            client.close();
-                            callback(res);
-                        });                       
-                    }
-                    else {
-                        client.close();
-                        callback(self.fullPhraseLib);
-                    }
-                }
-            });
+            callback(self.offlineGet("full", []));
         }  
         catch(ex){
             //callback(null);
@@ -94,31 +50,7 @@ class JLANGUAGE {
     searchPhrase(wordList, callback) {
         var self = this;
         try {
-            mongoClient.connect(database.connectionString, self.mongoOptions, function(err, client){
-                if(err) {
-                    //console.log(" Debug: Error Search Phrase");
-                    callback(self.offlineGet("search", wordList));
-                }
-                else {  
-                    const db = client.db(database.dbName).collection('phrases');
-                    /* Find all that
-                     * Not Phrase &&
-                     * [action in wordlist || additional_phrases in wordlist]
-                     */
-
-                    db.find({'$and': [
-                        {'type': { '$ne': 'phrase' }},
-                        {'$or': [
-                        {'action': {'$in': wordList}},
-                        {'additional_phrases': {'$elemMatch': {'$in': wordList}}}
-                        ]}
-                    ]}).toArray(function(err, res){
-                        if(res == null || res == undefined) { res = [];}
-                        client.close();
-                        callback(res);
-                    });
-                }
-            });
+            callback(self.offlineGet("search", wordList));
         }  
         catch(ex){
             //callback(null);
