@@ -1,5 +1,5 @@
 {
-    "tasteKid": {"link":"http://www.tastekid.com/api/"},
+    "tasteKid": {"link":"http://www.tastedive.com/api/"},
     "openWeather": {"link":"http://api.openweathermap.org/data/2.5/"},
     "iTranslate4": {"link":"http://itranslate4.eu/api/"},
     "googleMapsDirections": {"link":"https://maps.googleapis.com/maps/api/directions/json"},

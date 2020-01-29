@@ -5,6 +5,6 @@ module.exports = {
     postPhrase: function(input, userId, callback){
         var trimInput =   jbrain.jlanguage.cleanPhrase(input.trim());
 
-        jbrain.convo(trimInput, userId, callback(ret));
+        jbrain.convo(trimInput, userId, function(res){ callback(res); });
     }
 }

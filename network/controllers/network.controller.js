@@ -30,9 +30,12 @@ module.exports = function (connections) {
     router.post('/addUser', function(req, res){
         jauth.validateUser(req.body.userId, req.body.token, connections, function(ret){
             if(ret.statusCode > 0){
-                jauth.createUser(req.body.user.userId, req.body.user.password, req.body.user.name, connections, function(userRet){
+                jauth.createUser(req.body.user, req.body.userSettings,function(userRet){
                     res.status(200).json({ "data": userRet });
                 });
+            }
+            else {
+                res.status(400).json({ "data": null, "statusCode":ret.statusCode, "error":ret.error });
             }
         });
     });

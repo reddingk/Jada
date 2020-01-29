@@ -15,7 +15,9 @@ const rl = readline.createInterface({
   output: process.stdout
 });
 
-var settings = jbrain.jCells.jtools.getUserData('kredding');
+var settings = {"voice":"off"};
+
+//jbrain.jCells.jtools.getUserData('kredding');
 
 if(settings.voice == "on") {rl.setPrompt('|jada| -v- > '); }
 else {rl.setPrompt('|jada| --- > '); }

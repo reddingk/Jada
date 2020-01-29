@@ -11,6 +11,8 @@ const path = require("path");
 //const screen = require("screen-info");
 const modelLib = require("./config/data/modellib.json");
 const defaultCamPort = 1;
+const Tools = require('./jtools.js');
+const jtools = new Tools();
 
 class JEYES {
     constructor(){
@@ -71,7 +73,7 @@ class JEYES {
             ret.img = frame;
         }
         catch(ex){
-            console.log("Error Tracking IMG: ", ex);
+            jtools.errorLog(" [ERROR] Tracking IMG: " + ex);
             ret.error = ex;
         }
         return ret;
@@ -127,7 +129,7 @@ class JEYES {
             }
         }
         catch(ex){
-            console.log("Error Processing Recognizing Imgs: ", ex);
+            jtools.errorLog(" [ERROR] Processing Recognizing Imgs: " + ex);
             ret.error = ex;
         }
         callback(ret);
@@ -164,7 +166,7 @@ class JEYES {
             ret.img = recogImg;
         }
         catch(ex){
-            console.log("Error Recognizing Imgs: ", ex);
+            jtools.errorLog(" [ERROR] Recognizing Imgs: " + ex);
             ret.error = ex;
         }
 
@@ -212,7 +214,7 @@ class JEYES {
             ret.img = image;
         }
         catch(ex){
-            console.log(" Debug: Error facemarking image: ", ex);
+            jtools.errorLog(" [ERROR] facemarking image: " + ex);
             ret.error = ex;
         }
 
@@ -231,7 +233,7 @@ class JEYES {
             ret.img = cannyImg;
         }
         catch(ex){
-            console.log(" Debug: Error edge detecting image: ", ex);
+            jtools.errorLog(" [ERROR] edge detecting image: " + ex);
             ret.error = ex;
         }
 
@@ -338,7 +340,7 @@ class JEYES {
             }
         }
         catch(ex){
-            console.log(" Debug: Error library mapping image: ", ex);
+            jtools.errorLog(" [ERROR] library mapping image: " + ex);
             ret.error = ex;
         }
         return ret;
@@ -430,7 +432,7 @@ class JEYES {
             //callback(ret);
         }
         catch(ex){
-            console.log(" [Debug] Error Getting Image Text: ", ex);
+            jtools.errorLog(" [ERROR] Getting Image Text: " + ex);
             ret.error = ex;
             callback(ret);
         }
@@ -452,7 +454,7 @@ class JEYES {
             status = true;
         }
         catch(ex){
-            console.log("Error updating Recog Lib: ", ex);
+            jtools.errorLog(" [ERROR] updating Recog Lib: " + ex);
             status = false;
         }
 
@@ -482,7 +484,7 @@ class JEYES {
             return fullBase64;
         }
         catch(ex){
-            console.log(" Error convert mat to base 64: ", ex);
+            jtools.errorLog(" [ERROR] convert mat to base 64: " + ex);
             return null;
         }
     }
@@ -524,7 +526,7 @@ class JEYES {
             }, 0);
         }
         catch(ex){
-            console.log(" Debug: Error with motion tracking camera: ", ex);
+            jtools.errorLog(" [ERROR] with motion tracking camera: " + ex);
         }
     }
 
@@ -544,7 +546,7 @@ class JEYES {
             cv.imshowWait('result', result.img);
         }
         catch(ex){
-            console.log(" Debug Error With Facial Recognition: ", ex);
+            jtools.errorLog(" [ERROR] With Facial Recognition: " + ex);
         }
 
         return result.names;
@@ -579,7 +581,7 @@ class JEYES {
             
         }
         catch(ex){
-            console.log("Demo Error: ", ex);
+            jtools.errorLog(" [ERROR] Model Img: " + ex);
             callback(-1);
         }
     }
@@ -603,7 +605,7 @@ class JEYES {
             return retImg.total;
         }
         catch(ex){
-            console.log("Demo Error: ", ex);
+            cjtools.errorLog(" [ERROR] Facemark: " + ex);
             return -1;
         }
     }
@@ -639,7 +641,7 @@ class JEYES {
             }, 0);
         }
         catch(ex){
-            console.log(" Debug: Error with live camera: ", ex);
+            jtools.errorLog(" [ERROR] with live camera: " + ex);
         }
     }
 
@@ -674,7 +676,7 @@ class JEYES {
             }, 0);
         }
         catch(ex){
-            console.log(" Debug: Error with live camera: ", ex);
+            jtools.errorLog(" [ERROR] with facemark camera: " + ex);
         }
     }
 
@@ -712,7 +714,7 @@ class JEYES {
             }, 0);
         }
         catch(ex){
-            console.log(" Debug: Error with live camera: ", ex);
+            jtools.errorLog(" [ERROR] with face recognition camera: " + ex);
         }
     }
 
@@ -747,7 +749,7 @@ class JEYES {
             }, 0);
         }
         catch(ex){
-            console.log(" Debug: Error with edge detection camera: ", ex);
+            jtools.errorLog(" [ERROR] with edge detection camera: " + ex);
         }
     }
 
@@ -799,7 +801,7 @@ class JEYES {
             }, 0);
         }
         catch(ex){
-            console.log(" Debug: Error with model camera: ", ex);
+            jtools.errorLog(" [ERROR] with model camera: " + ex);
         }
     }
 }
@@ -817,7 +819,7 @@ function _indexOf(obj, val){
         }
     }
     catch(ex){
-        console.log("Error getting special Index: ", ex);
+        jtools.errorLog(" [ERROR] getting special Index: " + ex);
     }
     return -1;
 }
@@ -863,7 +865,7 @@ function _loadTextDetection(textDetectModel){
         ret = cv.readNetFromTensorflow(textDetectModel);
     }
     catch(ex){
-        console.log("Error Loading Text Detection Model: ",ex);
+        jtools.errorLog(" [ERROR] Loading Text Detection Model: " + ex);
     }
     return ret;
 }
@@ -883,7 +885,7 @@ function _loadFacemark(facialClassifier, facemarkModel){
         });*/
     }
     catch(ex){
-        console.log(" Debug: Error Loading Face Mark: ", ex);
+        jtools.errorLog(" [ERROR] Loading Face Mark: " + ex);
     }
 
     return facemark;
@@ -898,7 +900,7 @@ function _sizeImg(img){
         retImg = (mainScreen.width < img.cols ? _sizeImg(img.rescale(.7)): img);
     }
     catch(ex){
-        console.log("Error resizing image: ", ex);
+        jtools.errorLog(" [ERROR] resizing image: " + ex);
         retImg = img;
     }
     return retImg;
@@ -923,7 +925,7 @@ function _getImgInfo(imgId, imgIndex){
         }
     }
     catch(ex){
-        console.log("Error getting Img Info: ",ex);
+        jtools.errorLog(" [ERROR] getting Img Info: " + ex);
     }
 
     return ret;
@@ -947,7 +949,7 @@ function _buildNameMap(photoMemory){
         .map(mapImgName);
     }
     catch(ex){
-        console.log("Error building name map: ", ex);
+        jtools.errorLog(" [ERROR] building name map: " + ex);
     }
     return nameObj;
 }
@@ -981,7 +983,7 @@ function _loadRecogTrainingData(photoMemory, imgIndex, nameMappings, imgResize, 
             var tmpMat = cv.imread(tmpfile);
             const tmpfaceRects = facialClassifier.detectMultiScale(tmpMat.bgrToGray()).objects;
             if(!tmpfaceRects.length){
-                console.log("no faces in: ", imgF);
+                jtools.errorLog(" [WARNING] no faces in: " + imgF);
             }
         });*/
         
@@ -1005,7 +1007,7 @@ function _loadRecogTrainingData(photoMemory, imgIndex, nameMappings, imgResize, 
         ret.eigenRecognizer.train(trainImgs, labels);
     }
     catch(ex){
-        console.log("Error Loading Training Recog Data: ", ex);
+        jtools.errorLog(" [ERROR] Loading Training Recog Data: " + ex);
     }
 
     return ret;
@@ -1052,7 +1054,7 @@ function _drawPolyline(img, landmarks, start, end, isClosed = false){
         img.drawPolylines(new Array(points), isClosed, new cv.Vec(4,205,252), 1, cv.LINE_4);
     }
     catch(ex){
-        console.log(" Debug: Error drawing polyline: ", ex);
+        jtools.errorLog(" [ERROR] drawing polyline: " + ex);
     }
     return img;
 }   
@@ -1079,7 +1081,7 @@ function _drawPolyline(img, landmarks, start, end, isClosed = false){
         return img;
     }
     catch(ex){
-        console.log("Error Drawing Landmark: ",ex);
+        jtools.errorLog(" [ERROR] Drawing Landmark: " + ex);
     }
 }
 
@@ -1098,7 +1100,7 @@ function _processRecognitionImgs(baseLoc, finalLoc, facialClassifier){
 
             const faceRects = facialClassifier.detectMultiScale(grayImg).objects;
             if (!faceRects.length) {
-                console.log("Couldn't process: ", imgFiles[i]);
+                jtools.errorLog(" [WARNING] Couldn't process: " + imgFiles[i]);
             } else {
                 var finalPath = path.resolve(finalLoc, imgFiles[i]);
                 if(!fs.existsSync(finalPath)){
@@ -1109,7 +1111,7 @@ function _processRecognitionImgs(baseLoc, finalLoc, facialClassifier){
         }
     }
     catch(ex){
-        console.log(" Debug Error processing REcognition Images: ", ex);
+        jtools.errorLog(" [ERROR] processing Recognition Images: " + ex);
     }
 
     return "completed";

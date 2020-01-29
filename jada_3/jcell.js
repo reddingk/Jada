@@ -9,10 +9,7 @@ var os = require('os');
 var underscore = require('underscore');
 
 require('dotenv').config();
-const settingLoc = process.env.CONFIG_LOC + "/settingsdb.json";
-const settingdb = require(settingLoc);
 const locationdb = require(process.env.CONFIG_LOC + "/locationdb.json");
-const db = require(process.env.CONFIG_LOC + "/db.json");
 
 const Tools = require('./jtools.js');
 const Eyes = require('./jeyes.js');
@@ -78,7 +75,7 @@ class JCELL {
             }
         }
         catch(ex){
-            console.log("Error Processing Request: " + ex);
+            this.jtools.errorLog(" [Error] Processing Request: " + ex);
         }
         callback(response);
     }
@@ -589,13 +586,13 @@ class JCELL {
         var prevResponse = null;
 
         try {
-            var obj = this.jtools.getUserData(items.userId);        
+            var obj = this.jtools.getUserData(data.userId);        
             prevResponse = obj.lastAction;
             obj.lastAction = {"method":method, "data":data};
-            self.jtools.updateUserData(items.userId, obj);
+            self.jtools.updateUserData(data.userId, obj);
         }
         catch(ex){
-            console.log("save Last Action Error: " + ex);
+            this.jtools.errorLog(" [ERROR] Saving Last Action: " + ex);
         }
 
         return prevResponse;

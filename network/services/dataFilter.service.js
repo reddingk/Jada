@@ -31,7 +31,7 @@ var dataFilter =  {
             }
         }
         catch(ex){
-            console.log(" Error filter check: ", ex);
+            jbrain.jCells.jtools.errorLog(" [ERROR] filter check: " + ex);
         }
     },
     jadaConvo: function(info, userId, callback){
@@ -43,8 +43,8 @@ var dataFilter =  {
             });
         }
         catch(ex){
-            var errorMsg = " Error with jada convo: "+ ex;
-            console.log(errorMsg);
+            var errorMsg = " [ERROR] with jada convo: "+ ex;
+            jbrain.jCells.jtools.errorLog(errorMsg);
             callback({"error": errorMsg});
         }
     }
@@ -60,7 +60,7 @@ function j_faceRecog(img, callback){
         retData = (matImg != null ? jEyes.faceRecogImg(matImg) : null);      
     }
     catch(ex){
-        console.log("Error FaceRecog Service:", ex);
+        jbrain.jCells.jtools.errorLog(" [ERROR] FaceRecog Service:" + ex);
         retData = null;
     }
     
@@ -74,7 +74,7 @@ function j_faceMark(img, callback){
         retData = (matImg != null ? jEyes.facemarkImg(matImg, true) : null);      
     }
     catch(ex){
-        console.log("Error Face Mark Service:", ex);
+        jbrain.jCells.jtools.errorLog(" [ERROR] Face Mark Service:" + ex);
         retData = null;
     }
     
@@ -87,10 +87,10 @@ function j_edgeDetect(img, callback){
         var matImg = jEyes.b64toMat(img);        
         retData = (matImg != null ? jEyes.edgeDetectionImg(matImg) : null); 
         
-        //console.log(" [DEBUG]:", (retData ? "Valid" : "Is Null"));
+        //jbrain.jCells.jtools.errorLog(" [DEBUG]:" + (retData ? "Valid" : "Is Null"));
     }
     catch(ex){
-        console.log("Error Edge Detection Service:", ex);
+        jbrain.jCells.jtools.errorLog(" [ERROR] Edge Detection Service:" + ex);
         retData = null;
     }
     

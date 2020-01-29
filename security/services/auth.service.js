@@ -3,31 +3,32 @@
 const util = require('util');
 const bcrypt = require('bcrypt');
 const UIDGenerator = require('uid-generator');
-var underscore = require('underscore');
+const underscore = require('underscore');
+const fs = require('fs');
 
 require('dotenv').config();
-var dbLoc = process.env.CONFIG_LOC + "/db.json";
-const db = require(dbLoc);
 
 const Eyes = require('../../jada_3/jeyes');
+const Tools = require('../../jada_3/jtools');
 
 /* Class Decleration */
 const jEyes = new Eyes();
+const jTools = new Tools();
 
 const uidgen = new UIDGenerator(); 
 const saltRounds = 15;
 
 var auth = {
-    createUser: function(user, password, name, connections, callback){
+    createUser: function(userInfo, userSettings, callback){
         var self = this;
         try {
-            _getUserByUname(user, function(res){
+            /* { userId, pwd, name, faceId } */
+            _getUserByUId(userInfo.userId, function(res){
                 if(res){
                     callback({"error":"User Already Exists"});
                 }
                 else {
-                    var pwdHash = bcrypt.hashSync(password, saltRounds);
-                    _addUser(user, pwdHash, name, callback);
+                    _addUser(userInfo, userSettings, callback);
                 }
             }); 
         }
@@ -63,14 +64,14 @@ var auth = {
             // test
             callback({"status":"Valid", "statusCode":1});
 
-            if(connections == null){
+            if(connections != null){
                 var connectionId = connections.getConnection(token);
 
                 callback({"status":(connectionId ? true : false), "statusCode":1, "userId": connectionId });                
             }
             else {
                 // Search DB
-                _getUserByUname(user.uname, function(res){ 
+                _getUserByUId(user.userId, function(res){ 
                     if(!res) {
                         callback({"status":"user not found", "statusCode":-1, "user": null });
                     }
@@ -120,13 +121,14 @@ var auth = {
 module.exports =  auth;
 
 /* Get User From DB */
-function _getUserByUname(uname, callback){
+function _getUserByUId(uID, callback){
     try {
-        var ret = underscore.where(db.users, {userId: uname});
+        var db = jTools.getDBData("db");
+        var ret = underscore.where(db.users, {userId: uID});
         callback((ret ? ret[0] : null));
     }
     catch(ex){
-        console.log("Error Getting User ", uname," :", ex);
+        console.log("Error Getting User ", uID," :", ex);
         callback(null);
     }
 }
@@ -134,6 +136,7 @@ function _getUserByUname(uname, callback){
 /* Get User From DB */
 function _getUserByFacename(facename, callback){
     try {
+        var db = jTools.getDBData("db");
         var ret = underscore.where(db.users, {faceId: facename});
         callback((ret ? ret[0] : null));
     }
@@ -144,27 +147,35 @@ function _getUserByFacename(facename, callback){
 }
 
 /* Add User to DB */
-function _addUser(uname, pwd, name, callback){
+function _addUser(userInfo, userSettings, callback){
     try {
-        var ret = underscore.where(db.users, {userId: uname});
-        
-        if(ret){
-            callback({"status":false });
+        var db = jTools.getDBData("db");
+        var ret = underscore.where(db.users, {userId: userInfo.userId});
+
+        if(ret && ret.length > 0){
+            callback({"status":false, "error":"User Already Exists" });
         }
-        else {
+        else {          
             var tmpId = 0;
-            while(tmpId == 0 || underscore.where(db.users, {id: tmpId})) {
+            while(tmpId == 0 || underscore.where(db.users, {id: tmpId}).length > 0) {
                 tmpId = Math.floor(Math.random() * Math.floor(process.env.MAXID));
             }
+            
+            // Hash PWD
+            var pwdHash = bcrypt.hashSync(userInfo.pwd, saltRounds);
+            
             // Add User 
-            db.users.push({"id":tmpId, "userId":uname, "pwd":pwd, "name":name, "faceId":null });
-            fs.writeFileSync(dbLoc, JSON.stringify(db), {"encoding":'utf8'});
+            db.users.push({"id":tmpId, "userId":userInfo.userId, "pwd":pwdHash, "name":userInfo.name, "faceId":userInfo.faceId });
+            var tmpStatus = jTools.setDBData("db", db);
 
-            callback({"status":true});  
+            // Add User Settings
+            var settingsUpdate = jTools.updateUserData(userInfo.userId, userSettings);
+
+            callback({ "status":(tmpStatus && settingsUpdate) });  
         }
     }
     catch(ex){
-        var err = util.format("Error Adding User [%s] : %s",uname, ex);
+        var err = util.format("Error Adding User [%s] : %s", userInfo.userId , ex);
         console.log(err);
         callback({"error":err, "status":false});
     }
@@ -209,7 +220,7 @@ function _getFaceRecogUsers(img){
 /* Login User */
 function _loginUser(user, password, ip, connections, callback){
     try {
-        _getUserByUname(user, function(res){
+        _getUserByUId(user, function(res){
             if(!res){
                 callback({"error":"Invalid User"});
             }

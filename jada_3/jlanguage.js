@@ -86,7 +86,7 @@ class JLANGUAGE {
             }
         }
         catch(ex){
-            console.log("Error with offline search: ", ex);
+            this.jTools.errorLog(" [ERROR] with offline search: " + ex);
         }
         return res;
     }
@@ -115,7 +115,7 @@ class JLANGUAGE {
             }
         }
         catch(ex){
-            console.log(" > Error Processing Language [jl0]", ex);
+            this.jTools.errorLog(" [ERROR] Processing Language [jl0]" + ex);
         }
 
         return response;

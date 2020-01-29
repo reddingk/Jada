@@ -6,7 +6,6 @@
  */
 const Language = require('./jlanguage.js');
 const Nerves = require('./jnerves.js');
-var phraseDB = require('./config/models/phrases');
 
 class JBRAIN {
     constructor() {        
@@ -16,13 +15,6 @@ class JBRAIN {
     }
 
     /* Functions */
-    test(phrase) {
-        console.log("You entered in " + phrase);
-        phraseDB.find({ 'type' : 'phrase' }, function(err, res){
-            console.log(" [2]>");
-        });
-    };
-
     polly(phrase) { console.log("You entered in " + phrase);};
 
     /* Jada conversation function */

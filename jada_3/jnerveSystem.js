@@ -14,7 +14,7 @@ var md5 = require('md5');
 const Tools = require('./jtools.js');
 const Cells = require('./jcell.js');
 //const Eyes = require('./jeyes.js');
-const basedb = require("./config/basedb.json");
+const basedb = require(process.env.CONFIG_LOC + "/basedb.json");
 
 class JNERVESYSTEM {
     constructor(innerBrain){
@@ -66,7 +66,7 @@ class JNERVESYSTEM {
     /* Get Local Time */
     getLocalTime(response, callback){
         var self = this;   
-        self.jcell.getLocalDateTime({"type":"time"},
+        self.jcell.getLocalDateTime({"type":"time", "userId": response.userId},
             function(res){
                 var finalResponse = null;
                 var timeRes = 0;
@@ -84,7 +84,7 @@ class JNERVESYSTEM {
     /* Get Local Date*/
     getLocalDate(response, callback){
         var self = this;   
-        self.jcell.getLocalDateTime({"type":"date"}, function(res){
+        self.jcell.getLocalDateTime({"type":"date", "userId": response.userId}, function(res){
             var finalResponse = null;
             var timeRes = 0;
             if(res.error == null){
@@ -110,7 +110,7 @@ class JNERVESYSTEM {
         }
         else {
             var postPhrase = tmpPhrase.slice(contriesIndex+2);
-            var cellData = {"location":postPhrase.join(" ")};
+            var cellData = {"location":postPhrase.join(" "), "userId": response.userId};
 
             self.jcell.getMapCountriesByContinent(cellData, function(res){
                 if(res.error){
@@ -145,7 +145,7 @@ class JNERVESYSTEM {
         }
         else {
             var postPhrase = tmpPhrase.slice(capIndex+2);
-            var cellData = {"location":postPhrase.join(" "), "isState":isStates};
+            var cellData = {"location":postPhrase.join(" "), "isState":isStates, "userId": response.userId};
             self.jcell.getMapCapital(cellData, function(res){
                 
                 if(res.error){
@@ -195,7 +195,7 @@ class JNERVESYSTEM {
             callback({"jresponse":"Error figuring out what sport to get schedule for"});
         }
         else {
-            var cellData = {"sport":postPhrase[sportsVal], "day_week":postPhrase[weekVal]};
+            var cellData = {"sport":postPhrase[sportsVal], "day_week":postPhrase[weekVal], "userId": response.userId};
             /* Request */
             self.jcell.getSportsSchedule(cellData, function(res){
                 var schFeedback = "";
@@ -220,7 +220,7 @@ class JNERVESYSTEM {
     getTastekidResults(response, callback){
         var self = this;
         var objectList = ["media","books","movies","music","shows","games","authors"];
-        var dataObj = {"type":"all", "query":"", "limit":10, "info":0};
+        var dataObj = {"type":"all", "query":"", "limit":10, "info":0, "userId": response.userId};
         
         // Parse phrase
         for(var i=0; i < objectList.length; i++){
@@ -256,7 +256,7 @@ class JNERVESYSTEM {
                     var inputString = res.results.Similar.Info.map(function(el){ return self.jtools.stringFormat("{0} ({1})", [el.Name, el.Type]); }).join(" & ");
                     resultsString = res.results.Similar.Results.map(function(el){ return self.jtools.stringFormat("{0} ({1})", [el.Name, el.Type]); }).join(", ");
 
-                    finalResponse = self.jtools.stringFormat("According to Tastekid for {0}. The following are sugguested that you checkout: {1}", [inputString, resultsString]);
+                    finalResponse = self.jtools.stringFormat("According to Tastedive for {0}. The following are sugguested that you checkout: {1}", [inputString, resultsString]);
                 }
             }
             else {
@@ -271,7 +271,7 @@ class JNERVESYSTEM {
         var self = this;
         var finalResponse = null;
         var apiResponse = null;
-        var dataObj = {"type":"find"};
+        var dataObj = {"type":"find", "userId": response.userId};
 
         var tmpPhrase = response.fullPhrase.split(" ");
         var postPhrase = tmpPhrase.slice(tmpPhrase.indexOf("weather"));
@@ -307,7 +307,7 @@ class JNERVESYSTEM {
         var self = this;
         var finalResponse = null;
         var apiResponse = {};
-        var dataObj = {"type":"forecast"};
+        var dataObj = {"type":"forecast", "userId": response.userId};
 
         var tmpPhrase = response.fullPhrase.split(" ");
         var postPhrase = tmpPhrase.slice(tmpPhrase.indexOf("forecast"));
@@ -365,7 +365,7 @@ class JNERVESYSTEM {
                             }
                         } 
                         
-                        finalResponse = self.jtools.stringFormat("The weather forecast for the next few days according to OpenWeather.com for {0}: \n {1}",[res.results.city.name, dateList.join("\n | ")]);
+                        finalResponse = self.jtools.stringFormat("The weather forecast for the next few days according to OpenWeather.com for {0}: \n {1}",[res.results.city.name, displayList.join("\n | ")]);
                         apiResponse = { dateList: dateList, resultList: res.results.list };
                     }
                     else {
@@ -389,7 +389,7 @@ class JNERVESYSTEM {
         var self = this;
         var finalResponse = null;
         var apiResponse = null;
-        var dataObj = {"type":"forecast"};
+        var dataObj = {"type":"forecast", "userId": response.userId};
 
         var tmpPhrase = response.fullPhrase.split(" ");
         var postPhrase = tmpPhrase.slice(tmpPhrase.indexOf("details"));
@@ -439,7 +439,7 @@ class JNERVESYSTEM {
     changeFullName(response, callback){
         var self = this;
         var finalResponse = null;
-        var dataObj = {"item":"fullname", "newitem":null};
+        var dataObj = {"item":"fullname", "newitem":null, "userId": response.userId};
 
         var tmpPhrase = response.fullPhrase.split(" ");
         var postPhrase = tmpPhrase.slice(tmpPhrase.indexOf("my"));
@@ -470,7 +470,7 @@ class JNERVESYSTEM {
     changeNickname(response, callback){
         var self = this;
         var finalResponse = null;
-        var dataObj = {"item":"nickname", "newitem":null};
+        var dataObj = {"item":"nickname", "newitem":null, "userId": response.userId};
 
         var tmpPhrase = response.fullPhrase.split(" ");
         var postPhrase = tmpPhrase.slice(tmpPhrase.indexOf("my"));
@@ -501,7 +501,7 @@ class JNERVESYSTEM {
     changeVoice(response, callback){
         var self = this;
         var finalResponse = null;
-        var dataObj = {"item":"voice", "newitem":null};
+        var dataObj = {"item":"voice", "newitem":null, "userId": response.userId};
 
         var tmpPhrase = response.fullPhrase.split(" ");
         var postPhrase = tmpPhrase.slice(tmpPhrase.indexOf("my"));
@@ -533,7 +533,7 @@ class JNERVESYSTEM {
         var self = this;
         var finalResponse = null;
         var apiResponse = null;
-        var dataObj = {};               
+        var dataObj = {"userId": response.userId};               
 
         try {
             var tmpPhrase = response.fullPhrase.split(" ");
@@ -586,7 +586,7 @@ class JNERVESYSTEM {
     getCpuArch(response, callback){
         var self = this;
         var finalResponse = null;
-        var dataObj = {"type":"arch"};
+        var dataObj = {"type":"arch", "userId": response.userId};
 
         try {                          
             self.jcell.getOSInfo(dataObj, function(res){  
@@ -609,7 +609,7 @@ class JNERVESYSTEM {
     getCpuInfo(response, callback){
         var self = this;
         var finalResponse = null;
-        var dataObj = {"type":"info"};
+        var dataObj = {"type":"info", "userId": response.userId};
 
         try {                          
             self.jcell.getOSInfo(dataObj, function(res){  
@@ -636,7 +636,7 @@ class JNERVESYSTEM {
     getComputerHostname(response, callback){
         var self = this;
         var finalResponse = null;
-        var dataObj = {"type":"hostname"};
+        var dataObj = {"type":"hostname", "userId": response.userId};
 
         try {                          
             self.jcell.getOSInfo(dataObj, function(res){  
@@ -659,7 +659,7 @@ class JNERVESYSTEM {
     getNetworkInterface(response, callback){
         var self = this;
         var finalResponse = null;
-        var dataObj = {"type":"networkinterface"};
+        var dataObj = {"type":"networkinterface", "userId": response.userId};
 
         try {                          
             self.jcell.getOSInfo(dataObj, function(res){  
@@ -694,7 +694,7 @@ class JNERVESYSTEM {
     getSystemRelease(response, callback){
         var self = this;
         var finalResponse = null;
-        var dataObj = {"type":"systemrelease"};
+        var dataObj = {"type":"systemrelease", "userId": response.userId};
 
         try {                          
             self.jcell.getOSInfo(dataObj, function(res){  
@@ -717,7 +717,7 @@ class JNERVESYSTEM {
     getSystemMemory(response, callback){
         var self = this;
         var finalResponse = null;
-        var dataObj = {"type":"systemmemory"};
+        var dataObj = {"type":"systemmemory", "userId": response.userId};
 
         try {                          
             self.jcell.getOSInfo(dataObj, function(res){  
@@ -771,7 +771,7 @@ class JNERVESYSTEM {
     relationshipGuide(response, callback){
         var self = this;
         var finalResponse = null;
-        var dataObj = {"type":null, "searchName":null};
+        var dataObj = {"type":null, "searchName":null, "userId": response.userId};
 
         try {
             var tmpPhrase = response.fullPhrase.split(" ");
@@ -780,11 +780,12 @@ class JNERVESYSTEM {
                 postPhrase = postPhrase.slice(postPhrase.indexOf("my")+1);
             }
 
+            dataObj.userId = response.userId;
             dataObj.type = (response.action == "am" ? "me" : (response.action == "is" || response.action == "are" ? "other" : null));
             if(dataObj.type == "other"){
                 dataObj.searchName = postPhrase.join(" ").replace(/'s$/g, "");
             }
-
+            
             self.jcell.getRelationships(dataObj, function(res){  
                 if(res.error == null && res.results != null){
                     var relationships = res.results;
@@ -829,7 +830,7 @@ class JNERVESYSTEM {
     locationGuide(response, callback){
         var self = this;
         var finalResponse = null;
-        var dataObj = {"type":null, "searchName":null};
+        var dataObj = {"type":null, "searchName":null, "userId": response.userId};
 
         try {
             var tmpPhrase = response.fullPhrase.split(" ");
@@ -871,7 +872,7 @@ class JNERVESYSTEM {
     addUserSetting(response, callback){
         var self = this;
         var finalResponse = null;
-        var dataObj = {"type":null, "info":{}};
+        var dataObj = {"type":null, "info":{}, "userId": response.userId};
         
         try {
             var tmpPhrase = response.fullPhrase.split(" ");
@@ -936,7 +937,7 @@ class JNERVESYSTEM {
     replaceLastAction(response, callback) {
         var self = this;
         var finalResponse = null;
-        var dataObj = {"type":null, "info":null};
+        var dataObj = {"type":null, "info":null, "userId": response.userId};
 
         try {
             self.jcell.replaceLastAction(dataObj, function(res){
@@ -983,7 +984,7 @@ class JNERVESYSTEM {
     testCode(response, callback){
         var self = this;
         var finalResponse = null;
-        var dataObj = {"type": null, "info":null};
+        var dataObj = {"type": null, "info":null, "userId": response.userId};
 
         try {
             /*self.jcell.jeyes.motionTrackingCamera(function(ret){

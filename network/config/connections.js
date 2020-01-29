@@ -1,5 +1,7 @@
 'use strict';
 const iplocation = require("iplocation").default;
+const Tool = require('../../jada_3/jtools.js');
+const jtool = new Tool();
 
 /*
   connectionId
@@ -25,11 +27,11 @@ class JConnection {
                 self.connectionList[id].connection = conn;
                 self.connectionList[id].nickname = nickname;
                 self.connectionList[id].token = token;
-                console.log(id, " updated network connection");
+                jtool.errorLog(" [CONNECTION] " + id + " updated network connection");
             }
             else {
                 self.connectionList[id] = { "connectionId":id, "connection": conn, "nickname": nickname, "token":token, "socket": null };
-                console.log(id, " joined network");
+                jtool.errorLog(" [CONNECTION] " + id + " joined network");
             }
             status = true;
         }
@@ -45,7 +47,7 @@ class JConnection {
         var status = false;
         try {
             delete self.connectionList[id];            
-            console.log(id, " completely left network");
+            jtool.errorLog(" [CONNECTION] " + id + " completely left network");
             status = true;
         }
         catch (ex) {
@@ -60,7 +62,7 @@ class JConnection {
         var status = false;
         try {
             self.connectionList[id].connection = null;
-            console.log(id, " left network");
+            jtool.errorLog(" [CONNECTION] " + id + " left network");
             status = true;
         }
         catch (ex) {
@@ -76,13 +78,13 @@ class JConnection {
         try {
             if (id in self.connectionList) {
                 self.connectionList[id].socket = sockId;
-                console.log(id, " connected socket");
+                jtool.errorLog(" [CONNECTION] " + id + " connected socket");
                 status = true;
             }          
         }
         catch (ex) {
             status = false;
-            console.log("Error adding socket: ", ex);
+            jtool.errorLog(" [ERROR] Adding socket: " + ex);
         }
         return status;
     }
@@ -94,13 +96,13 @@ class JConnection {
         try {
             if (id in self.connectionList) {
                 self.connectionList[id].socket = null;
-                console.log(id, " disconnected socket");
+                jtool.errorLog(" [CONNECTION] " + id + " disconnected socket");
                 status = true;
             }
         }
         catch (ex) {
             status = false;
-            console.log("Error removing socket: ", ex);
+            jtool.errorLog(" [ERROR] removing socket: " + ex);
         }
         return status;
     }
@@ -115,7 +117,7 @@ class JConnection {
         }
         catch (ex) {
             ret = null;
-            console.log("Error getting connection: ", ex);
+            jtool.errorLog(" [ERROR] getting connection: " + ex);
         }
         return ret;
     }
@@ -126,21 +128,21 @@ class JConnection {
         try {
             /*_getIpLocation(ip, function(res){
                 if(res.error){
-                    console.log("Error updating IP Location [", id,"](2):", res.error);                    
+                    jtool.errorLog(" [ERROR] updating IP Location [", id,"](2):", res.error);                    
                 }
                 else {                    
                     if(!(id in self.connectionList)) {
-                        console.log("Error updating IP Location [", id,"](2): No Id Found In Connection List");
+                        jtool.errorLog(" [ERROR] updating IP Location [", id,"](2): No Id Found In Connection List");
                     }
                     else {
                         self.connectionList[id].location = res.ret;
-                        //console.log(" [DEBUG]: ", res.ret);
+                        //jtool.errorLog(" [DEBUG] " + res.ret);
                     }
                 }
             });*/
         }
         catch (ex) {
-            console.log("Error updating IP Location [", id, "]:", ex);
+            jtool.errorLog(" [ERROR] updating IP Location [" + id + "]:" + ex);
         }        
     }
 
@@ -153,7 +155,7 @@ class JConnection {
             ret = Object.values(self.connectionList);
         }
         catch (ex) {
-            console.log("Error getting all connections: ", ex);
+            jtool.errorLog(" [ERROR] getting all connections: " + ex);
             ret = null;
         }
         return ret;
@@ -180,7 +182,7 @@ function _getIpLocation(ip, callback){
         }
     }
     catch(ex){
-        console.log("IP Loc Error: ", ex);
+        jtool.errorLog(" [ERROR] IP Loc: " + ex);
         callback({"error":ex, "ret":null});
     }
 }
