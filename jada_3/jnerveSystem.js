@@ -970,7 +970,7 @@ class JNERVESYSTEM {
     marvelCharacter(response, callback){
         var self = this;
         var finalResponse = null;
-        var dataObj = {"type":null, "info":null};
+        var dataObj = {"type":null, "info":null, "userId": response.userId};
 
         try {
 
@@ -980,6 +980,197 @@ class JNERVESYSTEM {
         }
     }
 
+    /* Search Movie DB */
+    searchMovieDB(response, callback){
+        var self = this;
+        var finalResponse = null;
+        var dataObj = {"type":null, "query":null, "userId": response.userId};
+        var dbRet = null;
+        try {
+            var responseTypes = { "movie":"movie","show":"tv","actor":"person","actress":"person","cast":"person","crew":"person" };
+
+            var tmpPhrase = response.fullPhrase.split(" ");
+            var postPhrase = tmpPhrase.slice(tmpPhrase.indexOf(response.action)+1);
+
+            if(responseTypes[response.action]){ 
+                // Set search type
+                dataObj.type = responseTypes[response.action];
+
+                // Set search query
+                var namePos = postPhrase.indexOf("named");
+                dataObj.query = postPhrase.slice(namePos + 1).join(" ");  
+                
+                self.jcell.searchMovieDB(dataObj, function(res){
+                    if(res.error == null && res.results != null){ 
+                        switch(dataObj.type){
+                            case "movie":
+                                if(res.results.total_results == 0) {
+                                    dbRet = [];
+                                    finalResponse = "No movies were found for that name";
+                                }
+                                else {
+                                    dbRet = res.results.results.sort((a, b) => (a.popularity > b.popularity) ? 1 : -1).map(
+                                        function(item) { 
+                                            var poster_path = (item.profile_path ? 'http://image.tmdb.org/t/p/w500'+item.poster_path : null);
+                                            return { id:item.id, poster_path: poster_path, title: item.title, overview: item.overview, release_date: item.release_date }; 
+                                    });
+
+                                    finalResponse = "The movies that we found include: " + dbRet.map( x => x.title).join(", ");
+                                }
+                                break;
+                            case "tv":
+                                if(res.results.total_results == 0) {
+                                    dbRet = [];
+                                    finalResponse = "No shows were found for that name";
+                                }
+                                else {
+                                    dbRet = res.results.results.sort((a, b) => (a.popularity > b.popularity) ? 1 : -1).map(
+                                        function(item) { 
+                                            var poster_path = (item.profile_path ? 'http://image.tmdb.org/t/p/w500'+item.poster_path : null);
+                                            return { id:item.id, poster_path: poster_path, name: item.name, overview: item.overview, first_air_date: item.first_air_date }; 
+                                    });
+
+                                    finalResponse = "The shows that we found include: " + dbRet.map( x => x.name).join(", ");
+                                }
+                                break;
+                            case "person":
+                                if(res.results.total_results == 0) {
+                                    dbRet = [];
+                                    finalResponse = "No people were found for that name";
+                                }
+                                else {
+                                    dbRet = res.results.results.sort((a, b) => (a.popularity > b.popularity) ? 1 : -1).map(
+                                        function(item) { 
+                                            var profile_img = (item.profile_path ? 'http://image.tmdb.org/t/p/w500'+item.profile_path : null);
+                                            return { id:item.id, profile_path: profile_img, name: item.name, known_for_department: item.known_for_department }; 
+                                    });
+
+                                    finalResponse = "The people that we found are: " + dbRet.map( x => x.name +" ("+x.known_for_department+")").join(", ");
+                                }
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                    else {
+                        finalResponse = " [Search DB Error]: " + res.error;
+                    }
+
+                    callback({"jresponse": finalResponse, jdata: dbRet, "jtype": dataObj.type  });
+                });                
+            }
+            else {
+                callback({"jresponse": "You have an invalid search type for the movie db"});
+            }
+        }
+        catch(ex){
+            callback({"jresponse": "There seems to be an issue searching the movie db: " + ex });
+        }
+    }
+
+    /* List special items from Movie DB */
+    listMovieDBSpecialItems(response, callback){ 
+        var self = this;
+        var finalResponse = null;
+        var dataObj = {"type":null, "userId": response.userId};
+        var dbRet = null;
+
+        try {
+            var responseTypes = { "playing":"movie/now_playing","coming":"movie/upcoming","actors":"person/popular","actresses":"person/popular","cast":"person/popular","crew":"person/popular" };
+
+            if(responseTypes[response.action]){ 
+                // Set search type
+                dataObj.type = responseTypes[response.action];
+                var dataType = dataObj.type.split("/")[0];
+
+                self.jcell.listMovieDBSpecialItems(dataObj, function(res){
+                    if(res.error == null && res.results != null){ 
+                        switch(dataType){
+                            case "movie":
+                                if(res.results.results.length == 0) {
+                                    dbRet = [];
+                                    finalResponse = "No movies were found " + (dataObj.type == "movie/now_playing" ? "that are currently playing" : "that are coming soon");
+                                }
+                                else {
+                                    dbRet = (dataObj.type == "movie/upcoming" ? res.results.results.filter(function(item){ return Date.parse(item.release_date) > Date.now();}) : res.results.results);
+                                    dbRet = dbRet.sort((a, b) => (a.popularity > b.popularity) ? 1 : -1).map(
+                                        function(item) { 
+                                            var poster_path = (item.profile_path ? 'http://image.tmdb.org/t/p/w500'+item.poster_path : null);
+                                            return { id:item.id, poster_path: poster_path, title: item.title, overview: item.overview, release_date: item.release_date }; 
+                                    });
+
+                                    finalResponse = (dataObj.type == "movie/now_playing" ? "The movies that are currently playing" : "The movies that are coming soon")+ " include: " + dbRet.map( x => x.title +" ("+x.release_date+")").join(", ");
+                                }
+                                break;
+                            case "person":
+                                if(res.results.results.length == 0) {
+                                    dbRet = [];
+                                    finalResponse = "No people were found";
+                                }
+                                else {
+                                    dbRet = res.results.results.sort((a, b) => (a.popularity > b.popularity) ? 1 : -1).map(
+                                        function(item) { 
+                                            var profile_img = (item.profile_path ? 'http://image.tmdb.org/t/p/w500'+item.profile_path : null);
+                                            return { id:item.id, profile_path: profile_img, name: item.name, known_for_department: item.known_for_department, known_for: item.known_for }; 
+                                    });
+
+                                    finalResponse = "The people that we found are: " + dbRet.map( x => x.name +" ("+x.known_for_department+")").join(", ");
+                                }
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                    else {
+                        finalResponse = " [List DB Error]: " + res.error;
+                    }
+                    callback({"jresponse": finalResponse, jdata: dbRet, "jtype": dataType });
+                });
+            }
+            else {
+                callback({"jresponse": "You have an invalid list type for the movie db", "jtype":"movie" });
+            }
+        }
+        catch(ex){
+            callback({"jresponse": "There seems to be an issue listing the movie db: " + ex, "jtype":"movie" });
+        }
+    }
+
+    /* Cast & Crew that worked in movie list from MovieDB */
+    compareMovieDB(response, callback){ 
+        var self = this;
+        var finalResponse = null;
+        var dataObj = {"projectlist":[], "userId": response.userId};
+        var dbRet = null;
+
+        try {
+            var tmpPhrase = response.fullPhrase.split(" ");
+            var postPhrase = tmpPhrase.slice(tmpPhrase.indexOf(response.action)+1);
+
+            var projList = postPhrase.join(" ").split(",");
+
+            // Set search type
+            dataObj.projectlist = projList;
+
+            self.jcell.compareCastMovieDB(dataObj, function(res){
+                if(res.error == null && res.results != null){ 
+                    dbRet = { movieList: res.results.movieList, finalCastList: res.results.finalCastList };
+                    var allList = Object.values(res.results.finalCastList).filter(function(item){ 
+                        return (item.movieIds.length == Object.keys(res.results.movieList).length);
+                    });
+                    finalResponse = "Comparing " + Object.keys(res.results.movieList).join(" | ") + " the following people are the same: " + allList.map(x=> x.name).join(", ");
+                }
+                else {
+                    finalResponse = " [Compare Movie DB Error]: " + res.error;
+                }
+                callback({"jresponse": finalResponse, jdata: dbRet, "jtype": 'person' });
+            });    
+        }
+        catch(ex){
+            callback({"jresponse": "There seems to be an issue searching the movie db: " + ex, "jtype":"movie" });
+        }
+    }
+    
     /* testCode */
     testCode(response, callback){
         var self = this;

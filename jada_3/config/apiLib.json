@@ -5,5 +5,6 @@
     "googleMapsDirections": {"link":"https://maps.googleapis.com/maps/api/directions/json"},
     "googlePlaces":{"link":"https://maps.googleapis.com/maps/api/place/autocomplete/json"},
     "marvel": {"link":"https://gateway.marvel.com/"},
-    "geoAPI": {"link":"http://ip-api.com/json"}
+    "geoAPI": {"link":"http://ip-api.com/json"},
+    "movieDb":{"link":"https://api.themoviedb.org/3/"}
 }

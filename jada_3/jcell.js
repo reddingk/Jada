@@ -580,6 +580,222 @@ class JCELL {
         }
     }
 
+    /* Search Movie DB By Type */
+    searchMovieDB(items, callback){        
+        var self = this;
+        var response = {"error":null, "results":null};
+        self.saveLastAction("searchMovieDB", items);
+
+        try {
+            if(!self.checkParameterList(["type", "query"], items)){
+                response.error = "Missing Parameter";
+                callback(response);
+            }
+            else {
+                var api = self.getApiItem("movieDb");
+                if(api == null){
+                    response.error = "Unable to retrieve API data";
+                    callback(response);
+                }
+                else {
+                    var url = self.jtools.stringFormat("{0}search/{1}?api_key={2}&query={3}",[api.link, items.type, process.env.MOVIEDB_KEY, items.query]);
+                    request({ url: url, json: true}, function (error, res, body){
+                        if(!error && res.statusCode === 200){
+                            response.results = body;                                
+                        }
+                        else {
+                            response.error = error;
+                        }
+                        callback(response);
+                    });
+                }
+            }
+        }
+        catch(ex){
+            response.error = "Sorry we were not able to complete search of movie db: " + ex;  
+            callback(response);          
+        }
+    }
+
+    /* List special items from Movie DB */
+    listMovieDBSpecialItems(items, callback){        
+        var self = this;
+        var response = {"error":null, "results":null};
+        self.saveLastAction("listMovieDBSpecialItems", items);
+
+        try {
+            if(!self.checkParameterList(["type"], items)){
+                response.error = "Missing Parameter";
+                callback(response);
+            }
+            else {
+                var api = self.getApiItem("movieDb");
+                if(api == null){
+                    response.error = "Unable to retrieve API data";
+                    callback(response);
+                }
+                else {
+                    var url = self.jtools.stringFormat("{0}{1}?api_key={2}",[api.link, items.type, process.env.MOVIEDB_KEY]);
+                    request({ url: url, json: true}, function (error, res, body){
+                        if(!error && res.statusCode === 200){
+                            response.results = body;                                
+                        }
+                        else {
+                            response.error = error;
+                        }
+                        callback(response);
+                    });
+                }
+            }
+        }
+        catch(ex){
+            response.error = "Sorry we were not able to complete search of movie db: " + ex;  
+            callback(response);          
+        }
+    }
+
+    /* Search Movie DB By ID */
+    searchMBDById(items, callback){        
+        var self = this;
+        var response = {"error":null, "results":null};
+        self.saveLastAction("searchMBDById", items);
+
+        try {
+            if(!self.checkParameterList(["type", "infotype", "typeid"], items)){
+                response.error = "Missing Parameter";
+                callback(response);
+            }
+            else {
+                var api = self.getApiItem("movieDb");
+                if(api == null){
+                    response.error = "Unable to retrieve API data";
+                    callback(response);
+                }
+                else {
+                    var url = self.jtools.stringFormat("{0}{1}/{2}{3}?api_key={4}",[api.link, items.type, items.typeid, items.infotype, process.env.MOVIEDB_KEY]);
+                    request({ url: url, json: true}, function (error, res, body){
+                        if(!error && res.statusCode === 200){
+                            response.results = body;                                
+                        }
+                        else {
+                            response.error = error;
+                        }
+                        callback(response);
+                    });
+                }
+            }
+        }
+        catch(ex){
+            response.error = "Sorry we were not able to complete ID search of movie db: " + ex;  
+            callback(response);          
+        }
+    }
+
+    /* Get Cast & Crew that worked on similar project MovieDB */
+    compareCastMovieDB(items, callback){
+        var self = this;
+        var response = {"error":null, "results":null};
+        self.saveLastAction("compareCastMovieDB", items);
+
+        try {
+            if(!self.checkParameterList(["projectlist"], items)){
+                response.error = "Missing Parameter";
+                callback(response);
+            }
+            else{
+                var processStatus = {
+                    "idRetrievedList":[],
+                    "movieCastList":{},
+                    "movieList":{},
+                    "finalCastList":{}
+                };
+
+                function compareItems(pStatus, projectlist, fresponse, callback) {
+                    pStatus.idRetrievedList.push(true);
+                    if(pStatus.idRetrievedList.length >= projectlist.length) {
+                        var idList = Object.keys(pStatus.movieCastList);
+
+                        for(var j =0; j < idList.length; j++){
+                            var idObj = pStatus.movieCastList[idList[j]].results;
+                            for(var k = 0; k < idObj.cast.length; k++){
+                                if(pStatus.finalCastList[idObj.cast[k].id]){
+                                    pStatus.finalCastList[idObj.cast[k].id].movieIds.push(idList[j]);
+                                }
+                                else {
+                                    pStatus.finalCastList[idObj.cast[k].id] = { id: idObj.cast[k].id, name:idObj.cast[k].name, profile_path: idObj.cast[k].profile_path, movieIds:[ idList[j] ]};
+                                }
+                            }
+                        }
+
+                        fresponse.results = pStatus;
+                        callback(fresponse);
+                    }
+                }                
+
+                for(var g=0; g < items.projectlist.length; g++)
+                {
+                    // Get ID OF All Movies
+                    if(!isNaN(items.projectlist[g])){
+                        if(processStatus.movieCastList[items.projectlist[g]]) {
+                            compareItems(processStatus, items.projectlist, response, function(finalRet){ callback(finalRet); });
+                        }
+                        else {
+                            self.searchMBDById({"type":"movie", "infotype":"/credits", "typeid": items.projectlist[g], "userId": items.userId}, function(ret){
+                                if(ret.error || ret.results == null){
+                                    response.error = ret.error;
+                                    callback(response);
+                                }
+                                else {
+                                    processStatus.movieList[ret.results.id] = ret.results.id;
+                                    processStatus.movieCastList[ret.results.id] = ret;
+                                }
+                                compareItems(processStatus, items.projectlist, response, function(finalRet){ callback(finalRet); });
+                            });
+                        }
+                    } 
+                    else {
+                        self.searchMovieDB({"type":"movie", "query":items.projectlist[g], "userId": items.userId}, function(ret){
+                            if(ret.error || ret.results == null){
+                                response.error = ret.error;
+                                callback(response);
+                            }
+                            else if(ret.results.total_results == 0) {
+                                response.error = "Unable to Find Movie: " + items.projectlist[g];
+                                callback(response);
+                            }
+                            else {
+                                var selectedItem = ret.results.results.sort((a, b) => (a.popularity > b.popularity) ? 1 : -1)[0];
+                                if(processStatus.movieCastList[selectedItem.id]) {
+                                    compareItems(processStatus, items.projectlist, response, function(finalRet){ callback(finalRet); });
+                                }
+                                else {
+                                    
+                                    self.searchMBDById({"type":"movie", "infotype":"/credits", "typeid": selectedItem.id, "userId": items.userId}, function(ret2){
+                                        if(ret.error || ret.results == null){
+                                            response.error = ret.error;
+                                            callback(response);
+                                        }
+                                        else {
+                                            processStatus.movieList[selectedItem.title] = selectedItem.id;
+                                            processStatus.movieCastList[ret2.results.id] = ret2;
+                                        }
+                                        compareItems(processStatus, items.projectlist, response, function(finalRet){ callback(finalRet); });
+                                    });
+                                }
+                            }
+                        });
+                    }
+                }
+            }
+        }
+        catch(ex){
+            response.error = "Sorry we were not able to complete compare for that movie combination: " + ex;  
+            callback(response);          
+        }
+    }
+
+    /* Get Projects that similar cast & crew worked on MovieDB */ 
+
     /* private methods */
     saveLastAction(method, data) {
         var self = this;

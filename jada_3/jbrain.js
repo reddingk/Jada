@@ -21,10 +21,7 @@ class JBRAIN {
     convo(phrase, userId, callback) {
         var self = this;
         
-        var tmpStr = phrase.split(" ");
-        var phraseLibrary = null;
-        var fullPhraseLibrary = null;
-        
+        var tmpStr = phrase.split(" ");        
         self.dbActions(tmpStr, phrase, userId, callback);
     }
 
@@ -55,18 +52,25 @@ class JBRAIN {
                   self.jlanguage.fullPhraseLib = fullres;
 
                   var response = self.jlanguage.getCall(phrase, res);
-
+                  
                   if(response != null){
                       phrase = ( response.response == "N/A" ? "" : phrase);
                       self.jNerves.dataResponse(response, phrase, userId, function(res){ callback(res); });
+                  }
+                  else {
+                    callback({"jresponse":" [Error] retrieving language call"});
                   }
               });
           }
           else {
               var response = self.jlanguage.getCall(phrase, res, callback);
+             
               if(response != null){
                   phrase = ( response.response == "N/A" ? "" : phrase);
                   self.jNerves.dataResponse(response, phrase, userId, function(res){ callback(res); });
+              }
+              else {
+                callback({"jresponse":" [Error] retrieving language call"});
               }
           }
       });
