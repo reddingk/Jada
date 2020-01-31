@@ -15,10 +15,10 @@ class Lift {
                     var results = [];
                     if(!jtools.checkConfig(["url", "day_week"], config)){}
                     else {                    
-                        var scrapurl = (config.week > 0 ? 
-                            jtools.stringFormat("{0}{1}/_/week/{2}/seasontype/2",[(config.url.startsWith('http')?"":"http://"), config.url, config.week]) :
+                        var scrapurl = (config.day_week > 0 ? 
+                            jtools.stringFormat("{0}{1}/_/week/{2}/seasontype/2",[(config.url.startsWith('http')?"":"http://"), config.url, config.day_week]) :
                             jtools.stringFormat("{0}{1}",[(config.url.startsWith('http')?"":"http://"), config.url]) );
-
+                        
                         request(scrapurl, function (error, res, body){                                                           
                             if(!error && res.statusCode === 200){                                
                                 const html = body;
@@ -60,7 +60,7 @@ class Lift {
                         var scrapurl = (config.day_week > 0 ? 
                             jtools.stringFormat("{0}{1}/_/date/{2}",[(config.url.startsWith('http')?"":"http://"), config.url, config.day_week]) :
                             jtools.stringFormat("{0}{1}",[(config.url.startsWith('http')?"":"http://"), config.url]) );
-
+                        
                         request(scrapurl, function (error, res, body){                                                           
                             if(!error && res.statusCode === 200){                                
                                 const html = body;

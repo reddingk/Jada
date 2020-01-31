@@ -189,7 +189,7 @@ class JNERVESYSTEM {
         weekIndex = (weekIndex < 0 ? forIndex+1 : weekIndex);
         
         var sportsVal = (scheduleIndex > 0 ? scheduleIndex-1 : -1);
-        var weekVal = (weekIndex < postPhrase.length ? weekIndex : 0);
+        var weekVal = (weekIndex < postPhrase.length ? weekIndex+1 : 0);
 
         if(sportsVal < 0){
             callback({"jresponse":"Error figuring out what sport to get schedule for"});
@@ -1011,7 +1011,7 @@ class JNERVESYSTEM {
                                 else {
                                     dbRet = res.results.results.sort((a, b) => (a.popularity > b.popularity) ? 1 : -1).map(
                                         function(item) { 
-                                            var poster_path = (item.profile_path ? 'http://image.tmdb.org/t/p/w500'+item.poster_path : null);
+                                            var poster_path = (item.poster_path ? 'http://image.tmdb.org/t/p/w500'+item.poster_path : null);
                                             return { id:item.id, poster_path: poster_path, title: item.title, overview: item.overview, release_date: item.release_date }; 
                                     });
 
@@ -1026,7 +1026,7 @@ class JNERVESYSTEM {
                                 else {
                                     dbRet = res.results.results.sort((a, b) => (a.popularity > b.popularity) ? 1 : -1).map(
                                         function(item) { 
-                                            var poster_path = (item.profile_path ? 'http://image.tmdb.org/t/p/w500'+item.poster_path : null);
+                                            var poster_path = (item.poster_path ? 'http://image.tmdb.org/t/p/w500'+item.poster_path : null);
                                             return { id:item.id, poster_path: poster_path, name: item.name, overview: item.overview, first_air_date: item.first_air_date }; 
                                     });
 
@@ -1136,38 +1136,74 @@ class JNERVESYSTEM {
         }
     }
 
-    /* Cast & Crew that worked in movie list from MovieDB */
+    /* Cast & Crew that worked in projects list from MovieDB */
     compareMovieDB(response, callback){ 
         var self = this;
         var finalResponse = null;
-        var dataObj = {"projectlist":[], "userId": response.userId};
+        var dataObj = {"projectlist":[], "type":null, "userId": response.userId};
         var dbRet = null;
 
         try {
+
             var tmpPhrase = response.fullPhrase.split(" ");
             var postPhrase = tmpPhrase.slice(tmpPhrase.indexOf(response.action)+1);
 
-            var projList = postPhrase.join(" ").split(",");
+            // Set project list
+            dataObj.projectlist = postPhrase.join(" ").split(",");
 
-            // Set search type
-            dataObj.projectlist = projList;
+            // Set project type
+            dataObj.type = (response.action == 'movies' ? "movie": "tv");
 
             self.jcell.compareCastMovieDB(dataObj, function(res){
                 if(res.error == null && res.results != null){ 
-                    dbRet = { movieList: res.results.movieList, finalCastList: res.results.finalCastList };
+                    dbRet = { projectList: res.results.projectList, finalCastList: res.results.finalCastList };
                     var allList = Object.values(res.results.finalCastList).filter(function(item){ 
-                        return (item.movieIds.length == Object.keys(res.results.movieList).length);
+                        return (item.projectIds.length == Object.keys(res.results.projectList).length);
                     });
-                    finalResponse = "Comparing " + Object.keys(res.results.movieList).join(" | ") + " the following people are the same: " + allList.map(x=> x.name).join(", ");
+                    finalResponse = "Comparing " + Object.keys(res.results.projectList).join(" | ") + " the following people are the same: " + allList.map(x=> x.name).join(", ");
                 }
                 else {
-                    finalResponse = " [Compare Movie DB Error]: " + res.error;
+                    finalResponse = " [Compare Project DB Error]: " + res.error;
                 }
                 callback({"jresponse": finalResponse, jdata: dbRet, "jtype": 'person' });
             });    
         }
         catch(ex){
-            callback({"jresponse": "There seems to be an issue searching the movie db: " + ex, "jtype":"movie" });
+            callback({"jresponse": "There seems to be an issue comapring the project db: " + ex, "jtype":"person" });
+        }
+    }
+
+    /* Get Projects that similar cast & crew worked on fomr MovieDB */
+    compareCastMovieDB(response, callback){ 
+        var self = this;
+        var finalResponse = null;
+        var dataObj = {"personlist":[], "userId": response.userId};
+        var dbRet = null;
+
+        try {
+            var tmpPhrase = response.fullPhrase.split(" ");
+            var slicePos = self.additionalPhraseSlicers(postPhrase, ["actors","actresses", "cast", "crew"]);
+            var postPhrase = tmpPhrase.slice(slicePos + 1);
+
+            // Set project list
+            dataObj.personlist = postPhrase.join(" ").split(",");
+
+            self.jcell.compareProjectsMovieDB(dataObj, function(res){
+                if(res.error == null && res.results != null){ 
+                    dbRet = { personList: res.results.personList, finalProjectList: res.results.finalProjectList };
+                    var allList = Object.values(res.results.finalProjectList).filter(function(item){ 
+                        return (item.personIds.length == Object.keys(res.results.personList).length);
+                    });
+                    finalResponse = "Comparing " + Object.keys(res.results.personList).join(" | ") + " the following projects are the same: " + allList.map(x=> x.title).join(", ");
+                }
+                else {
+                    finalResponse = " [Compare Persons DB Error]: " + res.error;
+                }
+                callback({"jresponse": finalResponse, jdata: dbRet, "jtype": 'movie' });
+            });    
+        }
+        catch(ex){
+            callback({"jresponse": "There seems to be an issue comapring the persons: " + ex, "jtype":"movie" });
         }
     }
     

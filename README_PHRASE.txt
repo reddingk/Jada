@@ -118,13 +118,13 @@ node jadacmd.js [Phrase]
       : Search for all shows with search title
    -- -- 
       : Get TV show information
-   -- --
+   {compare} [shows] *****
       : Get List of cast & crew that participated in the list of show titles
    {search} [actor|crew|actress|cast] [named] *****
       : Search for all film & TV people with that name
    -- --
       : Get Cast & Crew Information
-   -- --
+   {compare} [actor|crew|actress|cast] *****
       : Get List of movies & shows that the list of people participated in with each other
    {list} [movies] [now playing]
       : Get Movies Now Playing
