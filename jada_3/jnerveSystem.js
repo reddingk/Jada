@@ -29,8 +29,7 @@ class JNERVESYSTEM {
     greetings(response, callback){
         var self = this;
 
-        var tmpStr = response.fullPhrase.split(" ");
-        var actionResponse = null;
+        var tmpStr = response.fullPhrase.split(" ");        
         var removables = response.additional_phrases;
         removables.push(response.action);
         removables.push("Jada");
@@ -462,6 +461,7 @@ class JNERVESYSTEM {
         }
         catch(ex){
             finalResponse = "Error changing fullName: " + ex;
+            this.jtools.errorLog(finalResponse);
             callback({"jresponse": finalResponse});
         }
     }
@@ -493,6 +493,7 @@ class JNERVESYSTEM {
         }
         catch(ex){
             finalResponse = "Error changing fullName: " + ex;
+            this.jtools.errorLog(finalResponse);
             callback({"jresponse": finalResponse});
         }
     }
@@ -524,6 +525,7 @@ class JNERVESYSTEM {
         }
         catch(ex){
             finalResponse = "Error changing fullName: " + ex;
+            this.jtools.errorLog(finalResponse);
             callback({"jresponse": finalResponse});
         }
     }
@@ -578,6 +580,7 @@ class JNERVESYSTEM {
         }
         catch(ex){
             finalResponse = "Sorry there was an error while getting the directions for you: " + ex;
+            this.jtools.errorLog(finalResponse);
             callback({"jresponse": finalResponse, "jdata":apiResponse});
         }
     }
@@ -601,6 +604,7 @@ class JNERVESYSTEM {
         }
         catch(ex){
             finalResponse = "Error retrieving CPU ARCH: " + ex;
+            this.jtools.errorLog(finalResponse);
             callback({"jresponse": finalResponse, "jdata": null});
         }
     }
@@ -628,6 +632,7 @@ class JNERVESYSTEM {
         }
         catch(ex){
             finalResponse = "Error retrieving CPU INFO: " + ex;
+            this.jtools.errorLog(finalResponse);
             callback({"jresponse": finalResponse, "jdata":null});
         }
     }
@@ -651,6 +656,7 @@ class JNERVESYSTEM {
         }
         catch(ex){
             finalResponse = "Error retrieving Computer Hostname: " + ex;
+            this.jtools.errorLog(finalResponse);
             callback({"jresponse": finalResponse, "jdata":null});
         }
     }
@@ -686,6 +692,7 @@ class JNERVESYSTEM {
         }
         catch(ex){
             finalResponse = "Error retrieving network information: " + ex;
+            this.jtools.errorLog(finalResponse);
             callback({"jresponse": finalResponse, "jdata":null});
         }
     }
@@ -709,6 +716,7 @@ class JNERVESYSTEM {
         }
         catch(ex){
             finalResponse = "Error retrieving system release: " + ex;
+            this.jtools.errorLog(finalResponse);
             callback({"jresponse": finalResponse, "jdata":null});
         }
     }
@@ -739,6 +747,7 @@ class JNERVESYSTEM {
         }
         catch(ex){
             finalResponse = "Error retrieving system memory: " + ex;
+            this.jtools.errorLog(finalResponse);
             callback({"jresponse": finalResponse, "jdata":null});
         }
     }
@@ -763,6 +772,7 @@ class JNERVESYSTEM {
         }
         catch(ex){
             finalResponse = "(-_-)";
+            this.jtools.errorLog(finalResponse);
         }
         callback({"jresponse": finalResponse});
     }
@@ -822,6 +832,7 @@ class JNERVESYSTEM {
         }
         catch(ex){
             finalResponse = "error trying to find relationship: " + ex;
+            this.jtools.errorLog(finalResponse);
             callback({"jresponse": finalResponse, "jdata":null});
         }
     }
@@ -864,6 +875,7 @@ class JNERVESYSTEM {
 
         }
         catch(ex){
+            this.jtools.errorLog("There seems to be an issue with my location guide: " + ex);
             callback({"jresponse": "There seems to be an issue with my location guide: " + ex, "jdata":null});
         }
     }
@@ -929,6 +941,7 @@ class JNERVESYSTEM {
 
         }
         catch(ex){
+            this.jtools.errorLog("There seems to be an issue with my using settings: " + ex);
             callback({"jresponse": "There seems to be an issue with my using settings: " + ex});
         }
     }
@@ -962,6 +975,7 @@ class JNERVESYSTEM {
             });
         }
         catch(ex){
+            this.jtools.errorLog("There seems to be an issue with my replace: " + ex);
             callback({"jresponse": "There seems to be an issue with my replace: " + ex});
         }
     }
@@ -1064,6 +1078,7 @@ class JNERVESYSTEM {
             }
         }
         catch(ex){
+            this.jtools.errorLog("There seems to be an issue searching the movie db: " + ex);
             callback({"jresponse": "There seems to be an issue searching the movie db: " + ex });
         }
     }
@@ -1132,6 +1147,7 @@ class JNERVESYSTEM {
             }
         }
         catch(ex){
+            this.jtools.errorLog("There seems to be an issue listing the movie db: " + ex);
             callback({"jresponse": "There seems to be an issue listing the movie db: " + ex, "jtype":"movie" });
         }
     }
@@ -1169,6 +1185,7 @@ class JNERVESYSTEM {
             });    
         }
         catch(ex){
+            this.jtools.errorLog("There seems to be an issue comapring the project db: " + ex);
             callback({"jresponse": "There seems to be an issue comapring the project db: " + ex, "jtype":"person" });
         }
     }
@@ -1203,6 +1220,7 @@ class JNERVESYSTEM {
             });    
         }
         catch(ex){
+            this.jtools.errorLog("There seems to be an issue comapring the persons: " + ex);
             callback({"jresponse": "There seems to be an issue comapring the persons: " + ex, "jtype":"movie" });
         }
     }
@@ -1263,6 +1281,7 @@ class JNERVESYSTEM {
             
         }
         catch(ex){
+            this.jtools.errorLog("There is something wrong with your Demo: " + ex);
             callback({"jresponse": "There is something wrong with your Demo: " + ex});
         }
     }

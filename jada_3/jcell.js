@@ -103,7 +103,8 @@ class JCELL {
                 }
             }
             catch(ex){
-                response.error = "Error Proccessing API Request: " + ex;                
+                response.error = "Error Proccessing API Request: " + ex;
+                this.jtools.errorLog(response.error);                
                 callback(response);
             }
         }
@@ -138,7 +139,8 @@ class JCELL {
                 }
             }
             catch(ex){
-                response.error = "Error Proccessing API Request: " + ex;                
+                response.error = "Error Proccessing API Request: " + ex;  
+                this.jtools.errorLog(response.error);              
                 callback(response);
             }
         }
@@ -182,6 +184,7 @@ class JCELL {
         }
         catch(ex){
             response.error = self.jtools.stringFormat("Error updating {0} to {1}: {2}", [item.item, item.newitem, ex]);
+            this.jtools.errorLog(response.error);
         }
         callback(response);
     }
@@ -228,7 +231,8 @@ class JCELL {
                 }
             }
             catch(ex){
-                response.error = "Error Proccessing API Request: " + ex;                
+                response.error = "Error Proccessing API Request: " + ex;  
+                this.jtools.errorLog(response.error);              
                 callback(response);
             }
         }
@@ -275,6 +279,7 @@ class JCELL {
         }
         catch(ex){
             response.error = "Error retrieving OS data";
+            this.jtools.errorLog(response.error);
         }
         
         callback(response);
@@ -313,6 +318,7 @@ class JCELL {
         }
         catch(ex){
             response.error = "Error getting relationship information";
+            this.jtools.errorLog(response.error);
         }
         callback(response);
     }
@@ -343,6 +349,7 @@ class JCELL {
                         }
                         catch(err){
                           response.error = "Error with request: "+ err;
+                          this.jtools.errorLog(response.error);
                           callback(response);
                         }
                     }
@@ -361,6 +368,7 @@ class JCELL {
         }
         catch(ex){
             response.error = "Sorry there was a larger error getting location info:" + ex;
+            this.jtools.errorLog(response.error);
             callback(response);
         }
     }
@@ -418,7 +426,8 @@ class JCELL {
             }
         }
         catch(ex){
-            response.error = "Sorry there was a larger error getting setting user info:" + ex;            
+            response.error = "Sorry there was a larger error getting setting user info:" + ex; 
+            this.jtools.errorLog(response.error);           
         }
         callback(response);
     }
@@ -453,6 +462,7 @@ class JCELL {
         }
         catch(ex){
             response.error = "Error with replace: " + ex;
+            this.jtools.errorLog(response.error);
         }
 
         callback(response);
@@ -491,6 +501,7 @@ class JCELL {
         }
         catch(ex){
             response.error = "Error getting sports schedule: " + ex;
+            this.jtools.errorLog(response.error);
             callback(response);
         }
     }
@@ -518,6 +529,7 @@ class JCELL {
         }
         catch(ex){
             response.error = "Error getting maps capital info: " + ex;
+            this.jtools.errorLog(response.error);
             callback(response);
         }
     }
@@ -576,6 +588,7 @@ class JCELL {
         }
         catch(ex){
             response.error = "Error getting maps capital info: " + ex;
+            this.jtools.errorLog(response.error);
             callback(response);
         }
     }
@@ -612,7 +625,8 @@ class JCELL {
             }
         }
         catch(ex){
-            response.error = "Sorry we were not able to complete search of movie db: " + ex;  
+            response.error = "Sorry we were not able to complete search of movie db: " + ex;
+            this.jtools.errorLog(response.error);  
             callback(response);          
         }
     }
@@ -650,6 +664,7 @@ class JCELL {
         }
         catch(ex){
             response.error = "Sorry we were not able to complete search of movie db: " + ex;  
+            this.jtools.errorLog(response.error);
             callback(response);          
         }
     }
@@ -687,6 +702,7 @@ class JCELL {
         }
         catch(ex){
             response.error = "Sorry we were not able to complete ID search of movie db: " + ex;  
+            this.jtools.errorLog(response.error);
             callback(response);          
         }
     }
@@ -785,6 +801,7 @@ class JCELL {
         }
         catch(ex){
             response.error = "Sorry we were not able to complete compare for that project combination: " + ex;  
+            this.jtools.errorLog(response.error);
             callback(response);          
         }
     }
@@ -882,6 +899,7 @@ class JCELL {
         }
         catch(ex){
             response.error = "Sorry we were not able to complete compare for that person combination: " + ex;  
+            this.jtools.errorLog(response.error);
             callback(response);          
         }
     }
