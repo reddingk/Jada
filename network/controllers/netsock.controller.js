@@ -6,7 +6,7 @@ var jauth = require('../../security/services/auth.service');
 module.exports = function (io, connections) {
     // socket connection
     io.on('connection', function (socket) {
-        var userId = socket.handshake.query.userid;
+        var userId = socket.handshake.query.userId;
         var userToken = socket.handshake.query.token;
         var ipAddress = socket.handshake.address;
 
@@ -44,7 +44,7 @@ module.exports = function (io, connections) {
 
             if (connectionId && connectionId.socket) {                                             
                 if(info.type == "phrase"){
-                    dataFilter.jadaConvo(info, connectionId.nickname, function(ret){
+                    dataFilter.jadaConvo(info, info.rID, function(ret){
                         var retObj = {"rID":info.rID, "input":info.input, "type":info.type,"data":ret};
                         io.to(connectionId.socket).emit('jada', retObj);
                     });
@@ -73,11 +73,8 @@ module.exports = function (io, connections) {
             //console.log(" [DEBUG]: Authorize User");
             
             // Send Obj to Auth Service
-            jauth.authSwitch(info, connections, ipAddress, function(ret){
-                var retObj = (info ? info : {"status":"invalid object", "statusCode":-2});
-                retObj.data = ret;
-                
-                io.to(socket.id).emit('jauth', retObj);
+            jauth.loginUser(info, connections, ipAddress, function(ret){                
+                io.to(socket.id).emit('jauth', ret);
             });
         });
     });

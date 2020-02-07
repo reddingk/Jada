@@ -120,7 +120,7 @@ class JCELL {
         var response = {"error":null, "results":null};
         var api = self.getApiItem("openWeather");
         self.saveLastAction("weatherInfo", items);      
-
+        
         if(api != null){
             try {
                 if(!self.checkParameterList(["type", "location"], items)){

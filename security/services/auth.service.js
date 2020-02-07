@@ -38,10 +38,21 @@ var auth = {
             callback({"error":err});
         }
     },
-    loginUser: function(user, password, ip, connections, callback){
+    loginUser: function(userObj, connections, ip, callback){
         var self = this;
         try {
-            _loginUser(user, password, ip, connections, callback);       
+            if(userObj){
+                _loginUser(userObj.userId, userObj.password, ip, connections, function(ret){ 
+                    var retObj = {"error":null, "data":null };
+                    if(ret.error){ retObj.error = ret.error; }
+                    else { retObj.data = ret; }
+
+                    callback(retObj);
+                });     
+            }  
+            else {
+                callback({"error":"Invalid User Obj"});
+            }
         }
         catch(ex){
             var err = util.format("Error Logging %s On: %s", user, ex);
@@ -98,9 +109,6 @@ var auth = {
                         _faceMatchUser(userObj, callback);
                         break;
                     case 'userLogin':
-                        if(userObj.data){
-                            _loginUser(userObj.data.userId, userObj.data.password, ip, connections, callback)
-                        }
                         break;
                     default:
                         break;
@@ -225,14 +233,13 @@ function _loginUser(user, password, ip, connections, callback){
                 callback({"error":"Invalid User"});
             }
             else {
-                //console.log(" [Debug PWD]: ", bcrypt.hashSync(password, saltRounds));
-                bcrypt.compare(password, res.pwd, function(err, resCmp){
+                bcrypt.compare(_cleanPwd(password), res.pwd, function(err, resCmp){
                     if(resCmp){
                         var token = uidgen.generateSync();
                         connections.addConnection(res.userId, null, res.name, token);
                         connections.updateIPLocation(res.userId, ip);
                         
-                        callback({"_id":res._id, "userId":res.userId, "name":res.name, "token":token});
+                        callback({"id":res._id, "userId":res.userId, "name":res.name, "token":token});
                     }
                     else {
                         callback({"error":"Invalid Password"})
@@ -244,6 +251,20 @@ function _loginUser(user, password, ip, connections, callback){
     catch(ex){
         var err = util.format("Error Login In User: %s", ex);
         console.log(err);
-        callback({"status":err, "statusCode":0});
+        callback({"error":err, "statusCode":0});
     }
+}
+
+function _cleanPwd(pwd){
+    var ret = "";
+    try {
+        for(var i =0; i < pwd.length; i++){
+            var tmpPwd = pwd[i].split("|");
+            ret = ret + (i == pwd.length - 1 ? tmpPwd[0].toString() + tmpPwd[1].toString() : tmpPwd[0].toString());
+        }
+    }
+    catch(ex){
+        console.log("[Error] cleaning pwd: ",ex);
+    }
+    return ret;
 }
