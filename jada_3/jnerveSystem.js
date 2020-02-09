@@ -1110,7 +1110,7 @@ class JNERVESYSTEM {
                                     dbRet = (dataObj.type == "movie/upcoming" ? res.results.results.filter(function(item){ return Date.parse(item.release_date) > Date.now();}) : res.results.results);
                                     dbRet = dbRet.sort((a, b) => (a.popularity > b.popularity) ? 1 : -1).map(
                                         function(item) { 
-                                            var poster_path = (item.profile_path ? 'http://image.tmdb.org/t/p/w500'+item.poster_path : null);
+                                            var poster_path = (item.poster_path ? 'http://image.tmdb.org/t/p/w500'+item.poster_path : null);
                                             return { id:item.id, poster_path: poster_path, title: item.title, overview: item.overview, release_date: item.release_date }; 
                                     });
 
