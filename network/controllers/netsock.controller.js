@@ -68,6 +68,19 @@ module.exports = function (io, connections) {
             }
         });
 
+        // socket direct connect
+        socket.on('flick connection', function (info) {
+
+            /* TODO: AUTHENTICATE USER */
+            var connectionId = connections.getConnection(info.sID);
+            if (connectionId && connectionId.socket) {              
+                dataFilter.filterCheck(info.data, function(ret){                    
+                    var retObj = {"rID":info.data.rID, "command":info.data.command, "data":ret};
+                    io.to(connectionId.socket).emit('direct connection', retObj);
+                });                
+            }
+        });
+
         // socket authenticate user
         socket.on('jauth', function (info) {
             //console.log(" [DEBUG]: Authorize User");

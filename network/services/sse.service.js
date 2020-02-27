@@ -14,8 +14,10 @@ var sse = {
 
                 // Add client to Connection List & Broadcast New List
                 connections.addConnection(connectionId, null, res, null);
-                var ipAddress = (req.connection ? req.connection.remoteAddress : null);
-                connections.updateIPLocation(connectionId, ipAddress);
+
+                if(req.connection && req.connection.remoteAddress) {                    
+                    connections.updateIPLocation(connectionId, req.connection.remoteAddress);
+                }
 
                 broadcastList(connections);
 
