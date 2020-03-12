@@ -7,13 +7,23 @@ var jauth = require('../../security/services/auth.service');
 /* Send Phrase Return Answer */
 function convoRout(req, res){ 
     try {
-        var input = (req.body && req.body.phrase ? req.body.phrase : 'hey');
         var userId = (req.body && req.body.userId ? req.body.userId : '');
-        talk.postPhrase(input, userId, function(ret){
-            res.status(200).json(ret);
+        var token = (req.body && req.body.token ? req.body.token : '');
+
+        jauth.validateUser(userId, token, null, function(ret){
+            if(ret.statusCode > 0){
+                var input = (req.body && req.body.phrase ? req.body.phrase : 'hey');
+                talk.postPhrase(input, userId, function(ret){
+                    res.status(200).json(ret);
+                });
+            }
+            else {
+                res.status(400).json({ "data": null, "statusCode":ret.statusCode, "error":ret.error });
+            }
         });
     }
     catch(ex){
+        console.log(" [ERROR] with convoRout: ", ex);
         res.status(200).json({"error":"Error talking to Jada: "+ ex });
     }
 }
@@ -34,6 +44,7 @@ function createUser(req,res){
         //});
     }
     catch(ex){
+        console.log(" [ERROR] creating user: ", ex);
         res.status(200).json({"error":"Error Creating User: "+ ex });
     }
 }
