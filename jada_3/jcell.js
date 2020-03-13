@@ -129,10 +129,15 @@ class JCELL {
                 }
                 else {                    
                     var url = self.jtools.stringFormat("{0}{1}?q={2}&appid={3}&units=imperial", [api.link, items.type, items.location.replace(" ", "+"), process.env.OPENWEATHER_KEY]);
-                    
                     request({ url: url, json: true}, function (error, res, body){
                         if(!error && res.statusCode === 200){
                             response.results = body;                                                   
+                            callback(response);
+                        }
+                        else { 
+                            var err = (res.statusCode != 200 && body && body.message ? body.message : error);
+                            self.jtools.errorLog("[Error] weather info: " + err);
+                            response.error = err;
                             callback(response);
                         }
                     });

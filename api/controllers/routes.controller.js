@@ -10,15 +10,16 @@ function convoRout(req, res){
         var userId = (req.body && req.body.userId ? req.body.userId : '');
         var token = (req.body && req.body.token ? req.body.token : '');
 
-        jauth.validateUser(userId, token, null, function(ret){
-            if(ret.statusCode > 0){
+        jauth.validateUser(userId, token, null, function(vRet){
+            if(vRet.statusCode > 0){
                 var input = (req.body && req.body.phrase ? req.body.phrase : 'hey');
                 talk.postPhrase(input, userId, function(ret){
                     res.status(200).json(ret);
                 });
             }
             else {
-                res.status(400).json({ "data": null, "statusCode":ret.statusCode, "error":ret.error });
+                console.log("[Error] error validating user: ", vRet.statusCode, " | ",vRet.status );
+                res.status(400).json({ "data": null, "statusCode":vRet.statusCode, "error":vRet.error });
             }
         });
     }
@@ -31,9 +32,9 @@ function convoRout(req, res){
 /* Add User */
 function createUser(req,res){
     try {
-        //jauth.validateUser(req.body.userId, req.body.token, null, function(ret){
-            ret = { "statusCode": 1 };
-            if(ret.statusCode > 0){
+        //jauth.validateUser(req.body.userId, req.body.token, null, function(vRet){
+            vRet = { "statusCode": 1 };
+            if(vRet.statusCode > 0){
                 jauth.createUser(req.body.user, req.body.userSettings,function(userRet){
                     res.status(200).json({ "data": userRet });
                 });

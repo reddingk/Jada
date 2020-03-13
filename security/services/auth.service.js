@@ -70,10 +70,10 @@ var auth = {
             callback({"status":false, "errorMsg":err});
         }
     },
-    validateUser: function(user, token, connections, callback){
+    validateUser: function(userId, token, connections, callback){
         try {
             // test
-            callback({"status":"Valid", "statusCode":1});
+            //callback({"status":"Valid", "statusCode":1});
 
             if(connections != null){
                 var connectionId = connections.getConnection(token);
@@ -82,11 +82,11 @@ var auth = {
             }
             else {
                 // Search DB
-                _getUserByUId(user.userId, function(res){ 
+                _getUserByUId(userId, function(res){ 
                     if(!res) {
                         callback({"status":"user not found", "statusCode":-1, "user": null });
                     }
-                    else if(user.uid != res.uid) {
+                    else if(userId != res.userId) {
                         callback({"status":"invalid id", "statusCode":-2, "user": null });
                     }
                     else {
@@ -131,9 +131,14 @@ module.exports =  auth;
 /* Get User From DB */
 function _getUserByUId(uID, callback){
     try {
-        var db = jTools.getDBData("db");
-        var ret = underscore.where(db.users, {userId: uID});
-        callback((ret ? ret[0] : null));
+        if(uID) {
+            var db = jTools.getDBData("db");
+            var usrRet = underscore.where(db.users, {userId: uID});
+            callback((usrRet ? usrRet[0] : null));
+        }
+        else {
+            callback(null);
+        }
     }
     catch(ex){
         console.log("Error Getting User ", uID," :", ex);
@@ -145,8 +150,8 @@ function _getUserByUId(uID, callback){
 function _getUserByFacename(facename, callback){
     try {
         var db = jTools.getDBData("db");
-        var ret = underscore.where(db.users, {faceId: facename});
-        callback((ret ? ret[0] : null));
+        var usrRet = underscore.where(db.users, {faceId: facename});
+        callback((usrRet ? usrRet[0] : null));
     }
     catch(ex){
         console.log("Error Getting User By Facename ", facename," :", ex);
@@ -158,9 +163,9 @@ function _getUserByFacename(facename, callback){
 function _addUser(userInfo, userSettings, callback){
     try {
         var db = jTools.getDBData("db");
-        var ret = underscore.where(db.users, {userId: userInfo.userId});
+        var usrRet = underscore.where(db.users, {userId: userInfo.userId});
 
-        if(ret && ret.length > 0){
+        if(usrRet && usrRet.length > 0){
             callback({"status":false, "error":"User Already Exists" });
         }
         else {          
@@ -256,15 +261,15 @@ function _loginUser(user, password, ip, connections, callback){
 }
 
 function _cleanPwd(pwd){
-    var ret = "";
+    var pwdRet = "";
     try {
         for(var i =0; i < pwd.length; i++){
             var tmpPwd = pwd[i].split("|");
-            ret = ret + (i == pwd.length - 1 ? tmpPwd[0].toString() + tmpPwd[1].toString() : tmpPwd[0].toString());
+            pwdRet = pwdRet + (i == pwd.length - 1 ? tmpPwd[0].toString() + tmpPwd[1].toString() : tmpPwd[0].toString());
         }
     }
     catch(ex){
         console.log("[Error] cleaning pwd: ",ex);
     }
-    return ret;
+    return pwdRet;
 }
