@@ -76,10 +76,17 @@ class JConnection {
         var self = this;
         var status = false;
         try {
-            if (id in self.connectionList) {
+            if(!id || id == "null"){
+                jtool.errorLog(" [CONNECTION] no connection ID");
+            }
+            else if (id in self.connectionList) {
                 self.connectionList[id].socket = sockId;
                 jtool.errorLog(" [CONNECTION] " + id + " connected socket");
                 status = true;
+            }
+            else {
+                jtool.errorLog(" [CONNECTION] " + id + " is not in list please reconnect");
+                status = false;
             }          
         }
         catch (ex) {

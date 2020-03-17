@@ -32,8 +32,7 @@ function convoRout(req, res){
 /* Add User */
 function createUser(req,res){
     try {
-        //jauth.validateUser(req.body.userId, req.body.token, null, function(vRet){
-            vRet = { "statusCode": 1 };
+        jauth.validateUser(req.body.userId, req.body.token, null, function(vRet){
             if(vRet.statusCode > 0){
                 jauth.createUser(req.body.user, req.body.userSettings,function(userRet){
                     res.status(200).json({ "data": userRet });
@@ -42,7 +41,7 @@ function createUser(req,res){
             else {
                 res.status(400).json({ "data": null, "statusCode":ret.statusCode, "error":ret.error });
             }
-        //});
+        });
     }
     catch(ex){
         console.log(" [ERROR] creating user: ", ex);

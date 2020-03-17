@@ -15,9 +15,17 @@ module.exports = function (io, connections) {
         //console.log(socket.request);
 
         // add socket to connection item
-        connections.addSocket(userId, userToken, socket.id);
+        var connStatus = connections.addSocket(userId, userToken, socket.id);
         connections.updateIPLocation(userId, ipAddress);
 
+        if(userId && !connStatus) {
+            // Disconnect user
+            connections.removeSocket(userId);
+            if(socket.id){
+                io.to(socket.id).emit('disable_connection', {"status":false});
+            }
+        }
+        
         // socket disconnect
         socket.on('disconnect', function () {
             connections.removeSocket(userId);
