@@ -533,7 +533,7 @@ class JCELL {
             }
         }
         catch(ex){
-            response.error = "Error getting maps capital info: " + ex;
+            response.error = "Error getting maps country info: " + ex;
             this.jtools.errorLog(response.error);
             callback(response);
         }
@@ -554,22 +554,25 @@ class JCELL {
                 var getQuery = (items.isState ? {'name': {'$regex': items.location } } : {'$or': [{'name':{'$regex':items.location}},{'states.name': {'$regex': items.location }}]});
                 var getReturn = {'name':1,'capital':1,'countryCode':1,'continent':1,'states.name':1,'states.capital':1};
                 
-                var regex = "/" + items.location + "/i";
-                var ret = ( items.isState ?
+                var regex = new RegExp(items.location,'i');
+                
+                var ret = ( !items.isState ?
                             underscore.filter(locationdb, function(obj){ return obj.name.match(regex);}) :
                             underscore.filter(locationdb, function(obj){ 
                                 var stateName = false;
-                                for(var i =0; i < states.length; i++){
-                                    if(states.name.match(regex)){
-                                        stateName = true;
-                                        break;
+                                if(obj.states) { 
+                                    for(var i =0; i < obj.states.length; i++){
+                                        if(obj.states[i].name.match(regex)){
+                                            stateName = true;
+                                            break;
+                                        }
                                     }
                                 }
-
                                 return stateName || obj.name.match(regex);
                             })
                           );
-                if(items.isState){
+                
+                if(!items.isState){
                     // Return All
                     response.results = ret;
                 }
@@ -577,7 +580,13 @@ class JCELL {
                     // Filter countries
                     var tmpCountries = ret.filter(function(item){ return item.name.indexOf(items.location) >= 0; }).map(item => ({name: item.name, capital:item.capital, countryCode:item.countryCode, type:"country"}));
                     // Filter states
-                    var tmpCountryStates = ret.filter(function(country){ return country.states.filter(function(item){ return item.name.indexOf(items.location)  >= 0; }).length > 0});
+                    var tmpCountryStates = ret.filter(
+                        function(country){ 
+                            var tmpCntry = country.states.filter(function(item){
+                                return item.name.indexOf(items.location) >= 0;
+                            });
+                            return (tmpCntry && tmpCntry.length > 0);
+                        });
                     
                     var tmpStates = [];                                
                     tmpCountryStates.forEach(function(stItem){ 
@@ -655,6 +664,7 @@ class JCELL {
                 }
                 else {
                     var url = self.jtools.stringFormat("{0}{1}?api_key={2}",[api.link, items.type, process.env.MOVIEDB_KEY]);
+
                     request({ url: url, json: true}, function (error, res, body){
                         if(!error && res.statusCode === 200){
                             response.results = body;                                

@@ -32,7 +32,10 @@ function convoRout(req, res){
 /* Add User */
 function createUser(req,res){
     try {
-        jauth.validateUser(req.body.userId, req.body.token, null, function(vRet){
+        var userId = (req.body && req.body.userId ? req.body.userId : '');
+        var token = (req.body && req.body.token ? req.body.token : '');
+
+        jauth.validateUser(userId, token, null, function(vRet){
             if(vRet.statusCode > 0){
                 jauth.createUser(req.body.user, req.body.userSettings,function(userRet){
                     res.status(200).json({ "data": userRet });
@@ -50,16 +53,15 @@ function createUser(req,res){
 }
 
 /* Phrase based conversation
-    INPUT: { "phrase":"" }
+    INPUT: { "userId":"", "token":"", "phrase":"" }
     OUTPUT: { "jresponse":"", "japi":"" }
  */
 router.post('/talk', convoRout);
 
 /* Create New User
-    INPUT: { "userId":"", "user":{}, "userSettings":{} }
+    INPUT: { "userId":"", "token":"", "user":{}, "userSettings":{} }
     OUTPUT: { "status":""}
  */
 router.post('/createUser', createUser);
-
 
 module.exports = router;

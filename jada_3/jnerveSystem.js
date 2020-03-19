@@ -154,17 +154,13 @@ class JNERVESYSTEM {
                     if(isStates){
                         var capList = [];
                         // Parse state list
-                        for(var i =0; i < res.results.length; i++){
-                            var countryStates = [];
-                            for(var j =0; j < res.results[i].states.length; j++){
-                                countryStates.push(res.results[i].states[j].name+":"+res.results[i].states[j].capital.name);
-                            }
-                            capList.push(res.results[i].name + " | " + countryStates.join(", "));
+                        for(var i =0; i < res.results.length; i++){                         
+                            capList.push(res.results[i].name + ":" + res.results[i].capital.name);
                         }
                         finalResponse = "Here is the capital information that I found: " + capList.join(" "); 
                     }
                     else {
-                        var stateList = res.results.map(item => (item.name+":"+item.capital.name+":"+item.countryCode+":"+item.type));
+                        var stateList = res.results.map(item => (item.name+":"+item.capital.name+":"+item.countryCode));
                         finalResponse = "Here is the capital information that I found: " + stateList.join(", ");
                     }
                 }
@@ -1114,7 +1110,12 @@ class JNERVESYSTEM {
                                             return { id:item.id, poster_path: poster_path, title: item.title, overview: item.overview, release_date: item.release_date }; 
                                     });
 
-                                    finalResponse = (dataObj.type == "movie/now_playing" ? "The movies that are currently playing" : "The movies that are coming soon")+ " include: " + dbRet.map( x => x.title +" ("+x.release_date+")").join(", ");
+                                    if(dbRet.length > 0){
+                                        finalResponse = (dataObj.type == "movie/now_playing" ? "The movies that are currently playing" : "The movies that are coming soon")+ " include: " + dbRet.map( x => x.title +" ("+x.release_date+")").join(", ");
+                                    }
+                                    else {
+                                        finalResponse = "No movies were found " + (dataObj.type == "movie/now_playing" ? "that are currently playing" : "that are coming soon");
+                                    }
                                 }
                                 break;
                             case "person":
