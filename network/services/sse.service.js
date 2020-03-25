@@ -13,7 +13,7 @@ var sse = {
                 res.sse({data:{"command":"connection", "data":'connected'}});
 
                 // Add client to Connection List & Broadcast New List
-                connections.addConnection(connectionId, null, res, null);
+                connections.addConnection(connectionId, res, null, null);
 
                 if(req.connection && req.connection.remoteAddress) {                    
                     connections.updateIPLocation(connectionId, req.connection.remoteAddress);
@@ -43,7 +43,7 @@ var sse = {
                 }
                 else {
                     var broadcastId = ("id" in req.body ? req.body.id : null);
-                    var message = ("message" in req.body ? req.body.message : null);
+                    var castMsg = ("castMsg" in req.body ? req.body.castMsg : null);
 
                     if (broadcastId === null) {
                         var list = connections.getAll();
@@ -51,13 +51,13 @@ var sse = {
                         for(var j =0; j < list.length; j++) {
                             var conn = list[j];
                             if (conn.connection) {
-                                conn.connection.sse({ "command": "broadcast", "data": message });
+                                conn.connection.sse({ "command": "broadcast", "data": castMsg.data });
                             }
                         }
                     }
                     else {
                         var conn = connections.getConnection(broadcastId);
-                        conn.connection.sse({data: { "command":"broadcast", "data": message }});
+                        conn.connection.sse({data: { "command":castMsg.command, "data": castMsg.data }});
                         conn.connection.end();
                     }
 
@@ -105,15 +105,17 @@ function broadcastList(connections) {
 
     try {
         var list = connections.getAll();
-        var reduceList = list.map(r => ({connectionId: r.connectionId, nickname: r.nickname}));
 
-        var jsonObj = { "command":"connectionList", "data": reduceList };
-        
-        for (var i = 0; i < list.length; i++) {
-            if (!list[i].connectionId.startsWith("CB-")) {
-                var conn = list[i];
-                if (conn.connection) {
-                    conn.connection.sse({"data":jsonObj});
+        if(list){
+            var reduceList = list.map(r => ({connectionId: r.connectionId, nickname: r.nickname}));
+            var jsonObj = { "command":"connectionList", "data": reduceList };
+
+            for (var i = 0; i < list.length; i++) {
+                if (list[i].connectionId && !list[i].connectionId.startsWith("F3-")) {
+                    var conn = list[i];
+                    if (conn.connection) {
+                        conn.connection.sse({"data":jsonObj});
+                    }
                 }
             }
         }

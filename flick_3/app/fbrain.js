@@ -36,7 +36,7 @@ class FBRAIN {
                     case 'open':
                         /* Check if Connection is Active */
                         self.socket = io.connect(cfg.sockUrl, { query: "userid="+ self.name });
-                        _declareSocket(self.socket, self.cnerves);
+                        _declareSocket(self.socket, self.fnerves);
                         break;
                     case 'close':
                         self.socket.close();

@@ -134,7 +134,6 @@ node jadacmd.js [Phrase]
       : Get Popular Actors & Actresses
 
 
-
 /*Easter Eggs*/
   {do you know the muffin man}
   {how are you}

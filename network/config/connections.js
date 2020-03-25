@@ -14,9 +14,7 @@ const jtool = new Tool();
 
 class JConnection {
     constructor() {
-        this.connectionList = {
-            "ktest":{"connection":null, "nickname":"Test Man", "token":"J6968MjfCFaeMHMt8kDAA1"}
-        };       
+        this.connectionList = {};       
     }
     // Add Connection To List
     addConnection(id, conn, nickname, token) {
@@ -25,7 +23,7 @@ class JConnection {
         try {
             if (id in self.connectionList) {
                 self.connectionList[id].connection = conn;
-                self.connectionList[id].nickname = nickname;
+                self.connectionList[id].nickname = (nickname == null? id : nickname);
                 self.connectionList[id].token = token;
                 jtool.errorLog(" [CONNECTION] " + id + " updated network connection");
             }
@@ -163,6 +161,24 @@ class JConnection {
         }
         catch (ex) {
             jtool.errorLog(" [ERROR] getting all connections: " + ex);
+            ret = null;
+        }
+        return ret;
+    }
+
+    getSimpleConnections(){
+        var ret = null;
+        try {
+            ret = Object.values(self.connectionList);
+
+            if(ret && ret.length > 0){
+                ret = ret.filter(function(item) {
+                    return item.startsWith("F3-");
+                });
+            }
+        }
+        catch (ex) {
+            jtool.errorLog(" [ERROR] getting simple connections: " + ex);
             ret = null;
         }
         return ret;

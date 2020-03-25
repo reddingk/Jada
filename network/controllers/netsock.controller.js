@@ -78,7 +78,6 @@ module.exports = function (io, connections) {
 
         // socket direct connect
         socket.on('flick connection', function (info) {
-
             /* TODO: AUTHENTICATE USER */
             var connectionId = connections.getConnection(info.sID);
             if (connectionId && connectionId.socket) {              

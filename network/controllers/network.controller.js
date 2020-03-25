@@ -18,26 +18,13 @@ module.exports = function (connections) {
     
     // Broadcast Message to Network
     router.post('/broadcast', function (req, res) {
+        /* {userId, token, id, castMsg: {command, data}}*/
         sse.broadcast(req, res, connections);
     });
 
     // Get Connection List 
     router.post('/getConnections', function (req, res) {
         sse.getConnections(req, res, connections);
-    });
-
-    // Add User to Network
-    router.post('/addUser', function(req, res){
-        jauth.validateUser(req.body.userId, req.body.token, connections, function(ret){
-            if(ret.statusCode > 0){
-                jauth.createUser(req.body.user, req.body.userSettings,function(userRet){
-                    res.status(200).json({ "data": userRet });
-                });
-            }
-            else {
-                res.status(400).json({ "data": null, "statusCode":ret.statusCode, "error":ret.error });
-            }
-        });
     });
     
     return router;
