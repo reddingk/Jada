@@ -109,7 +109,7 @@ function broadcastList(connections) {
         if(list){
             var reduceList = list.map(r => ({connectionId: r.connectionId, nickname: r.nickname}));
             var jsonObj = { "command":"connectionList", "data": reduceList };
-
+            
             for (var i = 0; i < list.length; i++) {
                 if (list[i].connectionId && !list[i].connectionId.startsWith("F3-")) {
                     var conn = list[i];
