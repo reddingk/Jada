@@ -279,7 +279,7 @@ class JNERVESYSTEM {
                 if(res.error == null && res.results != null){
                     if(res.results.count > 0) {
                         finalResponse = self.jtools.stringFormat("The current weather accourding to OpenWeather.com for {0} is: Tempurature of {1}, Humidity of {2}%, with a description of '{3}'", [res.results.list[0].name, res.results.list[0].main.temp, res.results.list[0].main.humidity, res.results.list[0].weather[0].description ]);
-                        apiResponse = res.results.list[0];
+                        apiResponse = { resultList: [res.results.list[0]]};                        
                     }
                     else {
                         finalResponse = self.jtools.stringFormat("Sorry we could not find the current weather for: {0}", [dataObj.location]);
@@ -398,7 +398,7 @@ class JNERVESYSTEM {
                     if(res.results.list.length > 0) {  
                         var dateString = "";
                         finalResponse = self.jtools.stringFormat("The weather forecast for the next few days accourding to OpenWeather.com for {0}: ",[res.results.city.name]);
-                        apiResponse = res.results.list;
+                        apiResponse = { resultList: res.results.list}
 
                         for(var i =0; i < res.results.list.length; i++){
                             var item = res.results.list[i];

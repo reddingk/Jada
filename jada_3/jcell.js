@@ -156,7 +156,7 @@ class JCELL {
     }
 
     /* Change User Settings */
-    getChangedSetting(item, callback){
+    getChangedSetting(items, callback){
         var self = this;
         var response = {"error":null, "results":null};
         self.saveLastAction("getChangedSetting", items);
@@ -168,7 +168,7 @@ class JCELL {
             else {
                 var obj = this.jtools.getUserData(items.userId);
 
-                switch(item.item){
+                switch(items.item){
                     case "fullname":
                         obj.name.fullname = item.newitem;
                         break;
@@ -176,7 +176,7 @@ class JCELL {
                         obj.name.nickname = item.newitem;
                         break;
                     case "voice":
-                        obj.voice = (item.newitem == "on" ? "on": "off");
+                        obj.voice = (items.newitem == "on" ? "on": "off");
                         break;
                     default:
                         break;
@@ -184,11 +184,11 @@ class JCELL {
 
                 // Change Setting in DataBase                
                 this.jtools.updateUserData(items.userId, obj);
-                response.results = { "updated":true, "item":item.item, "newState":item.newitem};
+                response.results = { "updated":true, "item":items.item, "newState":items.newitem};
             }
         }
         catch(ex){
-            response.error = self.jtools.stringFormat("Error updating {0} to {1}: {2}", [item.item, item.newitem, ex]);
+            response.error = self.jtools.stringFormat("Error updating {0} to {1}: {2}", [items.item, items.newitem, ex]);
             this.jtools.errorLog(response.error);
         }
         callback(response);
@@ -917,6 +917,55 @@ class JCELL {
             this.jtools.errorLog(response.error);
             callback(response);          
         }
+    }
+
+    /* Get User Pinned Searches */
+    getUserPinnedSearches(items, callback){
+        var self = this;
+        var response = {"error":null, "results":null};
+        self.saveLastAction("getUserPinnedSearches", items);
+        
+        try {            
+            if(!self.checkParameterList(["userId"], items)){
+                response.error = "Missing Parameter";
+            }
+            else {
+                var obj = this.jtools.getUserData(items.userId);
+
+                response.results = { "userId": items.userId, "pinned": obj.pinned };
+            }
+        }
+        catch(ex){
+            response.error = self.jtools.stringFormat("Error getting pinned searches for {0}: {1}", [items.userId, ex]);
+            this.jtools.errorLog(response.error);
+        }
+        callback(response);
+    }
+
+    /* Update User Pinned Searches */
+    updateUserPinnedSearches(items, callback){
+        var self = this;
+        var response = {"error":null, "results":null};
+        self.saveLastAction("updateUserPinnedSearches", items);
+        
+        try {            
+            if(!self.checkParameterList(["userId", "pinned"], items)){
+                response.error = "Missing Parameter";
+            }
+            else {
+                var obj = this.jtools.getUserData(items.userId);
+                obj.pinned = items.pinned;
+
+                // Change Pinned in Database                
+                this.jtools.updateUserData(items.userId, obj);
+                response.results = { "updated":true, "pinned":items.pinned };
+            }
+        }
+        catch(ex){
+            response.error = self.jtools.stringFormat("Error updating pinned searches for {1}: {2}", [items.userId, ex]);
+            this.jtools.errorLog(response.error);
+        }
+        callback(response);
     }
 
     /* private methods */

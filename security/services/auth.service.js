@@ -241,7 +241,7 @@ function _loginUser(user, password, ip, connections, callback){
                 bcrypt.compare(_cleanPwd(password), res.pwd, function(err, resCmp){
                     if(resCmp){
                         var token = uidgen.generateSync();
-                        connections.addConnection(res.userId, null, res.name, token);
+                        connections.addConnection(res.userId, null, res.name, token, false);
                         connections.updateIPLocation(res.userId, ip);
                         
                         callback({"id":res._id, "userId":res.userId, "name":res.name, "token":token});

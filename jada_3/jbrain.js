@@ -30,9 +30,14 @@ class JBRAIN {
       var self = this;
       var response = {};
       try {
-        self.jCells[functionName](items, function(res){
+        if(functionName in self.jCells){
+          self.jCells[functionName](items, function(res){
             callback(res);
-        });
+          });
+        }
+        else {
+          callback({ error:"Invalid Function Name" });
+        }        
       }
       catch(ex){
         response.error = "Error calling directData function: "+ ex;

@@ -39,11 +39,22 @@ var dataFilter =  {
             var trimInput = jbrain.jlanguage.cleanPhrase(info.input.trim());  
             jbrain.convo(trimInput, userId, function(res){
                 callback(res);
-                //process.exit(0);
             });
         }
         catch(ex){
             var errorMsg = " [ERROR] with jada convo: "+ ex;
+            jbrain.jCells.jtools.errorLog(errorMsg);
+            callback({"error": errorMsg});
+        }
+    },
+    jadaDirectData: function(func, items, callback){
+        try {  
+            jbrain.directData(func, items, function(res){
+                callback(res);
+            });
+        }
+        catch(ex){
+            var errorMsg = " [ERROR] with jada direct data: "+ ex;
             jbrain.jCells.jtools.errorLog(errorMsg);
             callback({"error": errorMsg});
         }

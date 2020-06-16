@@ -20,7 +20,11 @@ app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Set Cors Header
-app.use((req, res, next) => { res.setHeader('Access-Control-Allow-Origin', '*'); next();  });
+app.use((req, res, next) => { 
+    res.setHeader('Access-Control-Allow-Origin', '*'); 
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+    next();
+});
 
 // All Api Routes
 app.use('/japi', require('./api/controllers/routes.controller.js'));

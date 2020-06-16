@@ -130,7 +130,7 @@ class TOOLS {
     }
 
     getUserData(userId) {
-        var userData = {name:'',voice:'off',lastAction:{},locations:{},relationships:{}};
+        var userData = {name:'',voice:'off',lastAction:{},locations:{},relationships:{},pinned:[]};
 
         try {
             var db = this.getDBData("db");

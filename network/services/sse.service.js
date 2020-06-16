@@ -12,8 +12,10 @@ var sse = {
                 // Send Connected Status Back To Client
                 res.sse({data:{"command":"connection", "data":'connected'}});
 
+                // Check Connection type
+                var isSubConn = (connectionId !== null && connectionId.indexOf("#5") == 0);
                 // Add client to Connection List & Broadcast New List
-                connections.addConnection(connectionId, res, null, null);
+                connections.addConnection(connectionId, res, null, null, isSubConn);
 
                 if(req.connection && req.connection.remoteAddress) {                    
                     connections.updateIPLocation(connectionId, req.connection.remoteAddress);

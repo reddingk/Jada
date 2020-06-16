@@ -14,10 +14,19 @@ const jtool = new Tool();
 
 class JConnection {
     constructor() {
-        this.connectionList = {};       
+        this.connectionList = {
+            "kredding":{ "connectionId":"kredding", "connection": null, "nickname": "Kris", "token":"2813308004", "socket": null }
+        };  
+        this.subConnectionList = {
+            "#5-Test1":{ "connectionId":"#5-Test1", "connection": null, "nickname": "#5-Test1", "token":"2813308004", "socket": null },
+            "#5-Test2":{ "connectionId":"#5-Test2", "connection": null, "nickname": "#5-Test2", "token":"2813308004", "socket": null },
+            "#5-Test3":{ "connectionId":"#5-Test3", "connection": null, "nickname": "#5-Test3", "token":"2813308004", "socket": null },
+            "#5-Test4":{ "connectionId":"#5-Test4", "connection": null, "nickname": "#5-Test4", "token":"2813308004", "socket": null },
+            "#5-Test5":{ "connectionId":"#5-Test5", "connection": null, "nickname": "#5-Test5", "token":"2813308004", "socket": null }
+        };     
     }
     // Add Connection To List
-    addConnection(id, conn, nickname, token) {
+    addConnection(id, conn, nickname, token, isSub) {
         var self = this;
         var status = false;
         try {
@@ -27,9 +36,20 @@ class JConnection {
                 self.connectionList[id].token = token;
                 jtool.errorLog(" [CONNECTION] " + id + " updated network connection");
             }
+            else if (id in self.subConnectionList) {
+                self.subConnectionList[id].connection = conn;
+                self.subConnectionList[id].nickname = (nickname == null? id : nickname);
+                self.subConnectionList[id].token = token;
+                jtool.errorLog(" [CONNECTION] " + id + " updated sub network connection");
+            }
             else {
-                self.connectionList[id] = { "connectionId":id, "connection": conn, "nickname": nickname, "token":token, "socket": null };
-                jtool.errorLog(" [CONNECTION] " + id + " joined network");
+                if(isSub) {
+                    self.subConnectionList[id] = { "connectionId":id, "connection": conn, "nickname": nickname, "token":token, "socket": null };
+                }
+                else {
+                    self.connectionList[id] = { "connectionId":id, "connection": conn, "nickname": nickname, "token":token, "socket": null };
+                }
+                jtool.errorLog(" [CONNECTION] " + id + (isSub ? " joined sub network": " joined network"));
             }
             status = true;
         }
@@ -44,8 +64,15 @@ class JConnection {
         var self = this;
         var status = false;
         try {
-            delete self.connectionList[id];            
-            jtool.errorLog(" [CONNECTION] " + id + " completely left network");
+            if(id in self.subConnectionList) {
+                delete self.subConnectionList[id]; 
+                jtool.errorLog(" [CONNECTION] " + id + " completely left sub network");
+            }
+            else {
+                delete self.connectionList[id]; 
+                jtool.errorLog(" [CONNECTION] " + id + " completely left network");
+            }
+           
             status = true;
         }
         catch (ex) {
@@ -59,8 +86,15 @@ class JConnection {
         var self = this;
         var status = false;
         try {
-            self.connectionList[id].connection = null;
-            jtool.errorLog(" [CONNECTION] " + id + " left network");
+            if(id in self.subConnectionList) {
+                self.subConnectionList[id].connection = null; 
+                jtool.errorLog(" [CONNECTION] " + id + " left sub network");
+            }
+            else {
+                self.connectionList[id].connection = null;
+                jtool.errorLog(" [CONNECTION] " + id + " left network");
+            }
+
             status = true;
         }
         catch (ex) {
@@ -80,6 +114,11 @@ class JConnection {
             else if (id in self.connectionList) {
                 self.connectionList[id].socket = sockId;
                 jtool.errorLog(" [CONNECTION] " + id + " connected socket");
+                status = true;
+            }
+            else if (id in self.subConnectionList) {
+                self.subConnectionList[id].socket = sockId;
+                jtool.errorLog(" [CONNECTION] " + id + " sub connected socket");
                 status = true;
             }
             else {
@@ -104,6 +143,11 @@ class JConnection {
                 jtool.errorLog(" [CONNECTION] " + id + " disconnected socket");
                 status = true;
             }
+            else if (id in self.subConnectionList) {
+                self.subConnectionList[id].socket = null;
+                jtool.errorLog(" [CONNECTION] " + id + " sub disconnected socket");
+                status = true;
+            }
         }
         catch (ex) {
             status = false;
@@ -118,7 +162,9 @@ class JConnection {
         var ret = null;
 
         try {
-            ret = (id in self.connectionList ? self.connectionList[id] : null); 
+            if (id in self.connectionList) { ret = self.connectionList[id]; }
+            else if (id in self.subConnectionList) { ret = self.subConnectionList[id]; }
+            else { ret = null; }
         }
         catch (ex) {
             ret = null;
@@ -153,11 +199,10 @@ class JConnection {
 
     // Return all connections
     getAll() {
-        var self = this;
         var ret = null;
 
         try {
-            ret = Object.values(self.connectionList);
+            ret = Object.values(this.connectionList);
         }
         catch (ex) {
             jtool.errorLog(" [ERROR] getting all connections: " + ex);
@@ -166,19 +211,13 @@ class JConnection {
         return ret;
     }
 
-    getSimpleConnections(){
+    getSubConnections(){
         var ret = null;
         try {
-            ret = Object.values(self.connectionList);
-
-            if(ret && ret.length > 0){
-                ret = ret.filter(function(item) {
-                    return item.startsWith("F3-");
-                });
-            }
+            ret = Object.values(this.subConnectionList);
         }
         catch (ex) {
-            jtool.errorLog(" [ERROR] getting simple connections: " + ex);
+            jtool.errorLog(" [ERROR] getting sub connections: " + ex);
             ret = null;
         }
         return ret;

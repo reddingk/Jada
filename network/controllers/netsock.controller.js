@@ -65,26 +65,23 @@ module.exports = function (io, connections) {
             }
         });
 
-        // socket spark connection
-        socket.on('spark connection', function (info) {
-            console.log(" [DEBUG]: Spark Connection");
+        // jada direct data connection
+        socket.on('jada direct data', function (info) {
             /* TODO: AUTHENTICATE USER */
-            var connectionId = connections.getConnection(info.sID);
+            var connectionId = connections.getConnection(info.rID);
 
-            if (connectionId && connectionId.connection && !connectionId.socket) {                                
-                connectionId.connection.sse({"data":{ "command": "sockControl", "data": "open" }});                                             
-            }
-        });
-
-        // socket direct connect
-        socket.on('flick connection', function (info) {
-            /* TODO: AUTHENTICATE USER */
-            var connectionId = connections.getConnection(info.sID);
-            if (connectionId && connectionId.socket) {              
-                dataFilter.filterCheck(info.data, function(ret){                    
-                    var retObj = {"rID":info.data.rID, "command":info.data.command, "data":ret};
-                    io.to(connectionId.socket).emit('direct connection', retObj);
-                });                
+            if (connectionId && connectionId.socket) {                                             
+                if(info.functionName !== null && info.functionName !== ""){
+                    dataFilter.jadaDirectData(info.functionName, info.data, function(ret){
+                        var retObj = {"rID":info.rID, "functionName":info.functionName, "data":ret};
+                        io.to(connectionId.socket).emit('jada direct data', retObj);
+                    });
+                }   
+                else {
+                    // Default return
+                    var retObj = {"rID":info.data.rID, "functionName":info.functionName, "error":"Function Type Missing"};
+                    io.to(connectionId.socket).emit('jada direct data', retObj);
+                }        
             }
         });
 
@@ -96,6 +93,18 @@ module.exports = function (io, connections) {
             jauth.loginUser(info, connections, ipAddress, function(ret){                
                 io.to(socket.id).emit('jauth', ret);
             });
+        });
+
+        /* NaratifLa */
+        socket.on('[naratifla] #5 list', function (info) {
+            /* TODO: AUTHENTICATE USER */
+            var connectionId = connections.getConnection(info.rID);
+            if (connectionId && connectionId.socket) { 
+                var num5List = connections.getSubConnections();
+
+                var retObj = {"rID":info.rID, "list":num5List, "error":null};
+                io.to(connectionId.socket).emit('[naratifla] #5 list', retObj);   
+            }
         });
     });
 }
