@@ -106,5 +106,19 @@ module.exports = function (io, connections) {
                 io.to(connectionId.socket).emit('[naratifla] #5 list', retObj);   
             }
         });
+
+        /* Susie */
+        socket.on('[susie] view', function (info) {
+            /* TODO: AUTHENTICATE USER */
+            var connectionId = connections.getConnection(info.rID);
+
+            if (connectionId && connectionId.socket) { 
+                dataFilter.filterCheck(info.data, function(ret){                    
+                    var retObj = {"sID":info.sID, "filter":info.data.filter, "data":ret};
+                    io.to(connectionId.socket).emit('[susie] view', retObj);
+                });               
+            }
+        });
+
     });
 }

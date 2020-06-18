@@ -97,8 +97,6 @@ function j_edgeDetect(img, callback){
     try {
         var matImg = jEyes.b64toMat(img);        
         retData = (matImg != null ? jEyes.edgeDetectionImg(matImg) : null); 
-        
-        //jbrain.jCells.jtools.errorLog(" [DEBUG]:" + (retData ? "Valid" : "Is Null"));
     }
     catch(ex){
         jbrain.jCells.jtools.errorLog(" [ERROR] Edge Detection Service:" + ex);
