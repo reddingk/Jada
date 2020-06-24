@@ -1,4 +1,5 @@
 var dataFilter = require('../services/dataFilter.service');
+var sse = require('../services/sse.service');
 
 // Auth Services
 var jauth = require('../../security/services/auth.service');
@@ -29,19 +30,6 @@ module.exports = function (io, connections) {
         // socket disconnect
         socket.on('disconnect', function () {
             connections.removeSocket(userId);
-        });
-
-        // socket direct connect
-        socket.on('direct connection', function (info) {
-
-            /* TODO: AUTHENTICATE USER */
-            var connectionId = connections.getConnection(info.sID);
-            if (connectionId && connectionId.socket) {              
-                dataFilter.filterCheck(info.data, function(ret){                    
-                    var retObj = {"rID":info.data.rID, "command":info.data.command, "data":ret};
-                    io.to(connectionId.socket).emit('direct connection', retObj);
-                });                
-            }
         });
 
         // socket direct connect
@@ -95,28 +83,50 @@ module.exports = function (io, connections) {
             });
         });
 
-        /* NaratifLa */
-        socket.on('[naratifla] #5 list', function (info) {
-            /* TODO: AUTHENTICATE USER */
-            var connectionId = connections.getConnection(info.rID);
-            if (connectionId && connectionId.socket) { 
-                var num5List = connections.getSubConnections();
+        /* Number 5 */
+        socket.on('[number5] command', function (info) {
+            try {
+                /* TODO: AUTHENTICATE USER */
+                sse.sendCmd(info.sID, info.rID, info.data.cmd, info.data.data, connections);
+            }
+            catch(ex){
+                console.log(" [Error] Sock N5-01: ",ex);
+            }
+        });
 
-                var retObj = {"rID":info.rID, "list":num5List, "error":null};
-                io.to(connectionId.socket).emit('[naratifla] #5 list', retObj);   
+        /* NaratifLa */
+        socket.on('[naratifla] N5 list', function (info) {
+            try {
+                /* TODO: AUTHENTICATE USER */
+                var connectionId = connections.getConnection(info.rID);
+                if (connectionId && connectionId.socket) { 
+                    var num5List = connections.getSubConnections();
+                    num5List = (num5List && num5List.length > 0 ? num5List.map(function(item){ return { connectionId: item.connectionId, nickname: item.nickname }; }) : []);
+
+                    var retObj = {"rID":info.rID, "list":num5List, "error":null};
+                    io.to(connectionId.socket).emit('[naratifla] N5 list', retObj);   
+                }
+            }
+            catch(ex){
+                console.log(" [Error] Sock N01: ",ex);
             }
         });
 
         /* Susie */
         socket.on('[susie] view', function (info) {
-            /* TODO: AUTHENTICATE USER */
-            var connectionId = connections.getConnection(info.rID);
+            try {
+                /* TODO: AUTHENTICATE USER */
+                var connectionId = connections.getConnection(info.rID);
 
-            if (connectionId && connectionId.socket) { 
-                dataFilter.filterCheck(info.data, function(ret){                    
-                    var retObj = {"sID":info.sID, "filter":info.data.filter, "data":ret};
-                    io.to(connectionId.socket).emit('[susie] view', retObj);
-                });               
+                if (connectionId && connectionId.socket) { 
+                    dataFilter.filterCheck(info.data, function(ret){                    
+                        var retObj = {"sID":info.sID, "filter":info.data.filter, "data":ret};
+                        io.to(connectionId.socket).emit('[susie] view', retObj);
+                    });               
+                }
+            }
+            catch(ex){
+                console.log(" [Error] Sock S01: ",ex);
             }
         });
 

@@ -10,10 +10,10 @@ var sse = {
 
             if (connectionId !== null) {                
                 // Send Connected Status Back To Client
-                res.sse({data:{"command":"connection", "data":'connected'}});
+                res.sse({ data: { cmd: "connStatus", srcId: connectionId, destId: connectionId, data:{status: "connected"}} });
 
                 // Check Connection type
-                var isSubConn = (connectionId !== null && connectionId.indexOf("#5") == 0);
+                var isSubConn = (connectionId !== null && connectionId.indexOf("N5") == 0);
                 // Add client to Connection List & Broadcast New List
                 connections.addConnection(connectionId, res, null, null, isSubConn);
 
@@ -32,6 +32,19 @@ var sse = {
         }
         catch (ex) {
             console.log("Error connecting to J Network: ", ex);
+        }
+    },
+    sendCmd: function(sID, rID, command, data, connections){
+        try {
+            var conn = connections.getConnection(rID);
+
+            if(conn){
+                conn.connection.sse({ data: { "cmd":command, "srcId":sID, "destId":rID, "data": data }});
+                conn.connection.end();
+            }
+        }
+        catch(ex){
+            console.log(" [Error] Sending SSE Command: ",ex);
         }
     },
     broadcast: function (req, res, connections) {

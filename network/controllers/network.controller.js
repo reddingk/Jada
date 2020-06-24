@@ -1,6 +1,7 @@
 var express = require('express');
 var router = express.Router();
-let sseExpress = require('sse-express');
+//let sseExpress = require('sse-express');
+let sseExpress = require('../services/sseDriver.service');
 
 // Network Services
 var sse = require('../services/sse.service');
@@ -10,8 +11,14 @@ var jauth = require('../../security/services/auth.service');
 
 module.exports = function (connections) {
     // Connect to J Network
-    router.get('/connect/:id', sseExpress(), function (req, res) {
-        sse.connect(req, res, connections);
+    router.get('/connect/:id', sseExpress({handShakeInterval: 30000}), function (req, res) {
+        try {
+            res.on('error', err => console.log(" [Error] Server Response Error: ","err"));
+            sse.connect(req, res, connections);
+        }
+        catch(ex){
+            console.log(" [Error] connectiong to jnetwork: ",ex);
+        }
     });
 
     /* Auth Required */

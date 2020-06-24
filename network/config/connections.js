@@ -18,11 +18,8 @@ class JConnection {
             "kredding":{ "connectionId":"kredding", "connection": null, "nickname": "Kris", "token":"2813308004", "socket": null }
         };  
         this.subConnectionList = {
-            "#5-Test1":{ "connectionId":"#5-Test1", "connection": null, "nickname": "#5-Test1", "token":"2813308004", "socket": null },
-            "#5-Test2":{ "connectionId":"#5-Test2", "connection": null, "nickname": "#5-Test2", "token":"2813308004", "socket": null },
-            "#5-Test3":{ "connectionId":"#5-Test3", "connection": null, "nickname": "#5-Test3", "token":"2813308004", "socket": null },
-            "#5-Test4":{ "connectionId":"#5-Test4", "connection": null, "nickname": "#5-Test4", "token":"2813308004", "socket": null },
-            "#5-Test5":{ "connectionId":"#5-Test5", "connection": null, "nickname": "#5-Test5", "token":"2813308004", "socket": null }
+            "N5-Test1":{ "connectionId":"N5-Test1", "connection": null, "nickname": "N5-Test1", "token":"2813308004", "socket": null },
+            "N5-Test2":{ "connectionId":"N5-Test2", "connection": null, "nickname": "N5-Test2", "token":"2813308004", "socket": null }
         };     
     }
     // Add Connection To List
@@ -44,10 +41,10 @@ class JConnection {
             }
             else {
                 if(isSub) {
-                    self.subConnectionList[id] = { "connectionId":id, "connection": conn, "nickname": nickname, "token":token, "socket": null };
+                    self.subConnectionList[id] = { "connectionId":id, "connection": conn, "nickname": (nickname == null? id : nickname), "token":token, "socket": null };
                 }
                 else {
-                    self.connectionList[id] = { "connectionId":id, "connection": conn, "nickname": nickname, "token":token, "socket": null };
+                    self.connectionList[id] = { "connectionId":id, "connection": conn, "nickname": (nickname == null? id : nickname), "token":token, "socket": null };
                 }
                 jtool.errorLog(" [CONNECTION] " + id + (isSub ? " joined sub network": " joined network"));
             }
