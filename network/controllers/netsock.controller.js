@@ -130,5 +130,20 @@ module.exports = function (io, connections) {
             }
         });
 
+        /* Fillmore */
+        socket.on('[fillmore] cmd', function (info) {
+            try {
+                /* TODO: AUTHENTICATE USER */
+                var connectionId = connections.getConnection(info.rID);
+
+                if (connectionId && connectionId.socket) { 
+                    var retObj = {"sID":info.sID, "data":info.data };
+                    io.to(connectionId.socket).emit('[fillmore] cmd', retObj);
+                }
+            }
+            catch(ex){
+                console.log(" [Error] Sock S01: ",ex);
+            }
+        });
     });
 }
