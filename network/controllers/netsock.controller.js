@@ -142,7 +142,23 @@ module.exports = function (io, connections) {
                 }
             }
             catch(ex){
-                console.log(" [Error] Sock S01: ",ex);
+                console.log(" [Error] Sock F01: ",ex);
+            }
+        });
+
+        /* Little Bill */
+        socket.on('[lil bill] sys info', function (info) {
+            try {
+                /* TODO: AUTHENTICATE USER */
+                var connectionId = connections.getConnection(info.rID);
+
+                if (connectionId && connectionId.socket) { 
+                    var retObj = {"sID":info.sID, "data":info.data };
+                    io.to(connectionId.socket).emit('[lil bill] sys info', retObj);
+                }
+            }
+            catch(ex){
+                console.log(" [Error] Sock LB01: ",ex);
             }
         });
     });
