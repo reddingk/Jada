@@ -161,5 +161,21 @@ module.exports = function (io, connections) {
                 console.log(" [Error] Sock LB01: ",ex);
             }
         });
+
+        /* Penny Proud */
+        socket.on('[penny proud] dir tree', function (info) {
+            try {
+                /* TODO: AUTHENTICATE USER */
+                var connectionId = connections.getConnection(info.rID);
+
+                if (connectionId && connectionId.socket) { 
+                    var retObj = {"sID":info.sID, "data":info.data };
+                    io.to(connectionId.socket).emit('[penny proud] dir tree', retObj);
+                }
+            }
+            catch(ex){
+                console.log(" [Error] Sock LB01: ",ex);
+            }
+        });
     });
 }
