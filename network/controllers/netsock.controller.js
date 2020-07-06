@@ -87,7 +87,15 @@ module.exports = function (io, connections) {
         socket.on('[number5] command', function (info) {
             try {
                 /* TODO: AUTHENTICATE USER */
-                sse.sendCmd(info.sID, info.rID, info.data.cmd, info.data.data, connections);
+                var connectionId = connections.getConnection(info.rID);
+                
+                if (info.socket === true && connectionId && connectionId.socket) {
+                    var sockMsg = { data: { "cmd":info.data.cmd, "srcId":info.sID, "destId":info.rID, "data": info.data.data }};
+                    io.to(connectionId.socket).emit('[number5] command', sockMsg);
+                }
+                else {
+                    sse.sendCmd(info.sID, info.rID, info.data.cmd, info.data.data, connections);
+                }
             }
             catch(ex){
                 console.log(" [Error] Sock N5-01: ",ex);
