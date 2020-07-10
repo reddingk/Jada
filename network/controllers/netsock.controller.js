@@ -1,10 +1,12 @@
+const ss = require('socket.io-stream');
+
 var dataFilter = require('../services/dataFilter.service');
 var sse = require('../services/sse.service');
 
 // Auth Services
 var jauth = require('../../security/services/auth.service');
 
-module.exports = function (io, connections) {
+module.exports = function (io, connections, filestore) {
     // socket connection
     io.on('connection', function (socket) {
         var userId = socket.handshake.query.userId;
@@ -183,6 +185,38 @@ module.exports = function (io, connections) {
             }
             catch(ex){
                 console.log(" [Error] Sock LB01: ",ex);
+            }
+        });
+
+        ss(socket).on('[penny proud] retrieve file', function(stream, info) { 
+            try {
+                filestore.streamFileData(info, stream, function(ret){
+                    console.log(" [Debug] File is completed: ", ret.path);
+                    var connectionId = connections.getConnection(info.rID);
+
+                    if (connectionId && connectionId.socket) { 
+                        var retObj = {"sID":info.sID, "data":ret.filename};
+                        io.to(connectionId.socket).emit('[penny proud] retrieve file', retObj);
+                    }
+                });
+            }
+            catch(ex){
+                console.log(" [Error] Sock PP01: ",ex);
+            }   
+        });
+
+        socket.on('[penny proud] no file', function (info) {
+            try {
+                console.log(" [Error] No File "); console.log(info);
+                var connectionId = connections.getConnection(info.rID);
+
+                if (connectionId && connectionId.socket) { 
+                    var retObj = { "sID":info.sID, "data":null, "error":info.error };
+                    io.to(connectionId.socket).emit('[penny proud] retrieve file', retObj);
+                }
+            }
+            catch(ex){
+                console.log(" [Error] Sock PP02: ",ex);
             }
         });
     });

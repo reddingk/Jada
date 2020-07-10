@@ -13,6 +13,10 @@ var port = process.env.PORT || 1003;
 const Connection = require('./network/config/connections.js');
 var jconnections = new Connection();
 
+// Set File Store
+const FileStore = require('./network/config/fileStore.js');
+var jfilestore = new FileStore();
+
 // parse application/json
 app.use(bodyParser.json());
 
@@ -33,7 +37,7 @@ app.use('/japi', require('./api/controllers/routes.controller.js'));
 app.use('/jnetwork', require('./network/controllers/network.controller.js')(jconnections));
 
 // SOCKET CONNECTION
-require('./network/controllers/netsock.controller.js')(io, jconnections);
+require('./network/controllers/netsock.controller.js')(io, jconnections, jfilestore);
 
 http.listen(port, function(){
     console.log('Application is open on port ' + port);
