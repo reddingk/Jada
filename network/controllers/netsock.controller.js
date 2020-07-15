@@ -111,7 +111,7 @@ module.exports = function (io, connections, filestore) {
                 var connectionId = connections.getConnection(info.rID);
                 if (connectionId && connectionId.socket) { 
                     var num5List = connections.getSubConnections();
-                    num5List = (num5List && num5List.length > 0 ? num5List.map(function(item){ return { connectionId: item.connectionId, nickname: item.nickname }; }) : []);
+                    num5List = (num5List && num5List.length > 0 ? num5List.map(function(item){ return { connectionId: item.connectionId, nickname: item.nickname, location: (item.location ? item.location : null) }; }) : []);
 
                     var retObj = {"rID":info.rID, "list":num5List, "error":null};
                     io.to(connectionId.socket).emit('[naratifla] N5 list', retObj);   

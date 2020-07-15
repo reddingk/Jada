@@ -1,5 +1,6 @@
 'use strict';
 const iplocation = require("iplocation").default;
+const publicIp = require('public-ip');
 const Tool = require('../../jada_3/jtools.js');
 const jtool = new Tool();
 
@@ -15,12 +16,9 @@ const jtool = new Tool();
 class JConnection {
     constructor() {
         this.connectionList = {
-            "kredding":{ "connectionId":"kredding", "connection": null, "nickname": "Kris", "token":"2813308004", "socket": null }
+            "kredding0":{ "connectionId":"kredding", "connection": null, "nickname": "Kris", "token":"2813308004", "socket": null }
         };  
-        this.subConnectionList = {
-            "N5-Test1":{ "connectionId":"N5-Test1", "connection": null, "nickname": "N5-Test1", "token":"2813308004", "socket": null },
-            "N5-Test2":{ "connectionId":"N5-Test2", "connection": null, "nickname": "N5-Test2", "token":"2813308004", "socket": null }
-        };     
+        this.subConnectionList = {};     
     }
     // Add Connection To List
     addConnection(id, conn, nickname, token, isSub) {
@@ -174,20 +172,22 @@ class JConnection {
         var self = this;        
 
         try {
-            /*_getIpLocation(ip, function(res){
+            _getIpLocation(ip, function(res){
                 if(res.error){
-                    jtool.errorLog(" [ERROR] updating IP Location [", id,"](2):", res.error);                    
+                    jtool.errorLog(" [ERROR] updating IP Location [" + id + "](2):", res.error);                    
                 }
-                else {                    
-                    if(!(id in self.connectionList)) {
-                        jtool.errorLog(" [ERROR] updating IP Location [", id,"](2): No Id Found In Connection List");
-                    }
-                    else {
-                        self.connectionList[id].location = res.ret;
-                        //jtool.errorLog(" [DEBUG] " + res.ret);
-                    }
+                else if (id in self.connectionList) { 
+                    self.connectionList[id].location = res.ret;
+                    jtool.errorLog(" [CONNECTION] Updated Loc: " + id);
                 }
-            });*/
+                else if (id in self.subConnectionList) {
+                    self.subConnectionList[id].location = res.ret;
+                    jtool.errorLog(" [CONNECTION] Updated Sub Loc: " + id);
+                }
+                else {   
+                    jtool.errorLog(" [ERROR] updating IP Location [" + id + "](3): No Id Found In Connection List");
+                }
+            });
         }
         catch (ex) {
             jtool.errorLog(" [ERROR] updating IP Location [" + id + "]:" + ex);
@@ -228,6 +228,20 @@ function _getIpLocation(ip, callback){
     try {
         if(!ip){
             callback({"error":"No a Valid IP", "ret":null});
+        }
+        else if(ip.indexOf("::1") >= 0 || ip.indexOf(":127.0.0.1") >= 0) {
+            (async () => {
+                var tmpIP = await publicIp.v4();
+                
+                iplocation(tmpIP, [], (error, res) => {  
+                    if(error){
+                        callback({"error":error, "ret":null});
+                    }
+                    else {
+                        callback({"error":null, "ret":res});
+                    }
+                });
+            })();
         }
         else {
             iplocation(ip, [], (error, res) => {  
