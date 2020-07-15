@@ -2,6 +2,8 @@
 
 var util = require('util');
 var jauth = require('../../security/services/auth.service');
+const Tool = require('../../jada_3/jtools.js');
+const jtool = new Tool();
 
 var sse = {
     connect: function (req, res, connections) {
@@ -31,7 +33,7 @@ var sse = {
             }
         }
         catch (ex) {
-            console.log("Error connecting to J Network: ", ex);
+            jtool.errorLog("Error connecting to J Network: " + ex);
         }
     },
     sendCmd: function(sID, rID, command, data, connections){
@@ -44,7 +46,7 @@ var sse = {
             }
         }
         catch(ex){
-            console.log(" [Error] Sending SSE Command: ",ex);
+            jtool.errorLog(" [Error] Sending SSE Command: " + ex);
         }
     },
     broadcast: function (req, res, connections) {
@@ -82,7 +84,7 @@ var sse = {
         }
         catch (ex) {
             var errorMsg = "Error broadcasting message: " + ex;
-            console.log(errorMsg);
+            jtool.errorLog(errorMsg);
             res.status(400).json({ "error": errorMsg, "data": false });
         }
     },
@@ -104,7 +106,7 @@ var sse = {
         }
         catch (ex) {
             var errorMsg = "Error retrieving list: " + ex;
-            console.log(errorMsg);
+            jtool.errorLog(errorMsg);
             res.status(400).json({ "error": errorMsg });
         }
     }
@@ -137,7 +139,7 @@ function broadcastList(connections) {
     }
     catch (ex) {
         var errorMsg = "Error broadcasting list: " + ex;
-        console.log(errorMsg);
+        jtool.errorLog(errorMsg);
     }
 }
 

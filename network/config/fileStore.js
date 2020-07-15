@@ -1,6 +1,8 @@
 'use strict';
 const fs = require('fs');
 const pathCmd = require("path");
+const Tool = require('../../jada_3/jtools.js');
+const jtool = new Tool();
 
 var struct = { name: null, type: null, size: 0, slicesize:0, data: [], slice: 0 };
 
@@ -30,7 +32,7 @@ class JFileStore {
             }
         }
         catch(ex){
-            console.log(" [Error] streaming file data: ",ex);
+            jtool.errorLog(" [Error] streaming file data: " + ex);
         }
     }
 
@@ -45,7 +47,7 @@ class JFileStore {
             }            
         }
         catch(ex){
-            console.log(" [Error] cleaning file store: ",ex);
+            jtool.errorLog(" [Error] cleaning file store: " + ex);
         }
     }
 }

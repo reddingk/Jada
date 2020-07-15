@@ -34,7 +34,7 @@ var auth = {
         }
         catch(ex){
             var err = util.format("Error Creating %s On: %s", user, ex);
-            console.log(err);
+            jtool.errorLog(err);
             callback({"error":err});
         }
     },
@@ -56,7 +56,7 @@ var auth = {
         }
         catch(ex){
             var err = util.format("Error Logging %s On: %s", user, ex);
-            console.log(err);
+            jtool.errorLog(err);
             callback({"error":err});
         }
     },
@@ -66,7 +66,7 @@ var auth = {
         }
         catch(ex){
             var err = util.format("Error Logging %s Off: %s", user, ex);
-            console.log(err);
+            jtool.errorLog(err);
             callback({"status":false, "errorMsg":err});
         }
     },
@@ -97,7 +97,7 @@ var auth = {
         }
         catch(ex){
             var err = util.format("Error Validating: %s", ex);
-            console.log(err);
+            jtool.errorLog(err);
             callback({"status":err, "statusCode":0, "user":null });
         }
     },
@@ -120,7 +120,7 @@ var auth = {
         }
         catch(ex){
             var err = util.format("Error Authetication User: %s", ex);
-            console.log(err);
+            jtool.errorLog(err);
             callback({"status":err, "statusCode":0});
         }
     }
@@ -141,7 +141,7 @@ function _getUserByUId(uID, callback){
         }
     }
     catch(ex){
-        console.log("Error Getting User ", uID," :", ex);
+        jtool.errorLog("Error Getting User ", uID," :", ex);
         callback(null);
     }
 }
@@ -154,7 +154,7 @@ function _getUserByFacename(facename, callback){
         callback((usrRet ? usrRet[0] : null));
     }
     catch(ex){
-        console.log("Error Getting User By Facename ", facename," :", ex);
+        jtool.errorLog("Error Getting User By Facename ", facename," :", ex);
         callback(null);
     }
 }
@@ -189,7 +189,7 @@ function _addUser(userInfo, userSettings, callback){
     }
     catch(ex){
         var err = util.format("Error Adding User [%s] : %s", userInfo.userId , ex);
-        console.log(err);
+        jtool.errorLog(err);
         callback({"error":err, "status":false});
     }
 }
@@ -210,7 +210,7 @@ function _faceMatchUser(userObj, callback){
     }
     catch(ex){
         var err = util.format("Error Matching User: %s", ex);
-        console.log(err);
+        jtool.errorLog(err);
         callback({"status":err, "statusCode":0});
     }
 }
@@ -223,7 +223,7 @@ function _getFaceRecogUsers(img){
         retData = (matImg != null ? jEyes.faceRecogImg(matImg) : null);   
     }
     catch(ex){
-        console.log("Error FaceRecog Service:", ex);
+        jtool.errorLog("Error FaceRecog Service:", ex);
         retData = null;
     }
     
@@ -255,7 +255,7 @@ function _loginUser(user, password, ip, connections, callback){
     }
     catch(ex){
         var err = util.format("Error Login In User: %s", ex);
-        console.log(err);
+        jtool.errorLog(err);
         callback({"error":err, "statusCode":0});
     }
 }
@@ -269,7 +269,7 @@ function _cleanPwd(pwd){
         }
     }
     catch(ex){
-        console.log("[Error] cleaning pwd: ",ex);
+        jtool.errorLog("[Error] cleaning pwd: ",ex);
     }
     return pwdRet;
 }

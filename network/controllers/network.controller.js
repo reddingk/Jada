@@ -9,15 +9,18 @@ var sse = require('../services/sse.service');
 // Auth Services
 var jauth = require('../../security/services/auth.service');
 
+const Tool = require('../../jada_3/jtools.js');
+const jtool = new Tool();
+
 module.exports = function (connections) {
     // Connect to J Network
     router.get('/connect/:id', sseExpress({handShakeInterval: 30000}), function (req, res) {
         try {
-            res.on('error', err => console.log(" [Error] Server Response Error: ","err"));
+            res.on('error', err => jtool.errorLog(" [Error] Server Response Error: ","err"));
             sse.connect(req, res, connections);
         }
         catch(ex){
-            console.log(" [Error] connectiong to jnetwork: ",ex);
+            jtool.errorLog(" [Error] connectiong to jnetwork: " + ex);
         }
     });
 

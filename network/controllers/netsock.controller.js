@@ -1,10 +1,14 @@
 const ss = require('socket.io-stream');
 
-var dataFilter = require('../services/dataFilter.service');
-var sse = require('../services/sse.service');
+const dataFilter = require('../services/dataFilter.service');
+const sse = require('../services/sse.service');
 
 // Auth Services
-var jauth = require('../../security/services/auth.service');
+const jauth = require('../../security/services/auth.service');
+
+const Tool = require('../../jada_3/jtools.js');
+const jtool = new Tool();
+//jtool.errorLog(" [Error] streaming file data: " + ex);
 
 module.exports = function (io, connections, filestore) {
     // socket connection
@@ -77,7 +81,6 @@ module.exports = function (io, connections, filestore) {
 
         // socket authenticate user
         socket.on('jauth', function (info) {
-            //console.log(" [DEBUG]: Authorize User");
             
             // Send Obj to Auth Service
             jauth.loginUser(info, connections, ipAddress, function(ret){                
@@ -100,7 +103,7 @@ module.exports = function (io, connections, filestore) {
                 }
             }
             catch(ex){
-                console.log(" [Error] Sock N5-01: ",ex);
+                jtool.errorLog(" [Error] Sock N5-01: " + ex);
             }
         });
 
@@ -118,7 +121,7 @@ module.exports = function (io, connections, filestore) {
                 }
             }
             catch(ex){
-                console.log(" [Error] Sock N01: ",ex);
+                jtool.errorLog(" [Error] Sock N01: " + ex);
             }
         });
 
@@ -136,7 +139,7 @@ module.exports = function (io, connections, filestore) {
                 }
             }
             catch(ex){
-                console.log(" [Error] Sock S01: ",ex);
+                jtool.errorLog(" [Error] Sock S01: " + ex);
             }
         });
 
@@ -152,7 +155,7 @@ module.exports = function (io, connections, filestore) {
                 }
             }
             catch(ex){
-                console.log(" [Error] Sock F01: ",ex);
+                jtool.errorLog(" [Error] Sock F01: " + ex);
             }
         });
 
@@ -168,7 +171,7 @@ module.exports = function (io, connections, filestore) {
                 }
             }
             catch(ex){
-                console.log(" [Error] Sock LB01: ",ex);
+                jtool.errorLog(" [Error] Sock LB01: " + ex);
             }
         });
 
@@ -184,14 +187,14 @@ module.exports = function (io, connections, filestore) {
                 }
             }
             catch(ex){
-                console.log(" [Error] Sock LB01: ",ex);
+                jtool.errorLog(" [Error] Sock LB01: " + ex);
             }
         });
 
         ss(socket).on('[penny proud] retrieve file', function(stream, info) { 
             try {
                 filestore.streamFileData(info, stream, function(ret){
-                    console.log(" [Debug] File is completed: ", ret.path);
+                    jtool.errorLog(" [Debug] File is completed: "+ ret.path);
                     var connectionId = connections.getConnection(info.rID);
 
                     if (connectionId && connectionId.socket) { 
@@ -201,13 +204,13 @@ module.exports = function (io, connections, filestore) {
                 });
             }
             catch(ex){
-                console.log(" [Error] Sock PP01: ",ex);
+                jtool.errorLog(" [Error] Sock PP01: " + ex);
             }   
         });
 
         socket.on('[penny proud] no file', function (info) {
             try {
-                console.log(" [Error] No File "); console.log(info);
+                jtool.errorLog(" [Error] No File "); jtool.errorLog(info);
                 var connectionId = connections.getConnection(info.rID);
 
                 if (connectionId && connectionId.socket) { 
@@ -216,7 +219,7 @@ module.exports = function (io, connections, filestore) {
                 }
             }
             catch(ex){
-                console.log(" [Error] Sock PP02: ",ex);
+                jtool.errorLog(" [Error] Sock PP02: " + ex);
             }
         });
     });
