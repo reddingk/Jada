@@ -8,7 +8,9 @@
 var underscore = require('underscore');
 var fs = require('fs');
 require('dotenv').config();
-const basedb = require(process.env.CONFIG_LOC + "/basedb.json");
+
+var configLoc = (process.env.CONFIG_LOC ? process.env.CONFIG_LOC : "/jada/localConfig");
+const basedb = require(configLoc + "/basedb.json");
 
 const Tools = require('./jtools.js');
 

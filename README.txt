@@ -11,3 +11,38 @@ https://www.npmjs.com/package/opencv4nodejs
 
 3) Auto Build OpenCV
    npm install --save opencv4nodejs
+
+/*** BUILD DOCKERFILE ***/
+*] BUILD Container:
+   docker build .
+   docker build -t jada:1.0 .
+   docker build -t jada:0.951 --output type=tar,dest=jada_0_951.tar .
+
+
+*] View Images
+   docker images
+
+*] View Containers
+   docker ps -a
+
+*] Run Container
+   docker run -t -i (NAME)
+
+*] Mount Folder
+
+   docker run -v (LOCAL PATH):(VM PATH)
+
+   docker run -v c:/Users/krisr/Documents/Development/Personal/Jada/localConfig:/jada/localConfig -t -i jada:0.9
+
+*] Expose Port
+   docker run -p <HOST_PORT>:<CONTAINER:PORT> IMAGE_NAME
+
+*] Start Container
+   docker start <CONTAINER>
+
+*] Export Images
+   docker export [CONTAINERID] > C:\Users\krisr\Documents\Development\Docker\jada_0_94.tar
+
+-- OFFICIAL --
+docker run -p 1003:1003 -v c:/Users/krisr/Documents/Development/Personal/Jada/localConfig:/jada/localConfig -t -i jada:0.9
+

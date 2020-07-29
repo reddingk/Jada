@@ -1,5 +1,7 @@
 #Download Alphine Linux
-FROM alpine:3.8
+FROM alpine:3.10
+
+ARG OPENCV_VERSION=4.1.2
 
 # Install OPENCV & Dependencies
 # Add Edge repos
@@ -15,45 +17,19 @@ RUN apk add --update npm
 
 # Install required packages
 RUN apk update && apk upgrade && apk --no-cache add \
-  bash \
-  build-base \
-  ca-certificates \
-  clang-dev \
-  clang \
-  cmake \
-  coreutils \
-  curl \ 
-  freetype-dev \
-  ffmpeg-dev \
-  ffmpeg-libs \
-  gcc \
-  g++ \
-  git \
-  gettext \
-  lcms2-dev \
-  libavc1394-dev \
-  libc-dev \
-  libffi-dev \
-  libjpeg-turbo-dev \
-  libpng-dev \
-  libressl-dev \
-  libtbb@edgetest \
-  libtbb-dev@edgetest \
-  libwebp-dev \
-  linux-headers \
-  make \
-  musl \
-  openblas@edgecomm \
-  openblas-dev@edgecomm \
-  openjpeg-dev \
-  openssl \
-  python \
-  python3 \
-  python3-dev \
-  tiff-dev \
-  unzip \
-  zlib-dev
+  bash build-base ca-certificates clang-dev \
+  clang cmake coreutils curl freetype-dev \
+  ffmpeg-dev ffmpeg-libs gcc g++ git \
+  gettext lcms2-dev libavc1394-dev libc-dev \
+  libffi-dev libjpeg-turbo-dev libpng-dev \
+  libressl-dev libwebp-dev linux-headers \
+  libx11-dev make musl openblas openblas-dev \
+  openjpeg-dev openssl python \
+  python3 python3-dev tiff-dev \
+  unzip zlib-dev
 
+RUN apk add --repository http://dl-cdn.alpinelinux.org/alpine/edge/testing \
+            --update --no-cache libtbb libtbb-dev
 
   # Python 3 as default
 RUN ln -s /usr/bin/python3 /usr/local/bin/python && \
@@ -67,14 +43,14 @@ RUN ln -s /usr/include/locale.h /usr/include/xlocale.h && \
 #RUN apk add g++ make python
 
 # Install OpenCV
-# https://github.com/opencv/opencv/archive/4.0.1.tar.gz
- RUN mkdir /opt && cd /opt && \
-   wget https://github.com/opencv/opencv/archive/4.0.1.zip && \
-   unzip 4.0.1.zip && rm 4.0.1.zip && \
-   wget https://github.com/opencv/opencv_contrib/archive/4.0.1.zip && \
-   unzip 4.0.1.zip && rm 4.0.1.zip \
+# https://github.com/opencv/opencv/archive/$OPENCV_VERSION.tar.gz
+ RUN mkdir -p /opt && cd /opt && \
+   wget https://github.com/opencv/opencv/archive/$OPENCV_VERSION.zip && \
+   unzip $OPENCV_VERSION.zip && rm $OPENCV_VERSION.zip && \
+   wget https://github.com/opencv/opencv_contrib/archive/$OPENCV_VERSION.zip && \
+   unzip $OPENCV_VERSION.zip && rm $OPENCV_VERSION.zip \
    && \
-   cd /opt/opencv-4.0.1 && mkdir build && cd build && \
+   cd /opt/opencv-$OPENCV_VERSION && mkdir -p build && cd build && \
    cmake -D CMAKE_BUILD_TYPE=RELEASE \
      -D CMAKE_C_COMPILER=/usr/bin/clang \
      -D CMAKE_CXX_COMPILER=/usr/bin/clang++ \
@@ -83,14 +59,14 @@ RUN ln -s /usr/include/locale.h /usr/include/xlocale.h && \
      -D INSTALL_C_EXAMPLES=OFF \
      -D WITH_FFMPEG=ON \
      -D WITH_TBB=ON \
-     -D OPENCV_EXTRA_MODULES_PATH=/opt/opencv_contrib-4.0.1/modules \
+     -D OPENCV_EXTRA_MODULES_PATH=/opt/opencv_contrib-$OPENCV_VERSION/modules \
      -D PYTHON_EXECUTABLE=/usr/local/bin/python \
      .. \
    && \
-   make -j$(nproc) && make install && cd .. && rm -rf build \
+   make && make install && cd .. && rm -rf build \
    && \
-   cp -p $(find /usr/local/lib/python3.6/site-packages -name cv2.*.so) \
-    /usr/lib/python3.6/site-packages/cv2.so && \
+   cp -p $(find /usr/local/lib/python3.7/site-packages -name cv2.*.so) \
+    /usr/lib/python3.7/site-packages/cv2.so && \
     python -c 'import cv2; print("Python: import cv2 - SUCCESS")'
 
 
@@ -102,17 +78,21 @@ RUN ln -s /usr/include/locale.h /usr/include/xlocale.h && \
  COPY README_PHRASE.txt /jada/README_PHRASE.txt
  COPY jadaEx.js /jada/jadaEx.js
  COPY jadacmd.js /jada/jadacmd.js
- COPY .env /jada/.env
+
+ # Copy Env File
+ COPY /dockerfiles/.env /jada/.env
+ COPY /dockerfiles/.env .env
 
 # Copy Application Folders
+ COPY /api /jada/api
  COPY /jada_3 /jada/jada_3
  COPY /network /jada/network
- COPY /api /jada/api
+ COPY /public /jada/public 
  COPY /security /jada/security
 
 # Install Application Packages
  RUN cd /jada; npm install
 
 # Run Application
-# EXPOSE  1003
-# CMD ["node", "/jada/server.js"]
+ EXPOSE  1003
+ CMD ["node", "/jada/server.js"]

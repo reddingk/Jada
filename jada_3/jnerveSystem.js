@@ -10,11 +10,12 @@ var http = require('http');
 var opn = require('opn');
 var underscore = require('underscore');
 var md5 = require('md5');
+require('dotenv').config();
 
 const Tools = require('./jtools.js');
 const Cells = require('./jcell.js');
-//const Eyes = require('./jeyes.js');
-const basedb = require(process.env.CONFIG_LOC + "/basedb.json");
+var configLoc = (process.env.CONFIG_LOC ? process.env.CONFIG_LOC : "/jada/localConfig");
+const basedb = require(configLoc + "/basedb.json");
 
 class JNERVESYSTEM {
     constructor(innerBrain){
