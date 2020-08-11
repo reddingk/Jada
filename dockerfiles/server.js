@@ -2,9 +2,13 @@ const express = require('express');
 const app = express();
 const path = require('path');
 const bodyParser = require('body-parser');
+const fs = require('fs');
 
-const http = require('http').Server(app);
-const io = require('socket.io')(http);
+const https = require('https').createServer({
+                    key: fs.readFileSync('server.key'),
+                    cert: fs.readFileSync('server.cert')
+                }, app);
+const io = require('socket.io')(https);
 
 // set ports
 var port = process.env.PORT || 1003;
@@ -39,7 +43,7 @@ app.use('/jnetwork', require('./network/controllers/network.controller.js')(jcon
 // SOCKET CONNECTION
 require('./network/controllers/netsock.controller.js')(io, jconnections, jfilestore);
 
-http.listen(port, function(){
+https.listen(port, function(){
     console.log('Application is open on port ' + port);
 });
 

@@ -93,6 +93,12 @@ RUN ln -s /usr/include/locale.h /usr/include/xlocale.h && \
 # Install Application Packages
  RUN cd /jada; npm install
 
+# Generate SSL Cert
+#RUN cd /jada; openssl req -nodes -new -x509 -keyout server.key -out server.cert -days 1024 -subj "/C=US/ST=NA/L=NA/O=Roj/CN=jada"
+
+# Copy server files
+#RUN cp /jada/server.key /;cp /jada/server.cert /
+
 # Run Application
  EXPOSE  1003
  CMD ["node", "/jada/server.js"]
