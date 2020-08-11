@@ -52,6 +52,7 @@ RUN ln -s /usr/include/locale.h /usr/include/xlocale.h && \
    && \
    cd /opt/opencv-$OPENCV_VERSION && mkdir -p build && cd build && \
    cmake -D CMAKE_BUILD_TYPE=RELEASE \
+     -D BUILD_EXAMPLES=OFF \
      -D CMAKE_C_COMPILER=/usr/bin/clang \
      -D CMAKE_CXX_COMPILER=/usr/bin/clang++ \
      -D CMAKE_INSTALL_PREFIX=/usr/local \
