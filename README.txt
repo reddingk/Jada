@@ -26,6 +26,9 @@ https://www.npmjs.com/package/opencv4nodejs
 *] Run Container
    docker run -t -i (NAME)
 
+*] Open Running Container
+   docker exec -it <CONTAINER ID> /bin/bash
+
 *] Mount Folder
 
    docker run -v (LOCAL PATH):(VM PATH)
