@@ -19,7 +19,7 @@ RUN apk add --update npm
 RUN apk update && apk upgrade && apk --no-cache add \
   bash build-base ca-certificates clang-dev \
   clang cmake coreutils curl freetype-dev \
-  ffmpeg-dev ffmpeg-libs gcc-arm* g++ git \
+  ffmpeg-dev ffmpeg-libs gcc g++ git \
   gettext lcms2-dev libavc1394-dev libc-dev \
   libffi-dev libjpeg-turbo-dev libpng-dev \
   libressl-dev libwebp-dev linux-headers \
