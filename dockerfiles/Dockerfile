@@ -24,7 +24,7 @@ RUN apk update && apk upgrade && apk --no-cache add \
   libffi-dev libjpeg-turbo-dev libpng-dev \
   libressl-dev libwebp-dev linux-headers \
   libx11-dev make musl openblas openblas-dev \
-  openjpeg-dev openssl python protobuf-compiler \
+  openjpeg-dev openssl python \
   python3 python3-dev tiff-dev \
   unzip zlib-dev
 
