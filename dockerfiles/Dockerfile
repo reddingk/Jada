@@ -3,7 +3,6 @@ FROM balenalib/raspberrypi4-64-python:3.7
 
 ARG OPENCV_VERSION=4.1.2
 
-RUN cwd=$(pwd)
 # Install dependencies needed for building and running OpenCV
 RUN apt-get update && apt-get install -y --no-install-recommends \
     # to build and install
@@ -17,7 +16,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 RUN cd /usr/include/linux && \
     sudo ln -s -f ../libv4l1-videodev.h videodev.h && \
-    cd $cwd
+    cd /
 
 RUN apt-get install -y --no-install-recommends \
     libgstreamer0.10-dev libgstreamer-plugins-base0.10-dev \
@@ -71,7 +70,7 @@ RUN cmake -D CMAKE_BUILD_TYPE=RELEASE \
 RUN python -c "import cv2; print('Installed OpenCV version is: {} :)'.format(cv2.__version__))"
 
 # Clean Up
-RUN cd $cwd && rm -rf opencv
+RUN cd / && rm -rf opencv
 
 # Setup Jada Application
 # Copy Application Code
