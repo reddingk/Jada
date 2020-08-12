@@ -30,8 +30,9 @@ RUN apt-get install -y --no-install-recommends \
     libmp3lame-dev libtheora-dev \
     libvorbis-dev libxvidcore-dev libx264-dev \
     libopencore-amrnb-dev libopencore-amrwb-dev \
-    libavresample-dev \
-    x264 v4l-utils \
+    libavresample-dev x264 v4l-utils \
+    # NodeJS
+    nodejs npm \
     # cleanup
     && rm -rf /var/lib/apt/lists/* \
     && apt-get -y autoremove
