@@ -21,6 +21,7 @@ class JEYES {
         this.textDetectionModel = __dirname+"/config/data/frozen_east_text_detection.pb";
         this.photoMemory = __dirname + "/config/data/photoMemory";
         this.imgIndexModel = __dirname + "/config/data/imgIndex.json";
+        
         this.PhoebeColor = new cv.Vec(4,205,252);
         this.foundColor = new cv.Vec(102,51,0);
         this.bgSubtractor = new cv.BackgroundSubtractorMOG2();
@@ -31,7 +32,7 @@ class JEYES {
         this.imgIndex = {"data":{}};
         this.modelLibrary = modelLib;
                            
-        this.recogData = _loadRecogTrainingData(this.photoMemory, this.imgIndex, this.nameMappings, this.imgResize, this.facialClassifier, this.imgIndexModel)  
+        this.recogData = _loadRecogTrainingData(this.photoMemory, this.imgIndex, this.nameMappings, this.imgResize, this.facialClassifier, this.imgIndexModel);  
         this.markData = _loadFacemark(this.facialClassifier, this.facemarkModel);
         this.textDetect = _loadTextDetection(this.textDetectionModel);
     }
@@ -78,6 +79,7 @@ class JEYES {
         }
         return ret;
     }
+
     /* Process Recognition Img */
     processRecognitionImgs(sourcePath, destinationPath, callback){
         var self = this;
@@ -134,6 +136,7 @@ class JEYES {
         }
         callback(ret);
     }
+
     /* Facial Recognize MAT */
     faceRecogImg(recogImg){
         var self = this;
@@ -240,6 +243,7 @@ class JEYES {
         return ret;
     }
 
+    /* modelMap Img */
     modelMapImg(img, searchFilter, filter){
         var self = this;
         var ret = {"img":null, "layers":[], "error":null};
@@ -567,6 +571,7 @@ class JEYES {
             if(retImg && retImg.img){
                 // Resize Img & Show Img
                 cv.imshowWait("Model Image Frame", _sizeImg(retImg.img));
+                callback(retImg.layers);
             }
 
             if(!reader){
@@ -677,6 +682,43 @@ class JEYES {
         }
         catch(ex){
             jtools.errorLog(" [ERROR] with facemark camera: " + ex);
+        }
+    }
+    /* OBJ Detect Camera */
+    ObjDetectCamera(callback){
+        var self = this;
+
+        try{
+            let done = false;
+            var camera = new cv.VideoCapture(defaultCamPort);
+            //var camera = new cv.VideoCapture("http://10.0.0.10:8080/videofeed");
+
+            const intvl = setInterval(function() {
+                let frame = camera.read();
+
+                if (frame.empty) {
+                    camera.reset();
+                    frame = camera.read();
+                }
+                
+                // Face Recognize Image
+                var retImg = self.faceRecogImg(frame);
+
+                // Resize Img
+                retImg.img = _sizeImg(retImg.img);
+                // Stream Or View Locally
+                cv.imshow("Facial Recognition Frame", retImg.img);
+                const key = cv.waitKey(1);
+
+                done = key !== -1 && key !== 255;
+                if (done) {
+                    clearInterval(intvl);
+                    callback(-100);
+                }
+            }, 0);
+        }
+        catch(ex){
+            jtools.errorLog(" [ERROR] with face recognition camera: " + ex);
         }
     }
 
@@ -955,8 +997,8 @@ function _buildNameMap(photoMemory){
 }
 
 /* Load Recog Training Data */
-function _loadRecogTrainingData(photoMemory, imgIndex, nameMappings, imgResize, facialClassifier, imgIndexModel){
-    var ret = { "lbph": new cv.LBPHFaceRecognizer(), "eigenRecognizer":new cv.EigenFaceRecognizer()};
+function _loadRecogTrainingData(photoMemory, imgIndex, nameMappings, imgResize, facialClassifier, imgIndexModel, cfgFile, weightsFile, labelsFile){
+    var ret = { "lbph": new cv.LBPHFaceRecognizer(), "eigenRecognizer":new cv.EigenFaceRecognizer() };
 
     try {
         nameMappings.map = ((Object.keys(nameMappings.map).length === 0) ? _buildNameMap(photoMemory) : nameMappings.map);        
@@ -976,16 +1018,6 @@ function _loadRecogTrainingData(photoMemory, imgIndex, nameMappings, imgResize, 
             }
             return grayImg.getRegion(faceRects[0]);
         };
-
-        // Test Images
-        /*imgFiles.forEach(function(imgF){
-            var tmpfile = path.resolve(photoMemory, imgF);
-            var tmpMat = cv.imread(tmpfile);
-            const tmpfaceRects = facialClassifier.detectMultiScale(tmpMat.bgrToGray()).objects;
-            if(!tmpfaceRects.length){
-                jtools.errorLog(" [WARNING] no faces in: " + imgF);
-            }
-        });*/
         
         const trainImgs = imgFiles
             // get absolute file path
@@ -1004,7 +1036,7 @@ function _loadRecogTrainingData(photoMemory, imgIndex, nameMappings, imgResize, 
             .map(file => nameMappings.list.findIndex(name => file.includes(name)));
 
         ret.lbph.train(trainImgs, labels);
-        ret.eigenRecognizer.train(trainImgs, labels);
+        ret.eigenRecognizer.train(trainImgs, labels); 
     }
     catch(ex){
         jtools.errorLog(" [ERROR] Loading Training Recog Data: " + ex);

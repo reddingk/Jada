@@ -24,6 +24,8 @@ var dataFilter =  {
                         break;
                     case 'edgeDetect':
                         j_edgeDetect(info.data, callback);
+                    case 'objDetect':
+                        j_objDetect(info.data, info.info, callback);
                     default:
                         callback(info.data);
                         break;
@@ -97,6 +99,23 @@ function j_edgeDetect(img, callback){
     try {
         var matImg = jEyes.b64toMat(img);        
         retData = (matImg != null ? jEyes.edgeDetectionImg(matImg) : null); 
+    }
+    catch(ex){
+        jbrain.jCells.jtools.errorLog(" [ERROR] Edge Detection Service:" + ex);
+        retData = null;
+    }
+    
+    callback((retData != null? jEyes.matTob64(retData.img) : null));
+}
+
+function j_objDetect(img, data, callback){
+    var retData = null;
+    try {
+        var matImg = jEyes.b64toMat(img); 
+        var searchFilters = (data.searchFilters ? data.searchFilters : []);
+        var filter = (data.filter ? data.filter : "base");
+
+        retData = (matImg != null ? jEyes.modelMapImg(matImg, searchFilters, filter) : null); 
     }
     catch(ex){
         jbrain.jCells.jtools.errorLog(" [ERROR] Edge Detection Service:" + ex);

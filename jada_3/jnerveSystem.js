@@ -22,7 +22,6 @@ class JNERVESYSTEM {
         this.jbrain = innerBrain;
         this.jtools = new Tools();
         this.jcell = new Cells();
-        //this.jeyes = new Eyes();
         this.greetPhrases = basedb.greetings;
     }
 
@@ -1273,13 +1272,14 @@ class JNERVESYSTEM {
             //    callback({"jresponse": "Test Model Status: " + ret });
             //});
 
-            //var tst = self.jcell.jeyes.modelImgFile("base", [], "C:\\Users\\krisr\\Pictures\\test\\IMG13.png", true, function(ret){
-            //    callback({"jresponse": "Test: I Read " + ret});
+            //self.jcell.jeyes.modelImgFile("base", [], "C:\\Users\\krisr\\Pictures\\test\\img7.jpg", true, function(ret){
+            //    console.log(ret);
+            //    callback({"jresponse": "Test: I Read "});
             //});
 
-            self.jcell.jeyes.motionTrackingCamera(function(ret){
-                callback({"jresponse": "Motion Tracking Camera Status: " + (ret == -100)});
-            });
+            //self.jcell.jeyes.motionTrackingCamera(function(ret){
+            //    callback({"jresponse": "Motion Tracking Camera Status: " + (ret == -100)});
+            //});
             
         }
         catch(ex){
