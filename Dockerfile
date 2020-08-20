@@ -1,7 +1,5 @@
 #Download Alphine Linux
-#FROM alpine:3.10
-FROM node:current-alpine3.10
-
+FROM alpine:3.10
 
 ARG OPENCV_VERSION=4.1.2
 
@@ -26,7 +24,7 @@ RUN apk update && apk upgrade && apk --no-cache add \
   openjpeg-dev openssl python \
   python3 python3-dev tiff-dev \
   # Install NodeJs
-  # nodejs npm \
+  nodejs npm \
   unzip zlib-dev
 
 RUN apk add --repository http://dl-cdn.alpinelinux.org/alpine/edge/testing \
@@ -105,4 +103,4 @@ RUN ln -s /usr/include/locale.h /usr/include/xlocale.h && \
 
 # Run Application
  EXPOSE  1003
- CMD ["node", "/jada/server.js"]
+ #CMD ["node", "/jada/server.js"]
