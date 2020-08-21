@@ -39,8 +39,8 @@
   },
   "opencv4nodejs": {
     "disableAutoBuild": 1,
-    "opencvIncludeDir": "/opt/opencv/build/include",
-    "opencvLibDir": "/opt/opencv/build/x64/vc14/lib",
-    "opencvBinDir": "/opt/opencv/build/x64/vc14/bin"
+    "opencvIncludeDir": "/usr/local/include",
+    "opencvLibDir": "/usr/local/lib",
+    "opencvBinDir": "/usr/local/bin"
   }
 }

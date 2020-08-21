@@ -1,84 +1,112 @@
-# Download opencv nodejs Ubuntu
-FROM resin/raspberrypi3-python:3.4
+#Download Alphine Linux
+FROM alpine:3.10
 
-RUN cwd=$(pwd)
+ARG OPENCV_VERSION=3.4.11
 
-# Install dependencies needed for building and running OpenCV
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    # to build and install
-    unzip \
-    build-essential cmake pkg-config \
-    checkinstall yasm \
-    # to work with images
-    libjpeg-dev libtiff-dev libjasper-dev libpng12-dev libtiff5-dev \
-    # to work with videos
-    libavcodec-dev libavformat-dev libswscale-dev \
-    libxine2-dev libv4l-dev 
-    
+# Install OPENCV & Dependencies
+# Add Edge repos
+RUN echo -e "\n\
+@edgemain http://nl.alpinelinux.org/alpine/edge/main\n\
+@edgecomm http://nl.alpinelinux.org/alpine/edge/community\n\
+@edgetest http://nl.alpinelinux.org/alpine/edge/testing"\
+  >> /etc/apk/repositories
 
-RUN cd /usr/include/linux && \
-    sudo ln -s -f ../libv4l1-videodev.h videodev.h && \
-    cd $cwd
 
-RUN apt-get install -y --no-install-recommends \
-    libgstreamer0.10-dev libgstreamer-plugins-base0.10-dev \
-    # needed by highgui tool
-    libgtk2.0-dev \
-    # for opencv math operations
-    libatlas-base-dev gfortran \
-    # others
-    libtbb2 libtbb-dev qt5-default \
-    libmp3lame-dev libtheora-dev \
-    libvorbis-dev libxvidcore-dev libx264-dev \
-    libopencore-amrnb-dev libopencore-amrwb-dev \
-    libavresample-dev \
-    x264 v4l-utils \
-    nodejs npm \
-    # cleanup
-    && rm -rf /var/lib/apt/lists/* \
-    && apt-get -y autoremove
+# Install required packages
+RUN apk update && apk upgrade && apk --no-cache add \
+  bash build-base ca-certificates clang-dev \
+  clang cmake coreutils curl freetype-dev \
+  ffmpeg-dev ffmpeg-libs gcc g++ git \
+  gettext lcms2-dev libavc1394-dev libc-dev \
+  libffi-dev libjpeg-turbo-dev libpng-dev \
+  libressl-dev libwebp-dev linux-headers \
+  libx11-dev make musl openblas openblas-dev \
+  openjpeg-dev openssl python \
+  python3 python3-dev tiff-dev \
+  # Install NodeJs
+  nodejs npm \
+  unzip zlib-dev
 
-RUN pip install --upgrade pip
+RUN apk add --repository http://dl-cdn.alpinelinux.org/alpine/edge/testing \
+            --update --no-cache libtbb libtbb-dev
 
-RUN pip install --no-cache-dir \
-    # OpenCV dependency
-    numpy \
-    # other usefull stuff
-    ipython \
-    # cleanup
-    && find /usr/local \
-       \( -type d -a -name test -o -name tests \) \
-       -o \( -type f -a -name '*.pyc' -o -name '*.pyo' \) \
-       -exec rm -rf '{}' + \
-    && cd / \
-    && rm -rf /usr/src/python ~/.cache
+  # Python 3 as default
+RUN ln -s /usr/bin/python3 /usr/local/bin/python && \
+  ln -s /usr/bin/pip3 /usr/local/bin/pip && \
+  pip install --upgrade pip
+
+# Install NumPy
+RUN ln -s /usr/include/locale.h /usr/include/xlocale.h && \
+  pip install numpy
 
 # Install OpenCV
-COPY download_build_install_opencv.sh download_build_install_opencv.sh
-RUN ./download_build_install_opencv.sh
+# https://github.com/opencv/opencv/archive/$OPENCV_VERSION.tar.gz
+ RUN mkdir -p /opt && cd /opt && \
+   wget https://github.com/opencv/opencv/archive/$OPENCV_VERSION.zip && \
+   unzip $OPENCV_VERSION.zip && rm $OPENCV_VERSION.zip && \
+   wget https://github.com/opencv/opencv_contrib/archive/$OPENCV_VERSION.zip && \
+   unzip $OPENCV_VERSION.zip && rm $OPENCV_VERSION.zip \
+   && \
+   cd /opt/opencv-$OPENCV_VERSION && mkdir -p build && cd build && \
+   cmake -D CMAKE_BUILD_TYPE=RELEASE \
+     -D CMAKE_C_COMPILER=/usr/bin/clang \
+     -D CMAKE_CXX_COMPILER=/usr/bin/clang++ \
+     -D CMAKE_INSTALL_PREFIX=/usr/local \
+     -D INSTALL_PYTHON_EXAMPLES=OFF \
+     -D INSTALL_C_EXAMPLES=OFF \
+     -D WITH_FFMPEG=ON \
+     -D WITH_TBB=ON \
+     -D OPENCV_EXTRA_MODULES_PATH=/opt/opencv_contrib-$OPENCV_VERSION/modules \
+     -D PYTHON_EXECUTABLE=/usr/local/bin/python \
+     -D BUILD_EXAMPLES=OFF \
+     -D BUILD_DOCS=OFF \
+     -D BUILD_PERF_TESTS=OFF \
+     -D INSTALL_C_EXAMPLES=OFF \
+     -D INSTALL_PYTHON_EXAMPLES=OFF \
+     -D BUILD_TESTS=OFF \
+     .. \
+   && \
+   make -j4 && make install && cd .. && rm -rf build \
+   && \
+   cp -p $(find /usr/local/lib/python3.7/site-packages -name cv2.*.so) \
+    /usr/lib/python3.7/site-packages/cv2.so && \
+    python -c 'import cv2; print("Python: import cv2 - SUCCESS")'
+
+# Clean Up
+# RUN apk del build-essential curl wget unzip git cmake
+
+# link opencv 4 folder for node instalation
+# RUN ln -s /usr/local/include/opencv4/opencv2/ /usr/local/include/opencv2
 
 # Setup Jada Application
 # Copy Application Code
- COPY /dockerfiles/package.json /jada/package.json
- COPY server.js /jada/server.js
- COPY README.txt /jada/README.txt
- COPY README_PHRASE.txt /jada/README_PHRASE.txt
- COPY jadaEx.js /jada/jadaEx.js
- COPY jadacmd.js /jada/jadacmd.js
+COPY /dockerfiles/package.json /jada/package.json
+COPY server.js /jada/server.js
+COPY README.txt /jada/README.txt
+COPY README_PHRASE.txt /jada/README_PHRASE.txt
+COPY jadaEx.js /jada/jadaEx.js
+COPY jadacmd.js /jada/jadacmd.js
 
- # Copy Env File
- COPY /dockerfiles/.env /jada/.env
- COPY /dockerfiles/.env .env
+# Copy Env File
+COPY /dockerfiles/.env /jada/.env
+COPY /dockerfiles/.env .env
 
 # Copy Application Folders
- COPY /api /jada/api
- COPY /jada_3 /jada/jada_3
- COPY /network /jada/network
- COPY /public /jada/public 
- COPY /security /jada/security
+COPY /api /jada/api
+COPY /jada_3 /jada/jada_3
+COPY /network /jada/network
+COPY /public /jada/public 
+COPY /security /jada/security
 
 # Install Application Packages
- RUN cd /jada; npm install
+# RUN npm install -g opencv4nodejs
+# RUN cd /jada; npm install
+
+# Generate SSL Cert
+#RUN cd /jada; openssl req -nodes -new -x509 -keyout server.key -out server.cert -days 1024 -subj "/C=US/ST=NA/L=NA/O=Roj/CN=jada"
+
+# Copy server files
+#RUN cp /jada/server.key /;cp /jada/server.cert /
 
 # Run Application
  EXPOSE  1003
