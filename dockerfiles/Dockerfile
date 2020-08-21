@@ -1,8 +1,5 @@
 # Download opencv nodejs Ubuntu
-FROM justadudewhohacks/opencv-nodejs
-
-# Update Container
-RUN sudo apt update
+FROM mohaseeb/raspberrypi3-python-opencv
 
 # Setup Jada Application
 # Copy Application Code
