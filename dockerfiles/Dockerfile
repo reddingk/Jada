@@ -1,5 +1,5 @@
 # Download opencv nodejs Ubuntu
-FROM resin/raspberrypi3-python:2.7
+FROM resin/raspberrypi3-python:3.4
 
 RUN cwd=$(pwd)
 
@@ -38,6 +38,7 @@ RUN apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get -y autoremove
 
+RUN pip install --upgrade pip
 
 RUN pip install --no-cache-dir \
     # OpenCV dependency

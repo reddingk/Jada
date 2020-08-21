@@ -66,7 +66,7 @@ RUN ln -s /usr/include/locale.h /usr/include/xlocale.h && \
      -D BUILD_TESTS=OFF \
      .. \
    && \
-   make && make install && cd .. && rm -rf build \
+   make -j4 && make install && cd .. && rm -rf build \
    && \
    cp -p $(find /usr/local/lib/python3.7/site-packages -name cv2.*.so) \
     /usr/lib/python3.7/site-packages/cv2.so && \
@@ -93,7 +93,7 @@ RUN ln -s /usr/include/locale.h /usr/include/xlocale.h && \
  COPY /security /jada/security
 
 # Install Application Packages
- RUN cd /jada; npm install
+# RUN cd /jada; npm install
 
 # Generate SSL Cert
 #RUN cd /jada; openssl req -nodes -new -x509 -keyout server.key -out server.cert -days 1024 -subj "/C=US/ST=NA/L=NA/O=Roj/CN=jada"
