@@ -21,7 +21,7 @@
     "iplocation": "^6.1.0",
     "language-tags": "^1.0.5",
     "md5": "^2.2.1",
-    "method-override": "~2.0.2",
+    "method-override": "~2.3.10",
     "opencv4nodejs": "^4.14.0",
     "opn": "^4.0.2",
     "public-ip": "^4.0.2",
