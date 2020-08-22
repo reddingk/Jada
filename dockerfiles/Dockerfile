@@ -1,7 +1,7 @@
 #Download Alphine Linux
 FROM alpine:3.10
 
-ARG OPENCV_VERSION=3.4.11
+ARG OPENCV_VERSION=3.4.1
 
 # Install OPENCV & Dependencies
 # Add Edge repos
@@ -99,8 +99,7 @@ COPY /public /jada/public
 COPY /security /jada/security
 
 # Install Application Packages
-# RUN npm install -g opencv4nodejs
-# RUN cd /jada; npm install
+RUN cd /jada; npm install
 
 # Generate SSL Cert
 #RUN cd /jada; openssl req -nodes -new -x509 -keyout server.key -out server.cert -days 1024 -subj "/C=US/ST=NA/L=NA/O=Roj/CN=jada"
