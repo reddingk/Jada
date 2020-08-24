@@ -1,7 +1,7 @@
 #Download Alphine Linux
 FROM alpine:3.10
 
-ARG OPENCV_VERSION=3.4.1
+ARG OPENCV_VERSION=4.10
 
 # Install OPENCV & Dependencies
 # Add Edge repos
@@ -14,7 +14,7 @@ RUN echo -e "\n\
 
 # Install required packages
 RUN apk update && apk upgrade && apk --no-cache add \
-  bash build-base ca-certificates clang-dev \
+  bash build-base clang-dev \
   clang cmake coreutils curl freetype-dev \
   ffmpeg-dev ffmpeg-libs gcc g++ git \
   gettext lcms2-dev libavc1394-dev libc-dev \
@@ -57,6 +57,7 @@ RUN ln -s /usr/include/locale.h /usr/include/xlocale.h && \
      -D WITH_FFMPEG=ON \
      -D WITH_TBB=ON \
      -D OPENCV_EXTRA_MODULES_PATH=/opt/opencv_contrib-$OPENCV_VERSION/modules \
+     -D OPENCV_ENABLE_NONFREE=ON \
      -D PYTHON_EXECUTABLE=/usr/local/bin/python \
      -D BUILD_EXAMPLES=OFF \
      -D BUILD_DOCS=OFF \
@@ -73,39 +74,38 @@ RUN ln -s /usr/include/locale.h /usr/include/xlocale.h && \
     python -c 'import cv2; print("Python: import cv2 - SUCCESS")'
 
 # Clean Up
-# RUN apk del build-essential curl wget unzip git cmake
+RUN apk del curl wget unzip
 
-# link opencv 4 folder for node instalation
-# RUN ln -s /usr/local/include/opencv4/opencv2/ /usr/local/include/opencv2
 
 # Setup Jada Application
-# Copy Application Code
-COPY /dockerfiles/package.json /jada/package.json
-COPY server.js /jada/server.js
-COPY README.txt /jada/README.txt
-COPY README_PHRASE.txt /jada/README_PHRASE.txt
-COPY jadaEx.js /jada/jadaEx.js
-COPY jadacmd.js /jada/jadacmd.js
+
+# Get Jada Code
+RUN git clone https://github.com/reddingk/Jada.git
+
+# Copy Build Files
+RUN rm /Jada/package.json && \
+    rm /Jada/package-lock.json && \
+    rm -r /Jada/jada_3/config/data/photoMemory
+
+COPY /dockerfiles/package.json /Jada/package.json
+COPY /public /Jada/public 
+
+COPY /jada_3/config/data/imgModels /Jada/jada_3/config/data/imgModels
+COPY /jada_3/config/data/photoMemory /Jada/jada_3/config/data/photoMemory
+COPY /jada_3/fileCache /Jada/jada_3/fileCache
 
 # Copy Env File
-COPY /dockerfiles/.env /jada/.env
+COPY /dockerfiles/.env /Jada/.env
 COPY /dockerfiles/.env .env
 
-# Copy Application Folders
-COPY /api /jada/api
-COPY /jada_3 /jada/jada_3
-COPY /network /jada/network
-COPY /public /jada/public 
-COPY /security /jada/security
+# Remove Development Files
+RUN rm -r /Jada/dockerfiles && \
+    rm /Jada/Dockerfile && \
+    rm /Jada/jadacmd.js && \
+    rm /Jada/jadaEx.js
 
 # Install Application Packages
 RUN cd /jada; npm install
-
-# Generate SSL Cert
-#RUN cd /jada; openssl req -nodes -new -x509 -keyout server.key -out server.cert -days 1024 -subj "/C=US/ST=NA/L=NA/O=Roj/CN=jada"
-
-# Copy server files
-#RUN cp /jada/server.key /;cp /jada/server.cert /
 
 # Run Application
  EXPOSE  1003

@@ -4,8 +4,7 @@
   "description": "The brain behind the Jaden personal assistant",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "postinstall": "if [ ! -f node_modules/opencv4nodejs/build/Release/opencv4nodejs.node ]; then cd node_modules/opencv4nodejs/build; make; fi"
+    "start": "node server.js"
   },
   "author": "Kris Redding",
   "license": "ISC",
@@ -37,11 +36,5 @@
     "tesseract.js": "^1.0.19",
     "uid-generator": "^1.0.0",
     "underscore": "^1.8.3"
-  },
-  "opencv4nodejs": {
-    "disableAutoBuild": 1,
-    "opencvIncludeDir": "/usr/local/include",
-    "opencvLibDir": "/usr/local/lib64",
-    "opencvBinDir": "/usr/local/bin"
   }
 }
