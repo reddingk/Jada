@@ -45,7 +45,7 @@ https://www.npmjs.com/package/opencv4nodejs
    docker save jada:0.951 > jada_0_951.tar
 
 -- OFFICIAL --
-docker run -p 1003:1003 -v c:/Users/krisr/Documents/Development/Personal/Jada/localConfig:/jada/localConfig -t -i jada:0.95
+docker run -p 1003:1003 -v c:/Users/krisr/Documents/Development/Personal/Jada/localConfig:/Jada/localConfig -t -i jada:0.97
 
 docker load < /media/usb/naratifla_0_951.tar
 docker load < /media/usb/jada_0_951.tar
