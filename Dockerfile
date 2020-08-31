@@ -1,5 +1,7 @@
 #Download Alphine Linux
-FROM alpine:3.10
+#FROM alpine:3.10
+FROM python:3.8.5-alpine3.12
+
 
 # Install OPENCV & Dependencies
 # Add Edge repos
@@ -18,9 +20,9 @@ RUN apk update && apk upgrade && apk --no-cache add \
   gettext lcms2-dev libavc1394-dev libc-dev \
   libffi-dev libjpeg-turbo-dev libpng-dev \
   libressl-dev libwebp-dev linux-headers \
-  libx11-dev make musl openblas openblas-dev \
-  openjpeg-dev openssl python \
-  python3 python3-dev tiff-dev \
+  libx11-dev make musl nano openblas openblas-dev \
+  openjpeg-dev openssl tiff-dev \
+  # python python3 python3-dev \
   # Install NodeJs
   nodejs npm \
   unzip zlib-dev
@@ -43,7 +45,7 @@ RUN apk del curl wget unzip
 
 # Setup Jada Application
 # Get Jada Code
-RUN git clone https://github.com/reddingk/Jada.git
+RUN git clone https://github.com/reddingk/Jada.git Jada
 
 # Copy Build Files
 RUN rm /Jada/package.json && \
@@ -72,4 +74,4 @@ RUN cd /Jada; npm install
 
 # Run Application
 EXPOSE  1003
-CMD ["node", "/Jada/server.js"]
+#CMD ["node", "/Jada/server.js"]
