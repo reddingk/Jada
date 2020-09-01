@@ -36,5 +36,12 @@
     "tesseract.js": "^1.0.19",
     "uid-generator": "^1.0.0",
     "underscore": "^1.8.3"
+  },
+  "opencv4nodejs": {
+    "disableAutoBuild": 1,
+    "opencvIncludeDir": "/usr/local/include/opencv4",
+    "opencvLibDir": "/usr/local/lib",
+    "opencvBinDir": "/usr/local/bin"
   }
+
 }

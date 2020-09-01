@@ -1,106 +1,91 @@
-#Download Alphine Linux
-FROM alpine:3.10
+#Download Linux
+FROM ubuntu:20.04
 
-ARG OPENCV_VERSION=4.1.2
+RUN apt-get update && apt-get upgrade
 
-# Install OPENCV & Dependencies
-# Add Edge repos
-RUN echo -e "\n\
-@edgemain http://nl.alpinelinux.org/alpine/edge/main\n\
-@edgecomm http://nl.alpinelinux.org/alpine/edge/community\n\
-@edgetest http://nl.alpinelinux.org/alpine/edge/testing"\
-  >> /etc/apk/repositories
+RUN apt-get install --yes build-essential cmake unzip pkg-config
+
+RUN apt-get install --yes libjpeg-dev libpng-dev
+RUN apt-get install --yes libavcodec-dev libavformat-dev libswscale-dev
+RUN apt-get install --yes libgtk2.0-dev libcanberra-gtk* libgtk-3-dev
+RUN apt-get install --yes libxvidcore-dev libx264-dev
+RUN apt-get install --yes python3-dev python3-numpy python3-pip
+RUN apt-get install --yes libtbb2 libtbb-dev libdc1394-22-dev \
+                          libv4l-dev v4l-utils \
+                          libopenblas-dev libatlas-base-dev libblas-dev \
+                          liblapack-dev gfortran libhdf5-dev \
+                          libprotobuf-dev libgoogle-glog-dev libgflags-dev \
+                          protobuf-compiler 
+
+# Download opencv
+RUN cd ~ \
+  && wget -O opencv.zip https://github.com/opencv/opencv/archive/4.3.0.zip \
+  && wget -O opencv_contrib.zip https://github.com/opencv/opencv_contrib/archive/4.3.0.zip
+
+RUN unzip opencv.zip && unzip opencv_contrib.zip
+RUN mv opencv-4.3.0 opencv && mv opencv_contrib-4.3.0 opencv_contrib
+
+# Clean Up
+RUN rm opencv.zip && rm opencv_contrib.zip
 
 
-# Install required packages
-RUN apk update && apk upgrade && apk --no-cache add \
-  bash build-base ca-certificates clang-dev \
-  clang cmake coreutils curl freetype-dev \
-  ffmpeg-dev ffmpeg-libs gcc g++ git \
-  gettext lcms2-dev libavc1394-dev libc-dev \
-  libffi-dev libjpeg-turbo-dev libpng-dev \
-  libressl-dev libwebp-dev linux-headers \
-  libx11-dev make musl openblas openblas-dev \
-  openjpeg-dev openssl python \
-  python3 python3-dev tiff-dev \
-  # Install NodeJs
-  nodejs npm \
-  unzip zlib-dev
+# Build OPENCV
+RUN cd ~/opencv/ && mkdir build && cd build
+RUN cmake -D CMAKE_BUILD_TYPE=RELEASE \
+        -D CMAKE_INSTALL_PREFIX=/usr/local \
+        -D OPENCV_EXTRA_MODULES_PATH=~/opencv_contrib/modules \
+        -D ENABLE_NEON=ON \
+        -D WITH_FFMPEG=ON \
+        -D WITH_GSTREAMER=ON \
+        -D WITH_TBB=ON \
+        -D BUILD_TBB=ON \
+        -D BUILD_TESTS=OFF \
+        -D WITH_EIGEN=OFF \
+        -D WITH_V4L=ON \
+        -D WITH_LIBV4L=ON \
+        -D WITH_VTK=OFF \
+        -D WITH_QT=OFF \
+        -D OPENCV_ENABLE_NONFREE=ON \
+        -D INSTALL_C_EXAMPLES=OFF \
+        -D INSTALL_PYTHON_EXAMPLES=OFF \
+        -D BUILD_NEW_PYTHON_SUPPORT=ON \
+        -D BUILD_opencv_python3=TRUE \
+        -D OPENCV_GENERATE_PKGCONFIG=ON \
+        -D BUILD_EXAMPLES=OFF ..
 
-RUN apk add --repository http://dl-cdn.alpinelinux.org/alpine/edge/testing \
-            --update --no-cache libtbb libtbb-dev
-
-  # Python 3 as default
-RUN ln -s /usr/bin/python3 /usr/local/bin/python && \
-  ln -s /usr/bin/pip3 /usr/local/bin/pip && \
-  pip install --upgrade pip
-
-# Install NumPy
-RUN ln -s /usr/include/locale.h /usr/include/xlocale.h && \
-  pip install numpy
-
-# Install OpenCV
-# https://github.com/opencv/opencv/archive/$OPENCV_VERSION.tar.gz
- RUN mkdir -p /opt && cd /opt && \
-   wget https://github.com/opencv/opencv/archive/$OPENCV_VERSION.zip && \
-   unzip $OPENCV_VERSION.zip && rm $OPENCV_VERSION.zip && \
-   wget https://github.com/opencv/opencv_contrib/archive/$OPENCV_VERSION.zip && \
-   unzip $OPENCV_VERSION.zip && rm $OPENCV_VERSION.zip \
-   && \
-   cd /opt/opencv-$OPENCV_VERSION && mkdir -p build && cd build && \
-   cmake -D CMAKE_BUILD_TYPE=RELEASE \
-     -D CMAKE_C_COMPILER=/usr/bin/clang \
-     -D CMAKE_CXX_COMPILER=/usr/bin/clang++ \
-     -D CMAKE_INSTALL_PREFIX=/usr/local \
-     -D INSTALL_PYTHON_EXAMPLES=OFF \
-     -D INSTALL_C_EXAMPLES=OFF \
-     -D WITH_FFMPEG=ON \
-     -D WITH_TBB=ON \
-     -D OPENCV_EXTRA_MODULES_PATH=/opt/opencv_contrib-$OPENCV_VERSION/modules \
-     -D PYTHON_EXECUTABLE=/usr/local/bin/python \
-     -D BUILD_EXAMPLES=OFF \
-     -D BUILD_DOCS=OFF \
-     -D BUILD_PERF_TESTS=OFF \
-     -D INSTALL_C_EXAMPLES=OFF \
-     -D INSTALL_PYTHON_EXAMPLES=OFF \
-     -D BUILD_TESTS=OFF \
-     .. \
-   && \
-   make -j4 && make install && cd .. && rm -rf build \
-   && \
-   cp -p $(find /usr/local/lib/python3.7/site-packages -name cv2.*.so) \
-    /usr/lib/python3.7/site-packages/cv2.so && \
-    python -c 'import cv2; print("Python: import cv2 - SUCCESS")'
+RUN make -j4 && make install && ldconfig && apt-get update
 
 # Setup Jada Application
-# Copy Application Code
- COPY /dockerfiles/package.json /jada/package.json
- COPY server.js /jada/server.js
- COPY README.txt /jada/README.txt
- COPY README_PHRASE.txt /jada/README_PHRASE.txt
- COPY jadaEx.js /jada/jadaEx.js
- COPY jadacmd.js /jada/jadacmd.js
+# Get Jada Code
+RUN git clone https://github.com/reddingk/Jada.git Jada
 
- # Copy Env File
- COPY /dockerfiles/.env /jada/.env
- COPY /dockerfiles/.env .env
+# Clean Extra Files Build Files
+RUN rm /Jada/package.json && \
+    rm /Jada/package-lock.json && \
+    rm -r /Jada/jada_3/config/data/photoMemory
 
-# Copy Application Folders
- COPY /api /jada/api
- COPY /jada_3 /jada/jada_3
- COPY /network /jada/network
- COPY /public /jada/public 
- COPY /security /jada/security
+# Copy Build Files
+COPY /dockerfiles/package.json /Jada/package.json
+RUN mkdir -p /public
+
+COPY /jada_3/config/data/imgModels /Jada/jada_3/config/data/imgModels
+COPY /jada_3/config/data/photoMemory /Jada/jada_3/config/data/photoMemory
+RUN mkdir -p /Jada/jada_3/fileCache
+
+# Copy Env File
+COPY /dockerfiles/.env /Jada/.env
+COPY /dockerfiles/.env .env
+
+# Remove Development Files
+RUN rm -r /Jada/dockerfiles && \
+    rm /Jada/Dockerfile && \
+    rm /Jada/jadacmd.js && \
+    rm /Jada/jadaEx.js
 
 # Install Application Packages
-# RUN cd /jada; npm install
-
-# Generate SSL Cert
-#RUN cd /jada; openssl req -nodes -new -x509 -keyout server.key -out server.cert -days 1024 -subj "/C=US/ST=NA/L=NA/O=Roj/CN=jada"
-
-# Copy server files
-#RUN cp /jada/server.key /;cp /jada/server.cert /
+RUN cd /Jada; npm install
 
 # Run Application
- EXPOSE  1003
- #CMD ["node", "/jada/server.js"]
+EXPOSE  1003
+#CMD ["node", "/Jada/server.js"]
+

@@ -1,6 +1,6 @@
 #Download Alphine Linux
-#FROM alpine:3.10
-FROM python:3.8.5-alpine3.12
+FROM alpine:3.10
+
 
 
 # Install OPENCV & Dependencies
@@ -21,8 +21,8 @@ RUN apk update && apk upgrade && apk --no-cache add \
   libffi-dev libjpeg-turbo-dev libpng-dev \
   libressl-dev libwebp-dev linux-headers \
   libx11-dev make musl nano openblas openblas-dev \
-  openjpeg-dev openssl tiff-dev \
-  # python python3 python3-dev \
+  openjpeg-dev openssl python \
+  python3 python3-dev tiff-dev \
   # Install NodeJs
   nodejs npm \
   unzip zlib-dev
