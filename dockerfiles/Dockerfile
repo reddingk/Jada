@@ -10,6 +10,7 @@ ENV TZ=America/New_York
 # Update and Upgrade Image
 RUN apt-get update -y && apt-get upgrade -y
 RUN apt-get install -y build-essential cmake unzip wget pkg-config git
+RUN apt-get install -y nodejs npm nano
 
 RUN apt-get install -y libjpeg-dev libpng-dev
 RUN apt-get install -y libavcodec-dev libavformat-dev libswscale-dev
@@ -33,8 +34,8 @@ RUN mkdir -p /opt && cd /opt && \
 
 
 # Build OPENCV
-RUN cd /opt/opencv/ && mkdir build && cd build
-RUN cmake -D CMAKE_BUILD_TYPE=RELEASE \
+RUN cd /opt/opencv/ && mkdir build && cd build &&\
+    cmake -D CMAKE_BUILD_TYPE=RELEASE \
         -D CMAKE_INSTALL_PREFIX=/usr/local \
         -D OPENCV_EXTRA_MODULES_PATH=/opt/opencv_contrib/modules \
         -D ENABLE_NEON=ON \
@@ -56,7 +57,7 @@ RUN cmake -D CMAKE_BUILD_TYPE=RELEASE \
         -D OPENCV_GENERATE_PKGCONFIG=ON \
         -D BUILD_EXAMPLES=OFF ..
 
-RUN make -j4 && make install && ldconfig && apt-get update
+RUN cd /opt/opencv/build && make -j4 && make install && ldconfig && apt-get update
 
 # Setup Jada Application
 # Get Jada Code
@@ -90,5 +91,5 @@ RUN cd /Jada; npm install
 
 # Run Application
 EXPOSE  1003
-#CMD ["node", "/Jada/server.js"]
+CMD ["node", "/Jada/server.js"]
 
