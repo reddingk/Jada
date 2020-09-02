@@ -1,16 +1,22 @@
 #Download Linux
 FROM ubuntu:20.04
 
-RUN apt-get update && apt-get upgrade
+ARG OPENCV_VERSION=4.3.0
 
-RUN apt-get install --yes build-essential cmake unzip pkg-config
+# Build Environment Variables
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=America/New_York
 
-RUN apt-get install --yes libjpeg-dev libpng-dev
-RUN apt-get install --yes libavcodec-dev libavformat-dev libswscale-dev
-RUN apt-get install --yes libgtk2.0-dev libcanberra-gtk* libgtk-3-dev
-RUN apt-get install --yes libxvidcore-dev libx264-dev
-RUN apt-get install --yes python3-dev python3-numpy python3-pip
-RUN apt-get install --yes libtbb2 libtbb-dev libdc1394-22-dev \
+# Update and Upgrade Image
+RUN apt-get update -y && apt-get upgrade -y
+RUN apt-get install -y build-essential cmake unzip wget pkg-config git
+
+RUN apt-get install -y libjpeg-dev libpng-dev
+RUN apt-get install -y libavcodec-dev libavformat-dev libswscale-dev
+RUN apt-get install -y libgtk2.0-dev libcanberra-gtk* libgtk-3-dev
+RUN apt-get install -y libxvidcore-dev libx264-dev
+RUN apt-get install -y python3-dev python3-numpy python3-pip
+RUN apt-get install -y libtbb2 libtbb-dev libdc1394-22-dev \
                           libv4l-dev v4l-utils \
                           libopenblas-dev libatlas-base-dev libblas-dev \
                           liblapack-dev gfortran libhdf5-dev \
@@ -18,22 +24,19 @@ RUN apt-get install --yes libtbb2 libtbb-dev libdc1394-22-dev \
                           protobuf-compiler 
 
 # Download opencv
-RUN cd ~ \
-  && wget -O opencv.zip https://github.com/opencv/opencv/archive/4.3.0.zip \
-  && wget -O opencv_contrib.zip https://github.com/opencv/opencv_contrib/archive/4.3.0.zip
-
-RUN unzip opencv.zip && unzip opencv_contrib.zip
-RUN mv opencv-4.3.0 opencv && mv opencv_contrib-4.3.0 opencv_contrib
-
-# Clean Up
-RUN rm opencv.zip && rm opencv_contrib.zip
+RUN mkdir -p /opt && cd /opt && \
+  wget -O opencv.zip https://github.com/opencv/opencv/archive/$OPENCV_VERSION.zip && \
+  wget -O opencv_contrib.zip https://github.com/opencv/opencv_contrib/archive/$OPENCV_VERSION.zip && \
+  unzip opencv.zip && rm opencv.zip && \
+  unzip opencv_contrib.zip && rm opencv_contrib.zip && \
+  mv /opt/opencv-$OPENCV_VERSION /opt/opencv && mv /opt/opencv_contrib-$OPENCV_VERSION /opt/opencv_contrib
 
 
 # Build OPENCV
-RUN cd ~/opencv/ && mkdir build && cd build
+RUN cd /opt/opencv/ && mkdir build && cd build
 RUN cmake -D CMAKE_BUILD_TYPE=RELEASE \
         -D CMAKE_INSTALL_PREFIX=/usr/local \
-        -D OPENCV_EXTRA_MODULES_PATH=~/opencv_contrib/modules \
+        -D OPENCV_EXTRA_MODULES_PATH=/opt/opencv_contrib/modules \
         -D ENABLE_NEON=ON \
         -D WITH_FFMPEG=ON \
         -D WITH_GSTREAMER=ON \
