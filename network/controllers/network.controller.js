@@ -7,7 +7,7 @@ let sseExpress = require('../services/sseDriver.service');
 var sse = require('../services/sse.service');
 
 // Auth Services
-var jauth = require('../../security/services/auth.service');
+//var jauth = require('../../security/services/auth.service');
 
 const Tool = require('../../jada_3/jtools.js');
 const jtool = new Tool();

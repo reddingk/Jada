@@ -89,6 +89,9 @@ RUN rm -r /Jada/dockerfiles && \
 # Install Application Packages
 RUN cd /Jada; npm install
 
+# Clean Up Packages
+RUN apt-get remove unzip wget cmake
+
 # Run Application
 EXPOSE  1003
 CMD ["node", "/Jada/server.js"]

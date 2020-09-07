@@ -1,8 +1,6 @@
 #Download Alphine Linux
 FROM alpine:3.10
 
-
-
 # Install OPENCV & Dependencies
 # Add Edge repos
 RUN echo -e "\n\
@@ -74,4 +72,4 @@ RUN cd /Jada; npm install
 
 # Run Application
 EXPOSE  1003
-#CMD ["node", "/Jada/server.js"]
+CMD ["node", "/Jada/server.js"]

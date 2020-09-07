@@ -163,7 +163,7 @@ class TOOLS {
 
             if(retUser && retUser.length > 0){ 
                 var settingKey = _updateKeyLength(retUser[0][process.env.CIPHER_KEY_ATTR], process.env.CIPER_KEY_LENGTH);                                
-                var cryptr = new Cryptr(settingKey);
+                var cryptr = new Cryptr(settingKey);                
                 var strData = JSON.stringify(userData);
 
                 settingdb[userId] = cryptr.encrypt(strData);                

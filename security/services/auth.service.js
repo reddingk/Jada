@@ -12,7 +12,7 @@ const Eyes = require('../../jada_3/jeyes');
 const Tools = require('../../jada_3/jtools');
 
 /* Class Decleration */
-const jEyes = new Eyes();
+//const jEyes = new Eyes();
 const jTools = new Tools();
 
 const uidgen = new UIDGenerator(); 
@@ -106,7 +106,7 @@ var auth = {
             if(userObj){
                 switch(userObj.type){
                     case 'faceMatch':
-                        _faceMatchUser(userObj, callback);
+                        /*_faceMatchUser(userObj, callback);*/
                         break;
                     case 'userLogin':
                         break;
@@ -182,6 +182,10 @@ function _addUser(userInfo, userSettings, callback){
             var tmpStatus = jTools.setDBData("db", db);
 
             // Add User Settings
+            userSettings = (userSettings === null ?
+                    {name:userInfo.name,voice:'off',lastAction:{},locations:{},relationships:{},pinned:[]}
+                    : userSettings);
+                    
             var settingsUpdate = jTools.updateUserData(userInfo.userId, userSettings);
 
             callback({ "status":(tmpStatus && settingsUpdate) });  
@@ -194,7 +198,7 @@ function _addUser(userInfo, userSettings, callback){
     }
 }
 
-function _faceMatchUser(userObj, callback){
+/*function _faceMatchUser(userObj, callback){
     try {        
         var matchNames = _getFaceRecogUsers(userObj.data);
         
@@ -213,10 +217,10 @@ function _faceMatchUser(userObj, callback){
         jtool.errorLog(err);
         callback({"status":err, "statusCode":0});
     }
-}
+}*/
 
 /* Face Recog Img */
-function _getFaceRecogUsers(img){
+/*function _getFaceRecogUsers(img){
     var retData = null;
     try {
         var matImg = jEyes.b64toMat(img);        
@@ -228,7 +232,7 @@ function _getFaceRecogUsers(img){
     }
     
     return (retData != null? retData.names : []);
-}
+}*/
 
 /* Login User */
 function _loginUser(user, password, ip, connections, callback){

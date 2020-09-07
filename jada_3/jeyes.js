@@ -8,19 +8,19 @@ const cv = require("opencv4nodejs");
 const tesseract = require('tesseract.js');
 const fs = require("fs");
 const path = require("path");
-//const screen = require("screen-info");
 const modelLib = require("./config/data/modellib.json");
 const defaultCamPort = 1;
 const Tools = require('./jtools.js');
 const jtools = new Tools();
+const configLoc = (process.env.CONFIG_LOC ? process.env.CONFIG_LOC : "/jada/localConfig");
 
 class JEYES {
     constructor(){
         this.facialClassifier = new cv.CascadeClassifier(cv.HAAR_FRONTALFACE_ALT2);
-        this.facemarkModel = __dirname+"/config/data/lbfmodel.yaml";
-        this.textDetectionModel = __dirname+"/config/data/frozen_east_text_detection.pb";
-        this.photoMemory = __dirname + "/config/data/photoMemory";
-        this.imgIndexModel = __dirname + "/config/data/imgIndex.json";
+        this.facemarkModel = configLoc+"/config/data/lbfmodel.yaml";
+        this.textDetectionModel = configLoc+"/config/data/frozen_east_text_detection.pb";
+        this.photoMemory = configLoc + "/config/data/photoMemory";
+        this.imgIndexModel = configLoc + "/config/data/imgIndex.json";
         
         this.PhoebeColor = new cv.Vec(4,205,252);
         this.foundColor = new cv.Vec(102,51,0);
@@ -256,9 +256,9 @@ class JEYES {
                 var model = self.modelLibrary[filter];
 
                 if(!model.net){
-                    const cfgFile =  __dirname + "/config/data/imgModels/" + model.configFile;
-                    const weightsFile =  __dirname + "/config/data/imgModels/" + model.weightsFile;
-                    const labelsFile = __dirname + "/config/data/imgModels/" + model.labelFile;
+                    const cfgFile =  configLoc + "/config/data/imgModels/" + model.configFile;
+                    const weightsFile =  configLoc + "/config/data/imgModels/" + model.weightsFile;
+                    const labelsFile = configLoc + "/config/data/imgModels/" + model.labelFile;
 
                     model.dataKey = fs.readFileSync(labelsFile).toString().split("\n");   
                     
@@ -404,13 +404,13 @@ class JEYES {
                 */
 
                 // Save Image                                    
-                var fileNm = __dirname+"\\fileCache\\"+Date.now() +".png";                                    
+                var fileNm = configLoc+"\\fileCache\\"+Date.now() +".png";                                    
                 cv.imwrite(fileNm, filterRes);
 
                 // TEST
-                cv.imwrite(__dirname+"\\fileCache\\"+i +"-"+Date.now() +"th0.png", imgToGry);
-                cv.imwrite(__dirname+"\\fileCache\\"+i +"-"+Date.now() +"th1.png", th1);
-                cv.imwrite(__dirname+"\\fileCache\\"+i +"-"+Date.now() +"th2.png", th2);
+                cv.imwrite(configLoc+"\\fileCache\\"+i +"-"+Date.now() +"th0.png", imgToGry);
+                cv.imwrite(configLoc+"\\fileCache\\"+i +"-"+Date.now() +"th1.png", th1);
+                cv.imwrite(configLoc+"\\fileCache\\"+i +"-"+Date.now() +"th2.png", th2);
 
                 tesseract.recognize(fileNm).then(function(result){
                     // Delete TMP Img
