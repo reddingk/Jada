@@ -14,7 +14,9 @@ const locationdb = require(process.env.CONFIG_LOC + "/locationdb.json");
 const Tools = require('./jtools.js');
 const Eyes = require('./jeyes.js');
 const Lift = require('./jlift.js');
-const apiLib = require("./config/apiLib.json");
+
+const configLoc = (process.env.CONFIG_LOC ? process.env.CONFIG_LOC : "/jada/localConfig");
+const apiLib = require(configLoc+"/config/apiLib.json");
 
 class JCELL {  
     constructor() {

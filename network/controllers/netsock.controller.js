@@ -1,5 +1,5 @@
 const ss = require('socket.io-stream');
-
+const fs = require('fs');
 const dataFilter = require('../services/dataFilter.service');
 const sse = require('../services/sse.service');
 
@@ -8,7 +8,7 @@ const jauth = require('../../security/services/auth.service');
 
 const Tool = require('../../jada_3/jtools.js');
 const jtool = new Tool();
-//jtool.errorLog(" [Error] streaming file data: " + ex);
+const configLoc = (process.env.CONFIG_LOC ? process.env.CONFIG_LOC : "/jada/localConfig");
 
 module.exports = function (io, connections, filestore) {
     // socket connection
@@ -140,6 +140,25 @@ module.exports = function (io, connections, filestore) {
             }
             catch(ex){
                 jtool.errorLog(" [Error] Sock S01: " + ex);
+            }
+        });
+
+        socket.on('[susie] lens list', function (info) {
+            try {
+                var connectionId = connections.getConnection(info.rID);
+
+                if (connectionId && connectionId.socket) {
+                    var retObj = {"sID":info.sID, "data": null };
+
+                    var labelsFile = configLoc+"/config/data/imgModels/coco.names";
+                    var lensData = fs.readFileSync(labelsFile).toString().replace(/(\r\n|\n|\r)/gm,"=").split("=");
+
+                    retObj.data = (lensData ? lensData : null);                                        
+                    io.to(connectionId.socket).emit('[susie] lens list', retObj);
+                }
+            }
+            catch(ex){
+                jtool.errorLog(" [Error] Sock S02: " + ex);
             }
         });
 

@@ -8,7 +8,7 @@ const fs = require('fs');
 
 require('dotenv').config();
 
-const Eyes = require('../../jada_3/jeyes');
+//const Eyes = require('../../jada_3/jeyes');
 const Tools = require('../../jada_3/jtools');
 
 /* Class Decleration */
@@ -20,7 +20,6 @@ const saltRounds = 15;
 
 var auth = {
     createUser: function(userInfo, userSettings, callback){
-        var self = this;
         try {
             /* { userId, pwd, name, faceId } */
             _getUserByUId(userInfo.userId, function(res){
@@ -34,7 +33,53 @@ var auth = {
         }
         catch(ex){
             var err = util.format("Error Creating %s On: %s", user, ex);
-            jtool.errorLog(err);
+            jTools.errorLog(err);
+            callback({"error":err});
+        }
+    },
+    removeUser: function(userInfo, callback){        
+        try {
+            /* { userId, pwd, name, faceId } */
+            _getUserByUId(userInfo.userId, function(res){
+                if(!res){
+                    callback({"error":"User DNE"});
+                }
+                else {
+                    _removeUser(userInfo, callback);
+                }
+            }); 
+        }
+        catch(ex){
+            var err = util.format("Error Removing %s On: %s", user, ex);
+            jTools.errorLog(err);
+            callback({"error":err});
+        }
+    },
+    updatingUser: function(userInfo, callback){
+        try {
+            /* { userId, pwd, name, faceId } */
+            _getUserByUId(userInfo.userId, function(res){
+                if(!res){
+                    callback({"error":"User DNE"});
+                }
+                else {
+                    _updateUser(userInfo, callback);
+                }
+            }); 
+        }
+        catch(ex){
+            var err = util.format("Error Removing %s On: %s", user, ex);
+            jTools.errorLog(err);
+            callback({"error":err});
+        }
+    },
+    getAllUsers: function(callback){
+        try {
+            _getUsers(callback);
+        }
+        catch(ex){
+            var err = util.format("Error Removing %s On: %s", user, ex);
+            jTools.errorLog(err);
             callback({"error":err});
         }
     },
@@ -56,7 +101,7 @@ var auth = {
         }
         catch(ex){
             var err = util.format("Error Logging %s On: %s", user, ex);
-            jtool.errorLog(err);
+            jTools.errorLog(err);
             callback({"error":err});
         }
     },
@@ -66,7 +111,7 @@ var auth = {
         }
         catch(ex){
             var err = util.format("Error Logging %s Off: %s", user, ex);
-            jtool.errorLog(err);
+            jTools.errorLog(err);
             callback({"status":false, "errorMsg":err});
         }
     },
@@ -97,7 +142,7 @@ var auth = {
         }
         catch(ex){
             var err = util.format("Error Validating: %s", ex);
-            jtool.errorLog(err);
+            jTools.errorLog(err);
             callback({"status":err, "statusCode":0, "user":null });
         }
     },
@@ -120,7 +165,7 @@ var auth = {
         }
         catch(ex){
             var err = util.format("Error Authetication User: %s", ex);
-            jtool.errorLog(err);
+            jTools.errorLog(err);
             callback({"status":err, "statusCode":0});
         }
     }
@@ -141,7 +186,7 @@ function _getUserByUId(uID, callback){
         }
     }
     catch(ex){
-        jtool.errorLog("Error Getting User ", uID," :", ex);
+        jTools.errorLog("Error Getting User ", uID," :", ex);
         callback(null);
     }
 }
@@ -154,7 +199,7 @@ function _getUserByFacename(facename, callback){
         callback((usrRet ? usrRet[0] : null));
     }
     catch(ex){
-        jtool.errorLog("Error Getting User By Facename ", facename," :", ex);
+        jTools.errorLog("Error Getting User By Facename ", facename," :", ex);
         callback(null);
     }
 }
@@ -175,10 +220,10 @@ function _addUser(userInfo, userSettings, callback){
             }
             
             // Hash PWD
-            var pwdHash = bcrypt.hashSync(userInfo.pwd, saltRounds);
+            var pwdHash = bcrypt.hashSync(_cleanPwd(userInfo.pwd), saltRounds);
             
             // Add User 
-            db.users.push({"id":tmpId, "userId":userInfo.userId, "pwd":pwdHash, "name":userInfo.name, "faceId":userInfo.faceId });
+            db.users.push({"id":tmpId, "userId":userInfo.userId, "pwd":pwdHash, "name":userInfo.name, "faceId":userInfo.faceId, "admin":userInfo.admin });
             var tmpStatus = jTools.setDBData("db", db);
 
             // Add User Settings
@@ -193,10 +238,90 @@ function _addUser(userInfo, userSettings, callback){
     }
     catch(ex){
         var err = util.format("Error Adding User [%s] : %s", userInfo.userId , ex);
-        jtool.errorLog(err);
+        jTools.errorLog(err);
         callback({"error":err, "status":false});
     }
 }
+
+/* Remove User from DB */
+function _removeUser(userInfo, callback){
+    try {
+        var db = jTools.getDBData("db");
+        var usrRet = underscore.where(db.users, {userId: userInfo.userId});
+
+        if(!usrRet || usrRet.length <= 0){
+            callback({"status":false, "error":"User DNE" });
+        }
+        else {      
+            // Remove User             
+            var tmpList = db.users.filter(function(item) { return item.userId !== userInfo.userId; });
+             
+            db.users = tmpList;
+            var tmpStatus = jTools.setDBData("db", db);
+
+            // Remove Users Settings
+            var settingdb = this.getDBData("settingdb");
+            delete settingdb[userInfo.userId];
+            var settingsStatus = jTools.setDBData("settingdb", settingdb);
+
+            callback({ "status":tmpStatus && settingsStatus });  
+        }
+    }
+    catch(ex){
+        var err = util.format("Error Removing User [%s] : %s", userInfo.userId , ex);
+        jTools.errorLog(err);
+        callback({"error":err, "status":false});
+    }
+}
+
+/* Update User in DB */
+function _updateUser(userInfo, callback){
+    try {
+        var db = jTools.getDBData("db");
+        var usrRet = underscore.where(db.users, {userId: userInfo.userId});
+
+        if(!usrRet || usrRet.length <= 0){
+            callback({"status":false, "error":"User DNE" });
+        }
+        else {          
+                        
+            for(var i =0; i < db.users.length >=0; i++){
+                if(db.users[i].id === usrRet[0].id){                    
+                    db.users[i].pwd = (userInfo.pwd == null ? db.users[i].pwd : bcrypt.hashSync(_cleanPwd(userInfo.pwd), saltRounds));
+                    db.users[i].userId = userInfo.userId;
+                    db.users[i].name = userInfo.name;
+                    db.users[i].faceId = userInfo.faceId;
+                    db.users[i].admin = userInfo.admin;
+                    break;
+                }
+            }
+            
+            var tmpStatus = jTools.setDBData("db", db);          
+            callback({ "status":tmpStatus });  
+        }
+    }
+    catch(ex){
+        var err = util.format("Error Updating User [%s] : %s", userInfo.userId , ex);
+        jTools.errorLog(err);
+        callback({"error":err, "status":false});
+    }
+}
+
+/* Get User in DB */
+function _getUsers(callback){
+    try {
+        var db = jTools.getDBData("db");
+        var ret = db.users.map(function(user){ delete user.pwd; return user; });        
+
+        callback({ "users":ret }); 
+    }
+    catch(ex){
+        var err = util.format("Error Getting Users : %s", ex);
+        jTools.errorLog(err);
+        callback({"error":err, "status":false});
+    }
+}
+
 
 /*function _faceMatchUser(userObj, callback){
     try {        
@@ -214,7 +339,7 @@ function _addUser(userInfo, userSettings, callback){
     }
     catch(ex){
         var err = util.format("Error Matching User: %s", ex);
-        jtool.errorLog(err);
+        jTools.errorLog(err);
         callback({"status":err, "statusCode":0});
     }
 }*/
@@ -227,7 +352,7 @@ function _addUser(userInfo, userSettings, callback){
         retData = (matImg != null ? jEyes.faceRecogImg(matImg) : null);   
     }
     catch(ex){
-        jtool.errorLog("Error FaceRecog Service:", ex);
+        jTools.errorLog("Error FaceRecog Service:", ex);
         retData = null;
     }
     
@@ -259,7 +384,7 @@ function _loginUser(user, password, ip, connections, callback){
     }
     catch(ex){
         var err = util.format("Error Login In User: %s", ex);
-        jtool.errorLog(err);
+        jTools.errorLog(err);
         callback({"error":err, "statusCode":0});
     }
 }
@@ -273,7 +398,7 @@ function _cleanPwd(pwd){
         }
     }
     catch(ex){
-        jtool.errorLog("[Error] cleaning pwd: ",ex);
+        jTools.errorLog("[Error] cleaning pwd: ",ex);
     }
     return pwdRet;
 }

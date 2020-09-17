@@ -8,11 +8,14 @@ const cv = require("opencv4nodejs");
 const tesseract = require('tesseract.js');
 const fs = require("fs");
 const path = require("path");
-const modelLib = require("./config/data/modellib.json");
-const defaultCamPort = 1;
 const Tools = require('./jtools.js');
-const jtools = new Tools();
+
 const configLoc = (process.env.CONFIG_LOC ? process.env.CONFIG_LOC : "/jada/localConfig");
+const modelLib = require(configLoc+"/config/data/modellib.json");
+const defaultCamPort = 1;
+
+const jtools = new Tools();
+
 
 class JEYES {
     constructor(){
@@ -248,7 +251,7 @@ class JEYES {
         var self = this;
         var ret = {"img":null, "layers":[], "error":null};
 
-        try {
+        try {            
             if(!(filter in self.modelLibrary)){
                 ret.error = "Not A Valid Model";
             }
@@ -263,7 +266,11 @@ class JEYES {
                     model.dataKey = fs.readFileSync(labelsFile).toString().split("\n");   
                     
                     // initialize darknet model from modelFile
-                    model.net = self.modelLibrary[filter].net = cv.readNetFromDarknet(cfgFile, weightsFile);
+                    if(!self.modelLibrary[filter].net) {
+                        self.modelLibrary[filter].net = cv.readNetFromDarknet(cfgFile, weightsFile);
+                    }
+
+                    model.net = self.modelLibrary[filter].net;
                 }
                 // initialize darknet model from modelFile
                 const allLayerNames = model.net.getLayerNames();
@@ -315,7 +322,7 @@ class JEYES {
                                 boxes, confidences,
                                 model.minConfidence, model.nmsThreshold
                             );
-                            
+                                                        
                             indices.forEach(i => { 
                                 var text = model.dataKey[classIDs[i]];
                                 text = text.replace(/(?:\\[rn]|[\r\n])/g,"");
@@ -347,6 +354,7 @@ class JEYES {
             jtools.errorLog(" [ERROR] library mapping image: " + ex);
             ret.error = ex;
         }
+
         return ret;
     }
 
