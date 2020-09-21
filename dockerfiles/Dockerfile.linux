@@ -90,7 +90,7 @@ RUN rm -r /Jada/dockerfiles && \
 RUN cd /Jada; npm install
 
 # Clean Up Packages
-RUN apt-get remove unzip wget cmake
+RUN apt-get remove -y unzip wget cmake
 
 # Run Application
 EXPOSE  1003
