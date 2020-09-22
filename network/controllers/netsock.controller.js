@@ -88,6 +88,15 @@ module.exports = function (io, connections, filestore) {
             });
         });
 
+        // socket validate user
+        socket.on('jauth validate', function (info) {
+            
+            // Send Obj to Auth Service
+            jauth.validateUser(info.userId, info.token, connections, function(ret){                
+                io.to(socket.id).emit('jauth validate', ret);
+            });
+        });
+
         /* Number 5 */
         socket.on('[number5] command', function (info) {
             try {

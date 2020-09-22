@@ -15,7 +15,8 @@ https://www.npmjs.com/package/opencv4nodejs
 /*** BUILD DOCKERFILE ***/
 *] BUILD Container:
    docker build .
-   docker build -t jada:0.98 .
+   docker build -t jada:1.0 .
+   docker build --no-cache -t jada:1.0 .
 
 *] View Images
    docker images

@@ -65,16 +65,11 @@ RUN git clone https://github.com/reddingk/Jada.git Jada
 
 # Clean Extra Files Build Files
 RUN rm /Jada/package.json && \
-    rm /Jada/package-lock.json && \
-    rm -r /Jada/jada_3/config/data/photoMemory
+    rm /Jada/package-lock.json 
 
 # Copy Build Files
 COPY /dockerfiles/package.json /Jada/package.json
 RUN mkdir -p /public
-
-COPY /jada_3/config/data/imgModels /Jada/jada_3/config/data/imgModels
-COPY /jada_3/config/data/photoMemory /Jada/jada_3/config/data/photoMemory
-RUN mkdir -p /Jada/jada_3/fileCache
 
 # Copy Env File
 COPY /dockerfiles/.env /Jada/.env
@@ -82,7 +77,6 @@ COPY /dockerfiles/.env .env
 
 # Remove Development Files
 RUN rm -r /Jada/dockerfiles && \
-    rm /Jada/Dockerfile && \
     rm /Jada/jadacmd.js && \
     rm /Jada/jadaEx.js
 
