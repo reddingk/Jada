@@ -176,6 +176,9 @@ class JConnection {
                 if(res.error){
                     jtool.errorLog(" [ERROR] updating IP Location [" + id + "](2):", res.error);                    
                 }
+                else if(id.startsWith("access-")){
+                    jtool.errorLog(" [CONNECTION] Access Connection");
+                }
                 else if (id in self.connectionList) { 
                     self.connectionList[id].location = res.ret;
                     jtool.errorLog(" [CONNECTION] Updated Loc: " + id);

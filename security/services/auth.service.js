@@ -84,7 +84,6 @@ var auth = {
         }
     },
     loginUser: function(userObj, connections, ip, callback){
-        var self = this;
         try {
             if(userObj){
                 _loginUser(userObj.userId, userObj.password, ip, connections, function(ret){ 
@@ -260,7 +259,7 @@ function _removeUser(userInfo, callback){
             var tmpStatus = jTools.setDBData("db", db);
 
             // Remove Users Settings
-            var settingdb = this.getDBData("settingdb");
+            var settingdb = jTools.getDBData("settingdb");
             delete settingdb[userInfo.userId];
             var settingsStatus = jTools.setDBData("settingdb", settingdb);
 

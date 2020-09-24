@@ -18,8 +18,7 @@ module.exports = function (io, connections, filestore) {
         var ipAddress = socket.handshake.address;
 
         //console.log(" [Debug] socket: ");
-        //console.log(socket.handshake);
-        //console.log(socket.request);
+        //console.log(socket.handshake);console.log(socket.request);
 
         // add socket to connection item
         var connStatus = connections.addSocket(userId, userToken, socket.id);
