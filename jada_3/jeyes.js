@@ -1020,13 +1020,26 @@ function _loadRecogTrainingData(photoMemory, imgIndex, nameMappings, imgResize, 
                     
         // Get Face Images
         const getFaceImage = (grayImg) => {
-            const faceRects = facialClassifier.detectMultiScale(grayImg).objects;
+           const faceRects = facialClassifier.detectMultiScale(grayImg).objects;
             if (!faceRects.length) {
               throw new Error('failed to detect faces');
             }
             return grayImg.getRegion(faceRects[0]);
         };
         
+        /* Debug to Find Bad Data */
+        var noFaceList = 0;
+        imgFiles.forEach(function (file){
+            var tmp1 = path.resolve(photoMemory, file);
+            var tmp2 = cv.imread(tmp1);
+            var tmp3 = tmp2.bgrToGray()
+
+            const faceRects = facialClassifier.detectMultiScale(tmp3).objects;
+            if (!faceRects.length) { jtools.errorLog(" [Error] No Face File: "+file); noFaceList++; }
+        });        
+        if(noFaceList > 0) { throw new Error('Invalid face data'); }
+
+
         const trainImgs = imgFiles
             // get absolute file path
             .map(file => path.resolve(photoMemory, file))

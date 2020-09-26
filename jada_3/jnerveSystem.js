@@ -1238,7 +1238,7 @@ class JNERVESYSTEM {
             });*/
 
             /*var tst = self.jcell.jeyes.processRecognitionImgs(
-                "C:\\Users\\krisr\\Pictures\\ImgRecognitionTest\\ImgRecog5",
+                "C:\\Users\\krisr\\Pictures\\ImgRecognitionTest\\Photos",
                 "C:\\Users\\krisr\\Pictures\\ImgRecognitionTest\\Processed",
                 function(ret){
                     console.log(ret);
