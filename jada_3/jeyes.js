@@ -986,7 +986,7 @@ function _getImgInfo(imgId, imgIndex){
     return ret;
 }
 /* Build Name Map */
-function _buildNameMap2(photoMemory){
+function _buildNameMap(photoMemory){
     var nameObj = {};
     try {       
         const mapImgName = (folder) => {
