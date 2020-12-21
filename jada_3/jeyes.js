@@ -87,7 +87,7 @@ class JEYES {
     processRecognitionImgs(sourcePath, destinationPath, callback){
         var self = this;
         var ret = { "error":"", "processedImgs":0, "unprocessedImgs":0 };
-        var resizeMax = 350;
+        var resizeMax = 250;
 
         try {
             // Read In file Location
@@ -107,6 +107,7 @@ class JEYES {
                 }
                 else {
                     faceResults.objects.forEach((faceRect, j) => { 
+                        
                         const faceImg = grayImg.getRegion(faceRect).resize(self.imgResize, self.imgResize);
                         var displayImg = imgMat.getRegion(faceRect);
 
@@ -124,10 +125,9 @@ class JEYES {
                             imgNm = who + "-" + self.nameMappings.map[who];
                         }
 
-
                         // Save Image                                    
                         var fileNm = destinationPath+"\\"+imgNm +".png";                                                     
-                        cv.imwrite(fileNm, displayImg.resizeToMax(resizeMax));    
+                        cv.imwrite(fileNm, displayImg.resizeToMax(resizeMax));
                     });
                     ret.processedImgs = ret.processedImgs + 1;
                 }
@@ -854,6 +854,11 @@ class JEYES {
             jtools.errorLog(" [ERROR] with model camera: " + ex);
         }
     }
+
+    /* Test */
+    test(callback){
+        callback("Done TEST");
+    }
 }
 
 module.exports = JEYES;
@@ -981,22 +986,23 @@ function _getImgInfo(imgId, imgIndex){
     return ret;
 }
 /* Build Name Map */
-function _buildNameMap(photoMemory){
+function _buildNameMap2(photoMemory){
     var nameObj = {};
     try {       
-        const mapImgName = (name) => {
-            name = path.win32.basename(name, '.PNG');
-            name = name.split('-')[0];
+        const mapImgName = (folder) => {
+            var name = folder.folderNm;
 
             if(!(name in nameObj)){ nameObj[name] = 1; }
             else { nameObj[name] = nameObj[name] +1; }
         };
 
-        const imgFiles = fs.readdirSync(photoMemory);
+        const imgFolders = fs.readdirSync(photoMemory).filter(function(item){ 
+            return item != "_noFace" && fs.lstatSync(photoMemory+"/"+item).isDirectory(); 
+        }).map(function(folder){
+            return { "path": photoMemory+ "/"+ folder, "folderNm": folder };
+        });
 
-        imgFiles
-        .map(file => path.resolve(photoMemory, file))
-        .map(mapImgName);
+        imgFolders.map(mapImgName);
     }
     catch(ex){
         jtools.errorLog(" [ERROR] building name map: " + ex);
@@ -1004,8 +1010,8 @@ function _buildNameMap(photoMemory){
     return nameObj;
 }
 
-/* Load Recog Training Data */
-function _loadRecogTrainingData(photoMemory, imgIndex, nameMappings, imgResize, facialClassifier, imgIndexModel, cfgFile, weightsFile, labelsFile){
+/* Load Recog Training Data 2 */
+function _loadRecogTrainingData(photoMemory, imgIndex, nameMappings, imgResize, facialClassifier, imgIndexModel){
     var ret = { "lbph": new cv.LBPHFaceRecognizer(), "eigenRecognizer":new cv.EigenFaceRecognizer() };
 
     try {
@@ -1015,36 +1021,50 @@ function _loadRecogTrainingData(photoMemory, imgIndex, nameMappings, imgResize, 
         // Load Img Index 
         imgIndex.data = (fs.existsSync(imgIndexModel) ? require(imgIndexModel) : {});
 
-        // Load Files
-        const imgFiles = fs.readdirSync(photoMemory);
-                    
+        // Load File Folders
+        const imgFolders = fs.readdirSync(photoMemory).filter(function(item){ 
+            return item != "_noFace" && fs.lstatSync(photoMemory+"/"+item).isDirectory(); 
+        }).map(function(folder){
+            return { "path": photoMemory+ "/"+ folder, "folderNm": folder, "files": fs.readdirSync(photoMemory+ "/"+ folder) };
+        });
+
         // Get Face Images
         const getFaceImage = (grayImg) => {
-           const faceRects = facialClassifier.detectMultiScale(grayImg).objects;
-            if (!faceRects.length) {
-              throw new Error('failed to detect faces');
-            }
-            return grayImg.getRegion(faceRects[0]);
-        };
-        
-        /* Debug to Find Bad Data */
-        var noFaceList = 0;
-        imgFiles.forEach(function (file){
-            var tmp1 = path.resolve(photoMemory, file);
-            var tmp2 = cv.imread(tmp1);
-            var tmp3 = tmp2.bgrToGray()
+            const faceRects = facialClassifier.detectMultiScale(grayImg).objects;
+             if (!faceRects.length) {
+               throw new Error('failed to detect faces');
+             }
+             return grayImg.getRegion(faceRects[0]);
+         };
 
-            const faceRects = facialClassifier.detectMultiScale(tmp3).objects;
-            if (!faceRects.length) { jtools.errorLog(" [Error] No Face File: "+file); noFaceList++; }
-        });        
-        if(noFaceList > 0) { throw new Error('Invalid face data'); }
+         var validFaceImgs = [];
+         imgFolders.forEach(function (folder){
+            folder.files.forEach(function(file){
+                var tmp1 = path.resolve(folder.path, file);
+                var tmp2 = cv.imread(tmp1);
+                var tmp3 = tmp2.bgrToGray();
 
+                const faceRects = facialClassifier.detectMultiScale(tmp3).objects;
+                
+                if (!faceRects.length) {
+                    jtools.errorLog(" [Warning] No Face File: "+ tmp1);
+                    // move file
+                    fs.copyFile(tmp1, path.resolve(photoMemory, "_noFace", file), function(err){
+                        fs.unlink(tmp1, function(err){
+                            if (err) throw err;
+                            jtools.errorLog(" [Warning] Removed IMG: "+ tmp1);
+                        });
+                    });
+                }
+                else {
+                    validFaceImgs.push({ "name": folder.folderNm, "img": tmp1 });
+                }
+            });
+        });
 
-        const trainImgs = imgFiles
-            // get absolute file path
-            .map(file => path.resolve(photoMemory, file))
+        const trainImgs = validFaceImgs
             // read image
-            .map(filePath => cv.imread(filePath))
+            .map(filePath => cv.imread(filePath.img))
             // face recognizer works with gray scale images
             .map(img => img.bgrToGray())
             // detect and extract face
@@ -1052,10 +1072,10 @@ function _loadRecogTrainingData(photoMemory, imgIndex, nameMappings, imgResize, 
             // face images must be equally sized
             .map(faceImg => faceImg.resize(imgResize, imgResize));
 
-        // make labels
-        const labels = imgFiles
-            .map(file => nameMappings.list.findIndex(name => file.includes(name)));
-
+        const labels = validFaceImgs.map(function(faceImg){
+            return nameMappings.list.indexOf(faceImg.name);
+        });
+    
         ret.lbph.train(trainImgs, labels);
         ret.eigenRecognizer.train(trainImgs, labels); 
     }
@@ -1140,7 +1160,7 @@ function _drawPolyline(img, landmarks, start, end, isClosed = false){
 
 /* Process Recognition Images */
 function _processRecognitionImgs(baseLoc, finalLoc, facialClassifier){
-    var resizeMax = 350;
+    var resizeMax = 80;
     try {
         // Read In file Location
         const imgFiles = fs.readdirSync(baseLoc);
