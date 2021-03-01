@@ -1,4 +1,5 @@
 node_modules/*
 localConfig/*
+logs/*
 debug.log
 .env

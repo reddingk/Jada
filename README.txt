@@ -15,8 +15,8 @@ https://www.npmjs.com/package/opencv4nodejs
 /*** BUILD DOCKERFILE ***/
 *] BUILD Container:
    docker build .
-   docker build -t jada:1.0.2 .
-   docker build --no-cache -t jada:1.0.2 .
+   docker build -t jada:1.0.3 .
+   docker build --no-cache -t jada:1.0.3 .
 
 *] View Images
    docker images
@@ -47,6 +47,7 @@ https://www.npmjs.com/package/opencv4nodejs
 
 -- OFFICIAL --
 docker run -p 1003:1003 -v c:/Users/krisr/Documents/Development/Personal/Jada/localConfig:/Jada/localConfig -t -i jada:0.97
+docker run -p 1003:1003 -v /media/usb/jada/localConfig:/Jada/localConfig -t -i jada:1.0.3
 
 docker load < /media/usb/naratifla_0_951.tar
 docker load < /media/usb/jada_0_951.tar

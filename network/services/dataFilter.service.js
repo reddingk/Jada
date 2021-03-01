@@ -24,9 +24,11 @@ var dataFilter =  {
                         break;
                     case 'edgeDetect':
                         j_edgeDetect(info.data, callback);
+                        break;
                     case 'objDetect':
-                        var infoData = { filter:info.subModel, searchFilters:info.subFilter };
+                        var infoData = { filter:"base", searchFilters: null };
                         j_objDetect(info.data, infoData, callback);
+                        break;
                     default:
                         callback(info.data);
                         break;
@@ -68,60 +70,73 @@ module.exports = dataFilter;
 
 /* Private Functions */
 function j_faceRecog(img, callback){
-    var retData = null;
+    var ret = {};
     try {
-        var matImg = jEyes.b64toMat(img);        
-        retData = (matImg != null ? jEyes.faceRecogImg(matImg) : null);      
+        var matImg = jEyes.b64toMat(img);  
+        if(matImg != null){
+            var retData = jEyes.faceRecogImg(matImg);
+            ret = {
+                "tags":(retData != null && retData.names ? retData.names : []),
+                "data": (retData != null && retData.img != null ? jEyes.matTob64(retData.img) : null)
+            };   
+        }      
     }
     catch(ex){
         jbrain.jCells.jtools.errorLog(" [ERROR] FaceRecog Service:" + ex);
-        retData = null;
     }
     
-    callback((retData != null? jEyes.matTob64(retData.img) : null));
+    callback(ret);
 }
 
 function j_faceMark(img, callback){
-    var retData = null;
+    var ret = {};
     try {
         var matImg = jEyes.b64toMat(img);        
-        retData = (matImg != null ? jEyes.facemarkImg(matImg, true) : null);      
+        var retData = (matImg != null ? jEyes.facemarkImg(matImg, true) : null);  
+
+        ret = {"data": (retData != null && retData.img != null ? jEyes.matTob64(retData.img) : null)}; 
     }
     catch(ex){
         jbrain.jCells.jtools.errorLog(" [ERROR] Face Mark Service:" + ex);
-        retData = null;
     }
     
-    callback((retData != null? jEyes.matTob64(retData.img) : null));
+    callback(ret);
 }
 
 function j_edgeDetect(img, callback){
-    var retData = null;
+    var ret = {};
+
     try {
         var matImg = jEyes.b64toMat(img);        
-        retData = (matImg != null ? jEyes.edgeDetectionImg(matImg) : null); 
+        var retData = (matImg != null ? jEyes.edgeDetectionImg(matImg) : null); 
+        
+        ret = {"data": (retData != null && retData.img != null ? jEyes.matTob64(retData.img) : null)};
     }
     catch(ex){
         jbrain.jCells.jtools.errorLog(" [ERROR] Edge Detection Service:" + ex);
-        retData = null;
     }
-    
-    callback((retData != null? jEyes.matTob64(retData.img) : null));
+        
+    callback(ret);
 }
 
 function j_objDetect(img, data, callback){
-    var retData = null;
+    var ret = {};
     try {
         var matImg = jEyes.b64toMat(img); 
-        var searchFilters = (data && data.searchFilters ? data.searchFilters : []);
+        var searchFilters = (data && data.searchFilters ? data.searchFilters : null);
         var filter = (data && data.filter ? data.filter : "base");
 
-        retData = (matImg != null ? jEyes.modelMapImg(matImg, searchFilters, filter) : null); 
+        if(matImg != null){
+            var retData = jEyes.modelMapImg(matImg, searchFilters, filter); 
+            ret = {
+                "tags":(retData != null && retData.layers ? retData.layers : []), 
+                "data": (retData != null && retData.img != null ? jEyes.matTob64(retData.img) : null)
+            };
+        }    
     }
     catch(ex){
         jbrain.jCells.jtools.errorLog(" [ERROR] Object Detection Service:" + ex);
-        retData = null;
     }
     
-    callback((retData != null? jEyes.matTob64(retData.img) : null));
+    callback(ret);
 }

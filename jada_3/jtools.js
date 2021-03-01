@@ -55,7 +55,7 @@ class TOOLS {
             }
             
             // Check file size 
-            if(fs.statSync(dir + "/log.txt").size >= process.env.MAX_FILE_SZ){
+            if(fs.statSync(dir + "/log.txt").size >= process.env.MAX_LOG_SZ){
                 var d = new Date();
                 // Change File Name to old date name
                 fs.renameSync(dir + "/log.txt", dir + "/log_"+ d.getTime() +".txt");
@@ -64,7 +64,7 @@ class TOOLS {
     
                 var dirList = fs.readdirSync(dir);
     
-                if(dirList.length >= process.env.MAX_FILE_CNT) {
+                if(dirList.length >= process.env.MAX_LOG_CNT) {
                     var fileList = [];
                     dirList.forEach(function (file) {
                         if(fs.existsSync(dir + "/" + file)){

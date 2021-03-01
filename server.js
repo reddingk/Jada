@@ -4,7 +4,12 @@ const path = require('path');
 const bodyParser = require('body-parser');
 
 const http = require('http').Server(app);
-const io = require('socket.io')(http);
+const io = require('socket.io')(http, {
+    cors: {
+        origin: "http://localhost:3000",
+        methods: ["GET", "POST"]
+    }
+});
 
 // set ports
 var port = process.env.PORT || 1003;

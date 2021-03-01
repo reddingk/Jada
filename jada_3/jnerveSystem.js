@@ -1247,7 +1247,9 @@ class JNERVESYSTEM {
             });*/
             
             /*self.jcell.jeyes.faceRecognizeCamera(function(ret){
-                callback({"jresponse": "Facial Recognition Video Status: " + (ret == -100)});
+                var nameLst = Object.keys(ret.names);
+                console.log(ret.names);
+                callback({"jresponse": "Facial Recognition Video Status: " + ret.status + " [NAMES] " + nameLst.join(", ") });
             });*/
 
             //var tst = self.jcell.jeyes.facialRecognitionFile("C:\\Users\\krisr\\Pictures\\Wedding(AllenHouse)\\bridalpartyportraits\\1P9A9224.jpg");
@@ -1269,9 +1271,9 @@ class JNERVESYSTEM {
             //    callback({"jresponse": "Test Video Status: " + (ret == -100)});
             //});
             
-            //self.jcell.jeyes.modelImgCamera("base", [], true, function(ret){
-            //    callback({"jresponse": "Test Model Status: " + ret });
-            //});
+            self.jcell.jeyes.modelImgCamera("base", null, true, function(ret){
+                callback({"jresponse": "Test Model Status: " + ret });
+            });
 
             //self.jcell.jeyes.modelImgFile("base", [], "C:\\Users\\krisr\\Pictures\\test\\img7.jpg", true, function(ret){
             //    console.log(ret);

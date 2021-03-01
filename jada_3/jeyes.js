@@ -25,19 +25,25 @@ class JEYES {
         this.photoMemory = configLoc + "/config/data/photoMemory";
         this.imgIndexModel = configLoc + "/config/data/imgIndex.json";
         
-        this.PhoebeColor = new cv.Vec(4,205,252);
+        this.SusieColor = new cv.Vec(4,205,252);
         this.foundColor = new cv.Vec(102,51,0);
         this.bgSubtractor = new cv.BackgroundSubtractorMOG2();
 
         this.imgResize = 80;
         this.minDetections = 120;
         this.nameMappings = {"map":{},"list":[]};
-        this.imgIndex = {"data":{}};
+        this.imgIndex = { "data":{}};
         this.modelLibrary = modelLib;
+        this.recogList = [
+            {"name":"lbph", "minDetections": 100 },
+            {"name":"eigenRecognizer", "minDetections": 2000 },
+            {"name":"fisherRecognizer", "minDetections": 320 },
+        ];
                            
         this.recogData = _loadRecogTrainingData(this.photoMemory, this.imgIndex, this.nameMappings, this.imgResize, this.facialClassifier, this.imgIndexModel);  
         this.markData = _loadFacemark(this.facialClassifier, this.facemarkModel);
         this.textDetect = _loadTextDetection(this.textDetectionModel);
+        this.objDetect = {};
     }
 
     /* EXTERNAL FUNCTIONS */
@@ -60,17 +66,17 @@ class JEYES {
             const thresholded = blurred.threshold(200, 255, cv.THRESH_BINARY);
 
             const minPxSize = 4000;
-            var movingTargets = _drawRectAroundBlobs(thresholded, frame, minPxSize, self.PhoebeColor);
+            var movingTargets = _drawRectAroundBlobs(thresholded, frame, minPxSize, self.SusieColor);
 
             // Draw number of moving targets
             frame.drawRectangle(
                 new cv.Point(10, 10), new cv.Point(70, 70),
-                { color: self.PhoebeColor, thickness: 2 }
+                { color: self.SusieColor, thickness: 2 }
             );
             frame.putText(
                 String(movingTargets),
                 new cv.Point(20, 60), cv.FONT_ITALIC, 2,
-                { color: self.PhoebeColor, thickness: 2 }
+                { color: self.SusieColor, thickness: 2 }
             );
             
             // set return image
@@ -87,7 +93,7 @@ class JEYES {
     processRecognitionImgs(sourcePath, destinationPath, callback){
         var self = this;
         var ret = { "error":"", "processedImgs":0, "unprocessedImgs":0 };
-        var resizeMax = 250;
+        var resizeMax = 650;
 
         try {
             // Read In file Location
@@ -146,24 +152,34 @@ class JEYES {
         var ret = {"img":null, "names":[], "error":null};
 
         try {  
+            recogImg = recogImg.resizeToMax(640);
             const result = self.facialClassifier.detectMultiScale(recogImg.bgrToGray());             
-
             result.objects.forEach((faceRect, i) => {  
                 const faceImg = recogImg.getRegion(faceRect).bgrToGray().resize(self.imgResize, self.imgResize);
                 
-                var predition = self.recogData.lbph.predict(faceImg);
-                
-                const who = (predition.confidence > self.minDetections ? "not sure?" : _getImgInfo(self.nameMappings.list[predition.label], self.imgIndex.data));
-                const displayColor = (predition.confidence > self.minDetections ? self.PhoebeColor: self.foundColor);
+                var predictionMap = {};
+                var who = null;
+                var displayColor = self.foundColor;
+                var tmpWho;
 
-                /*if(predition.confidence <= self.minDetections) {
-                    console.log("Name: ",who, " - ", predition.confidence,"%");
-                }*/
+                for(var j =0; j < self.recogList.length; j++){
+                    tmpWho = null;
+                    var tmpPrediction = self.recogData[self.recogList[j].name].predict(faceImg);  
+                    
+                    if(Math.round(tmpPrediction.confidence) >= self.recogList[j].minDetections){
+                        tmpWho = _getImgInfo(self.nameMappings.list[tmpPrediction.label], self.imgIndex.data);
+                        predictionMap[tmpWho] = (tmpWho in predictionMap ? predictionMap[tmpWho] + 1 : 1);
+                    }
+    
+                    if(tmpWho && predictionMap[tmpWho] > 1){ who = tmpWho; break; }
+                }
 
-                ret.names.push(who);
                 
+                displayColor = (who ? self.SusieColor: self.foundColor);
+                
+                if(who){ ret.names.push(who); }
                 var rect = cv.drawDetection(recogImg, faceRect, { color: displayColor, segmentFraction: 4 });
-                
+
                 cv.drawTextBox(recogImg,
                     new cv.Point(rect.x, rect.y + rect.height + 10),
                     [{ text: (who ? who : "not sure?"), fontSize: 0.6 }], 0.4);
@@ -175,7 +191,7 @@ class JEYES {
             jtools.errorLog(" [ERROR] Recognizing Imgs: " + ex);
             ret.error = ex;
         }
-
+        
         return ret;
     }
 
@@ -186,14 +202,13 @@ class JEYES {
         
         var faceClassifierOpts = {
             minSize: new cv.Size(30, 30),
-            scaleFactor: 1.126,
-            minNeighbors: 1,
+            scaleFactor: 1.126, minNeighbors: 1,
         }
 
         try {
-            if (!cv.xmodules.face) {
+            /*if (!cv.xmodules.face) {
                 throw new Error("opencv4nodejs compiled without face module");
-            }
+            }*/
 
             if (!fs.existsSync(self.facemarkModel)) {
                 //https://raw.githubusercontent.com/kurnianggoro/GSOC2017/master/data/lbfmodel.yaml
@@ -229,12 +244,11 @@ class JEYES {
 
     /* Edge Detection Img */
     edgeDetectionImg(img){
-        var self = this;
         var ret = {"img":null, "error":null};
 
         try {
             const gray = img.bgrToGray();
-            const cannyImg = img.canny(50, 100, 3, false);
+            const cannyImg = gray.canny(50, 100, 3, false);
 
             ret.img = cannyImg;
         }
@@ -264,39 +278,40 @@ class JEYES {
                     const labelsFile = configLoc + "/config/data/imgModels/" + model.labelFile;
 
                     model.dataKey = fs.readFileSync(labelsFile).toString().split("\n");   
-                    
+
                     // initialize darknet model from modelFile
                     if(!self.modelLibrary[filter].net) {
                         self.modelLibrary[filter].net = cv.readNetFromDarknet(cfgFile, weightsFile);
                     }
 
                     model.net = self.modelLibrary[filter].net;
+
+                    // initialize darknet model from modelFile
+                    const allLayerNames = model.net.getLayerNames();
+                    const unconnectedOutLayers = model.net.getUnconnectedOutLayers();
+
+                    // determine only the *output* layer names that we need from YOLO
+                    model.layerNames = unconnectedOutLayers.map(layerIndex => {
+                        return allLayerNames[layerIndex - 1];
+                    });
                 }
-                // initialize darknet model from modelFile
-                const allLayerNames = model.net.getLayerNames();
-                const unconnectedOutLayers = model.net.getUnconnectedOutLayers();
-
-                // determine only the *output* layer names that we need from YOLO
-                const layerNames = unconnectedOutLayers.map(layerIndex => {
-                    return allLayerNames[layerIndex - 1];
-                });
-
+                
                 const size = new cv.Size(416, 416);
                 const vec3 = new cv.Vec(0, 0, 0);
+                img = img.resizeToMax(640);
                 const [imgHeight, imgWidth] = img.sizes;
 
                 const inputBlob = cv.blobFromImage(img, 1 / 255.0, size, vec3, true, false);
                 model.net.setInput(inputBlob);
 
                 // forward pass input through entire network
-                const layerOutputs = model.net.forward(layerNames);
+                const layerOutputs = model.net.forward(model.layerNames);
                
-                let boxes = [];
-                let confidences = [];
-                let classIDs = [];
+                let boxes = [], confidences = [], classIDs = [];
 
                 layerOutputs.forEach(mat => {
                     const output = mat.getDataAsArray();
+
                     output.forEach(detection => { 
                         const scores = detection.slice(5);
                         const maxScore = Math.max(...scores);
@@ -318,16 +333,13 @@ class JEYES {
                             confidences.push(confidence);
                             classIDs.push(classId);
 
-                            const indices = cv.NMSBoxes(
-                                boxes, confidences,
-                                model.minConfidence, model.nmsThreshold
-                            );
-                                                        
+                            const indices = cv.NMSBoxes(boxes, confidences, model.minConfidence, model.nmsThreshold);
+                            
                             indices.forEach(i => { 
                                 var text = model.dataKey[classIDs[i]];
                                 text = text.replace(/(?:\\[rn]|[\r\n])/g,"");
                                 
-                                if(searchFilter.length == 0 || (searchFilter.indexOf(text) >= 0)){
+                                if(searchFilter == null || (text in searchFilter)){
                                     const rect = boxes[i];
 
                                     const pt1 = new cv.Point(rect.x, rect.y);
@@ -336,9 +348,9 @@ class JEYES {
                                     const fontFace = cv.FONT_HERSHEY_SIMPLEX;
                                     
                                     // draw the rect for the object
-                                    img.drawRectangle(pt1, pt2, self.PhoebeColor, 2, 2);
+                                    img.drawRectangle(pt1, pt2, self.SusieColor, 2, 2);
                                     // put text on the object
-                                    img.putText((!text ?  "???": text), org, fontFace, 0.6, self.PhoebeColor, 2);
+                                    img.putText((!text ?  "???": text), org, fontFace, 0.6, self.SusieColor, 2);
                                     
                                     // Set Return Image   
                                     ret.layers.push({"rect":rect, "title":(!text ?  "???": text) });                                               
@@ -360,7 +372,6 @@ class JEYES {
 
     /* Read Image Text */
     readImageText(retImg, callback){
-        var self = this;
         var ret = {"txt":null, "img":null, "error":null};
          
         try {
@@ -436,7 +447,7 @@ class JEYES {
                 //const pt2 = new cv.Point(imgRect.x + imgRect.width, imgRect.y + imgRect.height);                                                                  
                                     
                 // draw the rect for the object
-                //img.drawRectangle(pt1, pt2, self.PhoebeColor, 2, 2);
+                //img.drawRectangle(pt1, pt2, self.SusieColor, 2, 2);
             });
 
             //ret.img = img;
@@ -733,12 +744,11 @@ class JEYES {
     /* Facemark Camera */
     faceRecognizeCamera(callback){
         var self = this;
-
+        var ret = { names:{}, status:false };
         try{
             let done = false;
             var camera = new cv.VideoCapture(defaultCamPort);
-            //var camera = new cv.VideoCapture("http://10.0.0.10:8080/videofeed");
-
+            
             const intvl = setInterval(function() {
                 let frame = camera.read();
 
@@ -746,12 +756,17 @@ class JEYES {
                     camera.reset();
                     frame = camera.read();
                 }
-                
+                  
                 // Face Recognize Image
                 var retImg = self.faceRecogImg(frame);
 
                 // Resize Img
                 retImg.img = _sizeImg(retImg.img);
+                           
+                retImg.names.forEach(function(name){
+                    ret.names[name] = (name in ret.names ? ret.names[name]+1 : 1);
+                });
+
                 // Stream Or View Locally
                 cv.imshow("Facial Recognition Frame", retImg.img);
                 const key = cv.waitKey(1);
@@ -759,7 +774,8 @@ class JEYES {
                 done = key !== -1 && key !== 255;
                 if (done) {
                     clearInterval(intvl);
-                    callback(-100);
+                    ret.status = true;
+                    callback(ret);
                 }
             }, 0);
         }
@@ -964,7 +980,6 @@ function _sizeImg(img){
 function _getImgInfo(imgId, imgIndex){
     var ret = "--";
     try {
-        
         if(Object.keys(imgIndex).length > 0) {
             var imgObj = (imgId in imgIndex ? imgIndex[imgId] : null);
             
@@ -1012,9 +1027,15 @@ function _buildNameMap(photoMemory){
 
 /* Load Recog Training Data 2 */
 function _loadRecogTrainingData(photoMemory, imgIndex, nameMappings, imgResize, facialClassifier, imgIndexModel){
-    var ret = { "lbph": new cv.LBPHFaceRecognizer(), "eigenRecognizer":new cv.EigenFaceRecognizer() };
-
+    var ret = { "face":false, "lbph": new cv.LBPHFaceRecognizer(), "eigenRecognizer":new cv.EigenFaceRecognizer(), "fisherRecognizer": new cv.FisherFaceRecognizer()  };
+    
+    const lbphFile = photoMemory + "/_photoModels/lbph.yml",
+                eigenFile = photoMemory + "/_photoModels/eigen.yml",
+                fisherFile = photoMemory + "/_photoModels/fisher.yml";
+    
     try {
+        // Load Name Map
+        console.log(" > Loading Name Map");
         nameMappings.map = ((Object.keys(nameMappings.map).length === 0) ? _buildNameMap(photoMemory) : nameMappings.map);        
         nameMappings.list = Object.keys(nameMappings.map);
 
@@ -1022,8 +1043,10 @@ function _loadRecogTrainingData(photoMemory, imgIndex, nameMappings, imgResize, 
         imgIndex.data = (fs.existsSync(imgIndexModel) ? require(imgIndexModel) : {});
 
         // Load File Folders
+        console.log(" > Loading File Folders");
+        var noRead = {"_noFace": 1, "_photoModels":1 };
         const imgFolders = fs.readdirSync(photoMemory).filter(function(item){ 
-            return item != "_noFace" && fs.lstatSync(photoMemory+"/"+item).isDirectory(); 
+            return !(item in noRead) && fs.lstatSync(photoMemory+"/"+item).isDirectory(); 
         }).map(function(folder){
             return { "path": photoMemory+ "/"+ folder, "folderNm": folder, "files": fs.readdirSync(photoMemory+ "/"+ folder) };
         });
@@ -1037,47 +1060,71 @@ function _loadRecogTrainingData(photoMemory, imgIndex, nameMappings, imgResize, 
              return grayImg.getRegion(faceRects[0]);
          };
 
-         var validFaceImgs = [];
-         imgFolders.forEach(function (folder){
-            folder.files.forEach(function(file){
-                var tmp1 = path.resolve(folder.path, file);
-                var tmp2 = cv.imread(tmp1);
-                var tmp3 = tmp2.bgrToGray();
+         if(!fs.existsSync(eigenFile) || !fs.existsSync(lbphFile) || !fs.existsSync(fisherFile)) {
+            console.log(" > Processing Face Imgs");
+            var validFaceImgs = [];
+            imgFolders.forEach(function (folder){
+                folder.files.forEach(function(file){
+                    var tmp1 = path.resolve(folder.path, file);                
+                    var tmp2 = cv.imread(tmp1);
+                    var tmp3 = tmp2.bgrToGray();
+                    const faceRects = facialClassifier.detectMultiScale(tmp3).objects;
 
-                const faceRects = facialClassifier.detectMultiScale(tmp3).objects;
-                
-                if (!faceRects.length) {
-                    jtools.errorLog(" [Warning] No Face File: "+ tmp1);
-                    // move file
-                    fs.copyFile(tmp1, path.resolve(photoMemory, "_noFace", file), function(err){
-                        fs.unlink(tmp1, function(err){
-                            if (err) throw err;
-                            jtools.errorLog(" [Warning] Removed IMG: "+ tmp1);
+                    if (!faceRects.length) {
+                        jtools.errorLog(" [Warning] No Face File: "+ tmp1);
+                        // move file
+                        fs.copyFile(tmp1, path.resolve(photoMemory, "_noFace", file), function(err){
+                            fs.unlink(tmp1, function(err){
+                                if (err) throw err;
+                                jtools.errorLog(" [Warning] Removed IMG: "+ tmp1);
+                            });
                         });
-                    });
-                }
-                else {
-                    validFaceImgs.push({ "name": folder.folderNm, "img": tmp1 });
-                }
+                    }
+                    else {
+                        validFaceImgs.push({ "name": folder.folderNm, "img": tmp1 });
+                    }
+                });
             });
-        });
 
-        const trainImgs = validFaceImgs
-            // read image
-            .map(filePath => cv.imread(filePath.img))
-            // face recognizer works with gray scale images
-            .map(img => img.bgrToGray())
-            // detect and extract face
-            .map(getFaceImage)
-            // face images must be equally sized
-            .map(faceImg => faceImg.resize(imgResize, imgResize));
+            console.log(" > Processing Training Imgs");
+            const trainImgs = validFaceImgs
+                // read image
+                .map(filePath => cv.imread(filePath.img))
+                // face recognizer works with gray scale images
+                .map(img => img.bgrToGray())
+                // detect and extract face
+                .map(getFaceImage)
+                // face images must be equally sized
+                .map(faceImg => faceImg.resize(imgResize, imgResize));
 
-        const labels = validFaceImgs.map(function(faceImg){
-            return nameMappings.list.indexOf(faceImg.name);
-        });
-    
-        ret.lbph.train(trainImgs, labels);
-        ret.eigenRecognizer.train(trainImgs, labels); 
+            const labels = validFaceImgs.map(function(faceImg){
+                return nameMappings.list.indexOf(faceImg.name);
+            });
+            
+            console.log(" > Training Models");
+            if(labels.length > 0 && labels.length == trainImgs.length) {
+                // LBPH
+                ret.lbph.train(trainImgs, labels);
+                ret.lbph.save(lbphFile);
+
+                //EIGEN
+                ret.eigenRecognizer.train(trainImgs, labels); 
+                ret.eigenRecognizer.save(eigenFile);
+
+               // FISHER
+                ret.fisherRecognizer.train(trainImgs, labels); 
+                ret.fisherRecognizer.save(fisherFile);                
+            }
+        }
+        else {
+            console.log(" > Training Models");
+            ret.lbph.load(lbphFile);
+            ret.eigenRecognizer.load(eigenFile);
+            ret.fisherRecognizer.load(fisherFile);
+        }       
+                
+        ret.face = true;
+        console.log(" > Completed Training");            
     }
     catch(ex){
         jtools.errorLog(" [ERROR] Loading Training Recog Data: " + ex);
