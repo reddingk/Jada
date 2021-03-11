@@ -1,6 +1,6 @@
 {
   "name": "jada",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "The brain behind the Jaden personal assistant",
   "main": "server.js",
   "scripts": {
