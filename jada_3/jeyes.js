@@ -19,7 +19,7 @@ const jtools = new Tools();
 
 class JEYES {
     constructor(){
-        this.facialClassifier = new cv.CascadeClassifier(cv.HAAR_FRONTALFACE_ALT2);
+        this.facialClassifier = new cv.CascadeClassifier(cv.HAAR_FRONTALFACE_ALT);
         this.facemarkModel = configLoc+"/config/data/lbfmodel.yaml";
         this.textDetectionModel = configLoc+"/config/data/frozen_east_text_detection.pb";
         this.photoMemory = configLoc + "/config/data/photoMemory";
