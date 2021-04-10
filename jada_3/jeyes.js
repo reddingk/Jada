@@ -19,7 +19,8 @@ const jtools = new Tools();
 
 class JEYES {
     constructor(){
-        this.facialClassifier = new cv.CascadeClassifier(cv.HAAR_FRONTALFACE_ALT);
+        // cv.HAAR_FRONTALFACE_ALT
+        this.facialClassifier = new cv.CascadeClassifier(configLoc+"/config/data/visionary_cascade.xml");
         this.facemarkModel = configLoc+"/config/data/lbfmodel.yaml";
         this.textDetectionModel = configLoc+"/config/data/frozen_east_text_detection.pb";
         this.photoMemory = configLoc + "/config/data/photoMemory";
@@ -47,6 +48,59 @@ class JEYES {
     }
 
     /* EXTERNAL FUNCTIONS */
+    /* Motion Track prev to next */
+
+    motionTrackImgs(frame, prevFrame){
+        var self = this;
+        var ret = {"prevFrame":prevFrame, "img":null, "motionFlg":false, "error":null};
+        const motionDelta = 1300;
+
+        try {
+            ret.prevFrame = frame.copy();
+            var gray = frame.copy();
+
+            //convert to grayscale
+            prevFrame.bgrToGray();
+            prevFrame.blur(new cv.Size(21, 21));
+
+            gray.bgrToGray();
+            gray.blur(new cv.Size(21, 21));
+
+            //compute difference between first frame and current frame
+            var frameDelta = prevFrame.absdiff(gray);
+            var thresh = frameDelta.threshold(25,255, cv.THRESH_BINARY);
+
+            thresh.dilate(
+                cv.getStructuringElement(cv.MORPH_ELLIPSE, new cv.Size(4, 4)),
+                new cv.Point(-1, -1), 2);
+                    
+            // Get Difference Count        
+            thresh = thresh.bgrToGray();
+            let contours = thresh.findContours(cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
+            
+            var motionContour = contours.filter(function(item){ return item.area > motionDelta; });
+            var contourPts = contours.map((contour) => { return contour.getPoints(); });
+
+            ret.motionFlg = (motionContour.length > 0);
+            if(ret.motionFlg) { 
+                console.log(" [Motion]: ", contourPts.length); 
+                //console.log(contourPts);
+                contourPts.forEach(function(dataPt){ console.log(_motionStats(dataPt)); });                
+            }
+
+            frame.drawContours(contourPts, -1, self.SusieColor, { thickness: 1 });
+
+            // set return image
+            ret.img = frame;
+        }
+        catch(ex){
+            jtools.errorLog(" [ERROR] Tracking IMG: " + ex);
+            ret.error = ex;
+        }
+
+        return ret;
+    }
+
     /* Motion Track MAT */
     motionTrackImg(frame){
         var self = this;
@@ -519,32 +573,49 @@ class JEYES {
 
         try{
             let done = false;
-            var delay = 50;
+            var delay = 50, retryCnt = 0;
 
             var camera = new cv.VideoCapture(defaultCamPort);
-            
+            var prevFrame = camera.read();
+
             const intvl = setInterval(function() {
                 let frame = camera.read();
+                if(!prevFrame || prevFrame.empty) { prevFrame = frame.copy(); }
 
                 if (frame.empty) {
-                    camera.reset();
-                    frame = camera.read();
+                    try {
+                        camera.reset();
+                        frame = camera.read();
+                        retryCnt = (frame === null || frame.empty ? retryCnt+1 : 0);
+                    }
+                    catch(frameEx){
+                        retryCnt++;
+                        console.log(" Video Load Retry #" + retryCnt);
+                    }
                 }
 
-                // Motion Tracking
-                let retFrame = self.motionTrackImg(frame);
-
-                // Resize Img
-                //retFrame.img = _sizeImg(retFrame.img);
-
-                // Stream Or View Locally
-                cv.imshow("Motion Camera Frame", retFrame.img);
-                
-                const key = cv.waitKey(delay);
-                done = key !== -1 && key !== 255;
-                if (done) {
+                if(retryCnt >= 3){ 
                     clearInterval(intvl);
                     callback(-100);
+                }
+                else if(retryCnt == 0){
+                    // Motion Tracking
+                    //let retFrame = self.motionTrackImg(frame);
+                    let retFrame = self.motionTrackImgs(frame, prevFrame);
+                    prevFrame = retFrame.prevFrame;
+
+                    // Resize Img
+                    //retFrame.img = _sizeImg(retFrame.img);
+
+                    // Stream Or View Locally
+                    cv.imshow("Motion Camera Frame", retFrame.img);
+                    
+                    const key = cv.waitKey(delay);
+                    done = key !== -1 && key !== 255;
+                    if (done) {
+                        clearInterval(intvl);
+                        callback(-100);
+                    }
                 }
             }, 0);
         }
@@ -880,6 +951,35 @@ class JEYES {
 module.exports = JEYES;
 
 /* Private Functions */
+/* Motion Stats */
+function _motionStats(dataList){
+    var ret = {min: null, max: null, center:{ y: 0, x:0 }};
+    try {
+        for(var i=0; i < dataList.length; i++){
+            // Min
+            if(ret.min == null || dataList[i].x < ret.min.x || dataList[i].y < ret.min.y) { 
+                ret.min = dataList[i];
+            }
+
+            // Max
+            if(ret.max == null || dataList[i].x > ret.max.x || dataList[i].y > ret.max.y) { 
+                ret.max = dataList[i];
+            }
+
+            ret.center.x += dataList[i].x;
+            ret.center.y += dataList[i].y;
+        }
+
+        ret.center.x = Math.ceil(ret.center.x / dataList.length);
+        ret.center.y = Math.ceil(ret.center.y / dataList.length);
+    }
+    catch(ex){
+        jtools.errorLog(" [ERROR] generating motion stats: " + ex);
+    }
+
+    return ret;
+}
+
 /* Special Index */
 function _indexOf(obj, val){
     try {
@@ -1030,8 +1130,8 @@ function _loadRecogTrainingData(photoMemory, imgIndex, nameMappings, imgResize, 
     var ret = { "face":false, "lbph": new cv.LBPHFaceRecognizer(), "eigenRecognizer":new cv.EigenFaceRecognizer(), "fisherRecognizer": new cv.FisherFaceRecognizer()  };
     
     const lbphFile = photoMemory + "/_photoModels/lbph.yml",
-                eigenFile = photoMemory + "/_photoModels/eigen.yml",
-                fisherFile = photoMemory + "/_photoModels/fisher.yml";
+          eigenFile = photoMemory + "/_photoModels/eigen.yml",
+          fisherFile = photoMemory + "/_photoModels/fisher.yml";
     
     try {
         // Load Name Map
