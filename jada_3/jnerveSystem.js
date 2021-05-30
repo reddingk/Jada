@@ -1246,11 +1246,15 @@ class JNERVESYSTEM {
                     callback({"jresponse": "completed"});
             });*/
             
-            self.jcell.jeyes.faceRecognizeCamera(function(ret){
+            /*self.jcell.jeyes.faceRecognizeCamera(function(ret){
                 var nameLst = Object.keys(ret.names);
                 console.log(ret.names);
                 callback({"jresponse": "Facial Recognition Video Status: " + ret.status + " [NAMES] " + nameLst.join(", ") });
-            });
+            });*/
+
+            /*self.jcell.jeyes.blindEye("C:\\Users\\krisr\\Pictures\\ImgRecognitionTest\\VideoTest\\v4.mp4",function(ret){
+                callback({"jresponse": "Blind Eye Status: " + ret.status });
+            });*/
 
             //var tst = self.jcell.jeyes.facialRecognitionFile("C:\\Users\\krisr\\Pictures\\Wedding(AllenHouse)\\bridalpartyportraits\\1P9A9224.jpg");
             //var tst = self.jcell.jeyes.facialRecognitionFile("C:\\Users\\krisr\\Pictures\\Saved Pictures\\t2.png");
@@ -1280,9 +1284,9 @@ class JNERVESYSTEM {
             //    callback({"jresponse": "Test: I Read "});
             //});
 
-            //self.jcell.jeyes.motionTrackingCamera(function(ret){
-            //    callback({"jresponse": "Motion Tracking Camera Status: " + (ret == -100)});
-            //});
+            self.jcell.jeyes.motionDetailsCamera(function(ret){
+                callback({"jresponse": "Motion Tracking Camera Status: " + (ret == -100)});
+            });
             
         }
         catch(ex){

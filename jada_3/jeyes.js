@@ -942,6 +942,125 @@ class JEYES {
         }
     }
 
+    /* Motion Details Camera */
+    motionDetailsCamera(callback){
+        var self = this;
+        try {
+            let done = false;
+            var delay = 50, retryCnt = 0;
+
+            var camera = new cv.VideoCapture(1);
+            var retFrame = {frame: null, baseFrame: null, hasMotion: true};
+            var prevFrame = camera.read();
+
+            const intvl = setInterval(function() {
+                let frame = camera.read();
+                if(!prevFrame || prevFrame.empty) { prevFrame = frame.copy(); }
+
+                if (frame.empty) {
+                    try {
+                        camera.reset();
+                        frame = camera.read();
+                        retryCnt = (frame === null || frame.empty ? retryCnt+1 : 0);
+                    }
+                    catch(frameEx){
+                        retryCnt++;
+                        console.log(" Video Load Retry #" + retryCnt);
+                    }
+                }
+
+                if(retryCnt >= 3){ 
+                    clearInterval(intvl);
+                    callback(-100);
+                }
+                else if(retryCnt == 0){
+                    // Motion Tracking
+                    retFrame = _detectMotionDetail2(prevFrame, frame);
+                    prevFrame = retFrame.prevFrame;
+
+                    // Stream Or View Locally
+                    cv.imshow("Motion Detail Frame", retFrame.frame);
+                    
+                    const key = cv.waitKey(delay);
+                    done = key !== -1 && key !== 255;
+                    if (done) {
+                        clearInterval(intvl);
+                        callback(-100);
+                    }
+                }
+            }, 0);
+        }
+        catch(ex){
+            jtools.errorLog(" [ERROR] with motion tracking camera: " + ex);
+        }
+    }
+    
+    /* Blind Eye Set Up */
+    blindEye(videoLoc, callback){
+        var self = this, retryCnt = 0, resizeMax = 640, done = false;
+        var ret = { status:false, ptStatus: { x: { low: null, high: null}, y: { low: null, high:null }} };
+
+        try {
+            if(!fs.existsSync(videoLoc)){
+                console.log("File DNE: " + videoLoc);
+                callback(ret);
+            }
+            else {
+                const cap = new cv.VideoCapture(videoLoc);
+
+                var retFrame = {frame: null, baseFrame: null, hasMotion: true};
+                var prevFrame = cap.read();
+
+                console.log(" [Start Blind Process] ");
+                while(!done){
+                    let frame = cap.read();
+
+                    if(!prevFrame || prevFrame.empty) { prevFrame = frame.copy(); }
+
+                    if (frame.empty) {
+                        try {
+                            //cap.reset();
+                            frame = cap.read();
+                            retryCnt = (frame === null || frame.empty ? retryCnt+1 : 0);
+                        }
+                        catch(frameEx){
+                            retryCnt++;
+                            console.log(" Video Load Retry #" + retryCnt);
+                        }
+                    }
+
+                    if(retryCnt >= 3){ done = true; break;}
+                    else if(retryCnt == 0){
+                        frame = frame.resizeToMax(resizeMax);  
+                        prevFrame = prevFrame.resizeToMax(resizeMax);
+
+                        retFrame = _detectMotionDetail(prevFrame, frame);
+                        prevFrame = retFrame.prevFrame;
+
+                        // Get Min & Max Pt
+                        if(ret.ptStatus.x.low == null || (retFrame.ptStatus.x.low && retFrame.ptStatus.x.low < ret.ptStatus.x.low)) { ret.ptStatus.x.low = retFrame.ptStatus.x.low; console.log(" [Pt Change]"); console.log(ret.ptStatus); }
+                        if(ret.ptStatus.x.high == null || (retFrame.ptStatus.x.high && retFrame.ptStatus.x.high > ret.ptStatus.x.high)) { ret.ptStatus.x.high = retFrame.ptStatus.x.high; console.log(" [Pt Change]"); console.log(ret.ptStatus);}
+        
+                        if(ret.ptStatus.y.low == null || (retFrame.ptStatus.y.low && retFrame.ptStatus.y.low < ret.ptStatus.y.low)) { ret.ptStatus.y.low = retFrame.ptStatus.y.low; console.log(" [Pt Change]"); console.log(ret.ptStatus);}
+                        if(ret.ptStatus.y.high == null || (retFrame.ptStatus.y.high && retFrame.ptStatus.y.high > ret.ptStatus.y.high)) { ret.ptStatus.y.high = retFrame.ptStatus.y.high; console.log(" [Pt Change]"); console.log(ret.ptStatus);}
+
+                        // [DEBUG] View Locally
+                        cv.imshow("BlindEye frame", retFrame.frame);
+                        const key = cv.waitKey(1);
+                    }
+                }
+
+                console.log(" [End Blind Process] ");
+                ret.status = true;
+                callback(ret);
+            }
+        }
+        catch(ex){
+            console.log(" [ERROR] with blind eye: " + ex);
+            callback(ret);
+        }
+    }
+
     /* Test */
     test(callback){
         callback("Done TEST");
@@ -951,6 +1070,216 @@ class JEYES {
 module.exports = JEYES;
 
 /* Private Functions */
+/* Remove Blind Eye Area */
+function _clearBlindEyeData(blindpts, contour){
+    var ret = contour;
+    try {
+        if(blindpts.length > 0) {
+            //var motionContour = contours.filter(function(item){ return item.area > motionDelta; });
+            //var contourPts = contours.map((contour) => { return contour.getPoints(); });
+
+            for(var i =0; i < blindpts.length; i++){
+                ret = ret.filter(function(contour){
+                    var tmpLoc = contour.getPoints().filter(function(mcpt) {
+                        var tx = mcpt.x < blindpts[i].low.x || mcpt.x > blindpts[i].high.x;
+                        var ty = mcpt.y < blindpts[i].low.y || mcpt.y > blindpts[i].high.y;
+
+                        return (tx || ty);
+                    });
+
+                    return tmpLoc.length > 0;
+                });
+            }
+        }
+    }
+    catch(ex){
+        console.log(" [Error] clearing blind eye: ",ex);
+    }
+
+    return ret;
+}
+
+/* Detect Motion Detail */
+function _detectMotionDetail(prevFrame,frame){
+    var ret = { prevFrame: frame, frame: frame, baseFrame: frame, hasMotion: false, ptStatus: {} };
+    const tmpColor = new cv.Vec(0, 0, 255), motionDelta = 800;
+
+    try {
+        ret.ptStatus = { 
+            x: { low: null, high: null},
+            y: { low: null, high:null }
+        }
+
+        ret.prevFrame = frame.copy();
+        ret.baseFrame = frame.copy();
+        var gray = frame.copy();
+
+        //convert to grayscale
+        prevFrame.bgrToGray();
+        prevFrame.blur(new cv.Size(21, 21));
+
+        gray.bgrToGray();
+        gray.blur(new cv.Size(21, 21));
+
+        //compute difference between first frame and current frame
+        var frameDelta = prevFrame.absdiff(gray);
+        var thresh = frameDelta.threshold(25,255, cv.THRESH_BINARY);
+        thresh.dilate(
+            cv.getStructuringElement(cv.MORPH_ELLIPSE, new cv.Size(4, 4)),
+            new cv.Point(-1, -1), 2);
+                
+        // Get Difference Count        
+        thresh = thresh.bgrToGray();
+        let contours = thresh.findContours(cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
+        
+        console.log("Before Clear: ", contours.length);
+        contours = _clearBlindEyeData([{low: { x: 400, y: 120 }, high: { x: 500, y: 180 }}], contours);
+        console.log("After Clear: ", contours.length);
+
+        var motionContour = contours.filter(function(item){ return item.area > motionDelta; });
+        var contourPts = contours.map((contour) => { return contour.getPoints(); });
+
+        ret.hasMotion = motionContour.length > 0;
+        ret.frame.drawContours(contourPts, -1, tmpColor, { thickness: 1 });
+        
+        console.log(" -> [Area]: "); console.log(contours.map(function(item){ return item.area; }));
+        //console.log(" -> [Motion XY]: "); contourPts.forEach(function(pt){ console.log("PT: ", pt.map(function(item){ return "X:"+ item.x + " |Y: " + item.y; })); });
+        //console.log(" -> [Motion P]: "); console.log(contourPts); 
+
+        contourPts.forEach(function(pt){ 
+            pt.forEach(function(item){ 
+                //ptStatus
+                if(ret.ptStatus.x.low == null || item.x < ret.ptStatus.x.low) { ret.ptStatus.x.low = item.x; }
+                if(ret.ptStatus.x.high == null || item.x > ret.ptStatus.x.high) { ret.ptStatus.x.high = item.x; }
+
+                if(ret.ptStatus.y.low == null || item.y < ret.ptStatus.y.low) { ret.ptStatus.y.low = item.y; }
+                if(ret.ptStatus.y.high == null || item.y > ret.ptStatus.y.high) { ret.ptStatus.y.high = item.y; }
+            }); 
+        });
+
+        if(ret.hasMotion){
+            console.log(" -> [Motion C]: ", motionContour.length); //console.log(motionContour);   
+        }
+
+        // Draw Blind Spot
+        const pt1 = new cv.Point(400, 100);
+        const pt2 = new cv.Point(500, 180);                                                                 
+                                    
+        ret.frame.drawRectangle(pt1, pt2, tmpColor, 2, 2);     
+    }
+    catch(ex){
+        console.log("Detection Motion(2): " + ex);
+    }
+    
+    return ret;
+}
+
+/* Detect Motion Detail */
+function _detectMotionDetail2(prevFrame,frame){
+    var ret = { prevFrame: frame, frame: frame, baseFrame: frame, hasMotion: false, ptStatus: {} };
+    const tmpColor = new cv.Vec(0, 0, 255), motionDelta = 1500;
+
+    try {
+        ret.ptStatus = { 
+            x: { low: null, high: null},
+            y: { low: null, high:null }
+        }
+
+        ret.prevFrame = frame.copy();
+        ret.baseFrame = frame.copy();
+        var gray = frame.copy();
+
+        //convert to grayscale
+        prevFrame.bgrToGray();
+        prevFrame.blur(new cv.Size(21, 21));
+
+        gray.bgrToGray();
+        gray.blur(new cv.Size(21, 21));
+
+        //compute difference between first frame and current frame
+        var frameDelta = prevFrame.absdiff(gray);
+        var thresh = frameDelta.threshold(25,255, cv.THRESH_BINARY);
+        thresh.dilate(
+            cv.getStructuringElement(cv.MORPH_ELLIPSE, new cv.Size(4, 4)),
+            new cv.Point(-1, -1), 2);
+                
+        // Get Difference Count        
+        thresh = thresh.bgrToGray();
+        let contours = thresh.findContours(cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
+        
+        var motionContour = contours.filter(function(item){ return item.area > motionDelta; });
+        var contourPts = contours.map((contour) => { return contour.getPoints(); });
+
+        ret.hasMotion = motionContour.length > 0;
+        ret.frame.drawContours(contourPts, -1, tmpColor, { thickness: 1 });
+        //ret.frame = _drawMotionConstraints(ret.frame, contourPts);
+        
+        //console.log(" -> [Motion XY]: "); contourPts.forEach(function(pt){ console.log("PT: ", pt.map(function(item){ return "X:"+ item.x + " |Y: " + item.y; })); });
+        //console.log(" -> [Motion P]: "); console.log(contourPts);   
+        console.log(" -> [Motion P]: "); console.log(contours);  
+    }
+    catch(ex){
+        console.log("Detection Motion(2): " + ex);
+    }
+    
+    return ret;
+}
+
+function _drawMotionConstraints(frame, contourPts){
+    var ret = frame, linePercent = .10, tmpColor = new cv.Vec(0, 0, 255)
+
+    try {
+        contourPts.forEach(function(section){
+            // Get Motion Area
+            var ptStatus = { x: { low: -1, high: -1}, y: { low: -1, high:-1 } };
+            section.forEach(function(pt){ 
+                if(ptStatus.x.low == -1 || pt.x < ptStatus.x.low) { ptStatus.x.low = pt.x; }
+                if(ptStatus.x.high == -1 || pt.x > ptStatus.x.high) { ptStatus.x.high = pt.x; }
+
+                if(ptStatus.y.low == -1 || pt.y < ptStatus.y.low) { ptStatus.y.low = pt.y; }
+                if(ptStatus.y.high == -1 || pt.y > ptStatus.y.high) { ptStatus.y.high = pt.y; }
+            }); 
+
+            // Get Area Center
+            var ctr = new cv.Point((ptStatus.x.high + ptStatus.x.low)/2, (ptStatus.y.high + ptStatus.y.low)/2);
+
+            // Get Line Length
+            var lineLength = {
+                x: (ptStatus.x.high + ptStatus.x.low) * linePercent, 
+                y: (ptStatus.y.high + ptStatus.y.low) * linePercent
+            };           
+
+            // Pt1
+            const pt1 = new cv.Point(ptStatus.x.low, ptStatus.y.low);
+            ret.drawLine(pt1, new cv.Point(ptStatus.x.low + lineLength.x, ptStatus.y.low), tmpColor, 2, cv.LINE_8);
+            ret.drawLine(pt1, new cv.Point(ptStatus.x.low, ptStatus.y.low + lineLength.y), tmpColor, 2, cv.LINE_8);
+
+            // Pt2            
+            const pt2 = new cv.Point(ptStatus.x.high, ptStatus.y.low);
+            ret.drawLine(pt2, new cv.Point(ptStatus.x.high - lineLength.x, ptStatus.y.low), tmpColor, 2, cv.LINE_8);
+            ret.drawLine(pt2, new cv.Point(ptStatus.x.high, ptStatus.y.low + lineLength.y), tmpColor, 2, cv.LINE_8);
+            
+            // Pt3
+            const pt3 = new cv.Point(ptStatus.x.high, ptStatus.y.high);
+            ret.drawLine(pt3, new cv.Point(ptStatus.x.high - lineLength.x, ptStatus.y.high), tmpColor, 2, cv.LINE_8);
+            ret.drawLine(pt3, new cv.Point(ptStatus.x.high, ptStatus.y.high - lineLength.y), tmpColor, 2, cv.LINE_8);
+
+            // Pt4
+            const pt4 = new cv.Point(ptStatus.x.low, ptStatus.y.high);
+            ret.drawLine(pt4, new cv.Point(ptStatus.x.low + lineLength.x, ptStatus.y.high), tmpColor, 2, cv.LINE_8);
+            ret.drawLine(pt4, new cv.Point(ptStatus.x.low, ptStatus.y.high - lineLength.y), tmpColor, 2, cv.LINE_8);
+
+            // Center
+            ret.drawCircle(ctr, 1, tmpColor, 1, cv.LINE_8);
+        });
+    }
+    catch(ex){
+        console.log("[Error] Drawing Motion Constraints: ",ex);
+    }
+
+    return ret;
+}
+
 /* Motion Stats */
 function _motionStats(dataList){
     var ret = {min: null, max: null, center:{ y: 0, x:0 }};
