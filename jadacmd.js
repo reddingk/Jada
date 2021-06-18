@@ -1,7 +1,4 @@
 'use strict';
-require('dotenv').config();
-var database = { connectionString: process.env.DatabaseConnectionString, dbName: process.env.DatabaseName }
-
 
 const Brain = require('./jada_3/jbrain.js');
 let jbrain = new Brain();
@@ -16,11 +13,11 @@ function run(args){
     }
     else {        
         var input = args.splice(2).join(" ");    
-        var trimInput =   jbrain.jlanguage.cleanPhrase(input.trim());                
-
-        jbrain.convo(trimInput, 'kredding', function(res){
-            var output = res.jresponse + "\n";
-            console.log(output);
+    
+        jbrain.convo(input, {userId: 15, nickname: "Kris"}, function(res){
+            //var output = res.jresponse + "\n";
+            //console.log(output);
+            console.log(res);
             process.exit(0);
         });
     }

@@ -1,92 +1,38 @@
 'use strict';
 
-/*
- * JADA BRAIN CLASS
- * By: Kris Redding
- */
 const Language = require('./jlanguage.js');
-const Nerves = require('./jnerves.js');
+const log = require('../server/services/log.service');
+
 
 class JBRAIN {
-    constructor() {        
-        this.jlanguage = new Language();
-        this.jNerves = new Nerves(this);
-        this.jCells = this.jNerves.jnervesystem.jcell;
+    constructor() {
+        this.jlanguage = new Language(this);
     }
 
     /* Functions */
-    polly(phrase) { console.log("You entered in " + phrase);};
-
-    /* Jada conversation function */
-    convo(phrase, userId, callback) {
+    convo(phrase, userInfo, callback){
         var self = this;
-        
-        var tmpStr = phrase.split(" ");        
-        self.dbActions(tmpStr, phrase, userId, callback);
-    }
+        try{
+            phrase = this.jlanguage.cleanPhrase(phrase);
+            var tmpStr = phrase.split(" ");
 
-    /* Direct Access to Functions */
-    directData(functionName, items, callback) {
-      var self = this;
-      var response = {};
-      try {
-        if(functionName in self.jCells){
-          self.jCells[functionName](items, function(res){
-            callback(res);
-          });
-        }
-        else {
-          callback({ error:"Invalid Function Name" });
-        }        
-      }
-      catch(ex){
-        response.error = "Error calling directData function: "+ ex;
-        callback(response);
-      }
-    }
-
-    /* Internal functions */
-    /* Database Actions */
-    dbActions(tmpStr, phrase, userId, callback){
-      var self = this;
-      
-      self.jlanguage.searchPhrase(tmpStr, function(res){
-          // Check Full Phrases
-          if(self.jlanguage.fullPhraseLib == null){
-              self.jlanguage.getFullPhrases(function(fullres){
-                  self.jlanguage.fullPhraseLib = fullres;
-
-                  var response = self.jlanguage.getCall(phrase, res);
-                  
-                  if(response != null){
-                      phrase = ( response.response == "N/A" ? "" : phrase);
-                      self.jNerves.dataResponse(response, phrase, userId, function(res){ callback(res); });
-                  }
-                  else {
-                    callback({"jresponse":" [Error] retrieving language call"});
-                  }
-              });
-          }
-          else {
-              var response = self.jlanguage.getCall(phrase, res, callback);
+            self.jlanguage.searchPhrase("search", tmpStr, function(res){                
+                var response = self.jlanguage.getCall(phrase, res);
              
-              if(response != null){
-                  phrase = ( response.response == "N/A" ? "" : phrase);
-                  self.jNerves.dataResponse(response, phrase, userId, function(res){ callback(res); });
-              }
-              else {
-                callback({"jresponse":" [Error] retrieving language call"});
-              }
-          }
-      });
-    }
-
-    /*Offline Actions */
-    offlineActions(tmpStr, phrase, callback){
-      var self= this;
-      callback({"jresponse":"Sorry We were not able to connect to the DB"});
+                if(response != null){
+                    phrase = (response.response == "N/A" ? "" : phrase);
+                    self.jlanguage.dataResponse(response, phrase, userInfo, function(res){ callback(res); });
+                }
+                else {
+                    callback({"jresponse":" [Error] retrieving language call"});
+                }
+            });
+        }
+        catch(ex){
+            log.error("during jbrain convo: " + ex);
+            callback({"jresponse":" [Error] during jbrain convo"});
+        }
     }
 }
-
 
 module.exports = JBRAIN;

@@ -1,130 +1,213 @@
 'use strict';
 
-/*
- * JADA LANGUAGE CLASS
- * By: Kris Redding
- */
-
-var underscore = require('underscore');
-var fs = require('fs');
 require('dotenv').config();
-
-var configLoc = (process.env.CONFIG_LOC ? process.env.CONFIG_LOC : "/jada/localConfig");
-const basedb = require(configLoc + "/basedb.json");
-
-const Tools = require('./jtools.js');
+const fs = require('fs');
+const log = require('../server/services/log.service');
+const NerveSystem = require('./jnerveSystem.js');
 
 class JLANGUAGE {
-    constructor(){
-        this.phraseLib = [];
-        this.fullPhraseLib = null;
-        this.mongoOptions = { connectTimeoutMS: 2000, socketTimeoutMS: 2000};
-        this.jTools = new Tools();
+    constructor(innerBrain){
+        this.jnervesystem = new NerveSystem(innerBrain);
     }
 
-    /* Functions */
     cleanPhrase(phrase) {
-        var tmpPhrase = phrase.toLowerCase();
-        return tmpPhrase;
+        return phrase.toLowerCase().trim();
     }
 
-    getPhrases(callback) {
-        var self = this;
-
-        try{
-            callback(self.offlineGet("all", []));
-        }  
-        catch(ex){
-            //callback(null);
-        }
-    }
-    getFullPhrases(callback){
-        var self = this;
-
+    searchPhrase(type, wordList, callback) {
         try {
-            callback(self.offlineGet("full", []));
+            callback(offlineGet(type, wordList));
         }  
         catch(ex){
-            //callback(null);
-        }
-    }
-
-    searchPhrase(wordList, callback) {
-        var self = this;
-        try {
-            callback(self.offlineGet("search", wordList));
-        }  
-        catch(ex){
-            //callback(null);
+            log.error("(jlanguage) " + type + " phrase: " + ex);
+            callback(null);
         } 
     }
 
-
-    /* PRIVATE FUNCTIONS */
-
-    /* Offline Get */
-    offlineGet(type, wordlist){
-        var self = this;
-        var res = [];
+    getCall(phrase, acList){ 
+        var self = this, actionCall = null, response = {"response":"N/A"};
 
         try {
+            let basedFile = fs.readFileSync(process.env.CONFIG_LOC +'/basedb.json');
+            let baseDb = JSON.parse(basedFile);
 
-            switch(type){
-                case "search":
-                    var q1 = underscore.reject(basedb.phrases, function(p){ return p.type == 'phrase'});
-                    var q2 = underscore.filter(q1, function(p){ return wordlist.includes(p.action); });
-                    var q3 = underscore.filter(q1, function(p){ return p.additional_phrases && p.additional_phrases.some(function(ap) { return wordlist.includes(ap);}); });
+            var tmpFull = baseDb.phrases.filter(function(fp){
+                return fp.type == "phrase" && phrase == fp.action;
+            });
 
-                    res = q2.concat(q3); 
-                    break;
-                case "full":
-                    res = underscore.where(basedb.phrases, {type: "phrases"});
-                    break;
-                case "all":
-                    res = basedb.phrases;
-                    break;
-                default:
-                    break;
+            if(!tmpFull || tmpFull.length <= 0){ 
+                // Regular Phrase
+                actionCall = acList.reduce(function(prev, curr) {
+                    return prev.level < curr.level ? prev : curr;
+                });
             }
-        }
-        catch(ex){
-            this.jTools.errorLog(" [ERROR] with offline search: " + ex);
-        }
-        return res;
-    }
-    /* Get Phrase Action Call */
-    getCall(phrase, acList){
-        var self = this;
-        var actionCall = null;
-        var response = null;
-
-        try {
-            var phraseSplit = phrase.split(" ");
-            var tmpFull = underscore.filter(self.fullPhraseLib, function(dt){ return phrase.search(dt.action) > -1; });
-
-            if(tmpFull == null || tmpFull == undefined || tmpFull == ''){
-                actionCall = underscore.min(acList, function(mt){ return mt.level; });
-            }
-            else {
-                actionCall = underscore.min(tmpFull, function(mt){ return mt.level; });
+            else {  
+                // Full Phrase
+                actionCall = tmpFull.reduce(function(prev, curr) {
+                    return prev.level < curr.level ? prev : curr;
+                });
             }
 
             if(actionCall != null){
-                var response = self.getActionResponse(actionCall, self.chopPhrase(actionCall.action, phraseSplit));
-            }
-            else {
-                var response = {"response":"N/A"}
+                response = self.getActionResponse(actionCall, chopPhrase(actionCall.action, phrase.split(" ")));
             }
         }
         catch(ex){
-            this.jTools.errorLog(" [ERROR] Processing Language [jl0]" + ex);
+            log.error("getting call: " + ex);
         }
 
         return response;
     }
 
-    // Return the phrase that remains after the action
-    chopPhrase(action, phrase) {
+    getActionResponse(actionCall, phrase){
+        var ret = null;
+
+        try {
+            var phraseSplit = phrase.split(" ");
+
+            //No response in main there is only a response in subactions
+            if(emptyCheck(actionCall.response) && actionCall.subactions != undefined){
+                return this.getSubActionResponse(actionCall.subactions, chopPhrase(actionCall.action, phraseSplit));
+            }
+            //Check for subaction responses before returning main response
+            else if(!emptyCheck(actionCall.subactions)) {
+                var response = this.getSubActionResponse(actionCall.subactions, chopPhrase(actionCall.action, phraseSplit));
+                var res = (response == null? {"response":actionCall.response, "action": actionCall.action } : response);
+
+                if(response == null && actionCall.additional_phrases != undefined) {
+                    res.additional_phrases = actionCall.additional_phrases;
+                }
+
+                return res;
+            }
+            //Return main response
+            else {
+                var res = {"response":actionCall.response, "action": actionCall.action};
+                if(actionCall.additional_phrases != undefined){
+                    res.additional_phrases = actionCall.additional_phrases;
+                }
+
+                return res;
+            }
+        }
+        catch(ex){
+            log.error("getting action response: " + ex);
+        }
+
+        return ret;
+    }
+
+    // Get the Sub Action based on the phrase
+    getSubActionResponse(subactions, phrase) {
+        var retResponse = null, subResponses = [];
+
+        try {
+            var phraseSplit = phrase.split(" ");
+
+            // Check for Sub action in remaining phrase
+            for(var i=0; i < phraseSplit.length; i++){
+                var tmpResponse = subactions.filter(function(val){ return ((phraseSplit[i] == val.action)  || (val.additional_phrases != undefined && val.additional_phrases.indexOf(phraseSplit[i]) > -1));  });
+                if(tmpResponse != null){
+                    if(subResponses.length == 0) {
+                        subResponses = tmpResponse;
+                    }
+                    else {
+                        subResponses.concat(tmpResponse);
+                    }
+                }
+            }
+
+            retResponse = subResponses.reduce(function(prev, curr) {
+                return prev.level < curr.level ? prev : curr;
+            });
+
+            if(retResponse){
+                if(emptyCheck(retResponse.subactions)) {
+                    var returnObj = {"response":retResponse.response, "action": retResponse.action, "level": retResponse.level};
+    
+                    if(!emptyCheck(retResponse.additional_phrases)) {
+                        returnObj.additional_phrases = retResponse.additional_phrases;
+                    }
+                    return returnObj;
+                }
+                else {
+                    return this.getSubActionResponse(retResponse.subactions, chopPhrase(retResponse.action, phraseSplit));
+                }
+            }
+            else {
+                return null;
+            }
+        }
+        catch(ex){
+            log.error("getting sub action response: " + ex);
+            return null;
+        }
+    }
+
+    // JNerve Data Response
+    dataResponse(response, fullPhrase, userInfo, callback) {
+        var finalResponse = {"jresponse": "I have nothing for you sorry"};
+
+        try {
+            if(response == null) { callback(finalResponse); }
+            else {
+                response.fullPhrase = fullPhrase;
+                response.userInfo = userInfo;                
+                response.lastAction = {"response":response, "fullPhrase":fullPhrase};
+                
+                if(!(response.response in this.jnervesystem)){
+                    finalResponse.jresponse = "I feel like you were close to asking me something, you may be missing something when you mentioned '" + response.action+"'. ";
+                    callback(finalResponse);
+                }
+                else {
+                    this.jnervesystem[response.response](response, function(finalRes){ callback(finalRes); });
+                }
+            }
+        }
+        catch(ex){
+            log.error("calling data response: " + ex);
+            callback({"jresponse": "Somthing went wrong sorry (E1)"})
+        }
+    }
+}
+
+module.exports = JLANGUAGE;
+
+
+function offlineGet(type, wordlist){
+    var ret = [];
+    try {
+        let basedFile = fs.readFileSync(process.env.CONFIG_LOC +'/basedb.json');
+        let baseDb = JSON.parse(basedFile);
+
+        switch(type){
+            case "search":
+                ret = baseDb.phrases.filter(function(p){
+                    var c1 = !p.type || p.type != "phrase";
+                    var c2 = wordlist.includes(p.action);
+                    var c3 = p.additional_phrases && p.additional_phrases.some(function(ap) { return wordlist.includes(ap);});
+
+                    return c1 && (c2 || c3);
+                });
+                break;
+            case "full":
+                ret = baseDb.phrases.filter(function(p){ return p.type == "phrase"; });
+                break;
+            case "all":
+                ret = baseDb.phrases;
+                break;
+            default:
+                break;
+        }
+    }
+    catch(ex){
+        log.error("getting offline search: " + ex);
+    }
+    return ret;
+}
+
+function chopPhrase(action, phrase) {
+    try {
         var index = phrase.indexOf(action);
         if(index > -1) {
             if((index + 1) < phrase.length) {
@@ -138,76 +221,12 @@ class JLANGUAGE {
             return phrase.join(" ");
         }
     }
-
-    // Get Action Response
-    getActionResponse(actionCall, phrase){
-        var self = this;
-        var phraseSplit = phrase.split(" ");
-
-        //No response in main there is only a response in subactions
-        if(self.jTools.emptyCheck(actionCall.response) && actionCall.subactions != undefined){
-            return self.getSubActionResponse(actionCall.subactions, self.chopPhrase(actionCall.action, phraseSplit));
-        }
-        //Check for subaction responses before returning main response
-        else if(!self.jTools.emptyCheck(actionCall.subactions)) {
-            var response = self.getSubActionResponse(actionCall.subactions, self.chopPhrase(actionCall.action, phraseSplit));
-            var res = (response == null? {"response":actionCall.response, "action": actionCall.action } : response);
-
-            if(response == null && actionCall.additional_phrases != undefined)
-                res.additional_phrases = actionCall.additional_phrases;
-
-            return res;
-        }
-        //Return main response
-        else {
-            var res = {"response":actionCall.response, "action": actionCall.action};
-            if(actionCall.additional_phrases != undefined)
-                res.additional_phrases = actionCall.additional_phrases;
-
-            return res;
-        }
-    }
-
-    // Get the Sub Action based on the phrase
-    getSubActionResponse(subactions, phrase) {
-        var self = this;
-        var phraseSplit = phrase.split(" ");
-        var retResponse = null;
-        var subResponses = [];
-
-        // Check for Sub action in remaining phrase
-        for(var i=0; i < phraseSplit.length; i++){
-            var tmpResponse = underscore.filter(subactions, function(val){ return ((phraseSplit[i] == val.action)  || (val.additional_phrases != undefined && val.additional_phrases.indexOf(phraseSplit[i]) > -1))  });
-            if(tmpResponse != null){
-                if(subResponses.length == 0) {
-                    subResponses = tmpResponse;
-                }
-                else {
-                    subResponses.concat(tmpResponse);
-                }
-            }
-        }
-
-        retResponse = underscore.min(subResponses, function(mt){ return mt.level; });
-
-        if(retResponse != Infinity) {
-            if(self.jTools.emptyCheck(retResponse.subactions)) {
-                var returnObj = {"response":retResponse.response, "action": retResponse.action, "level": retResponse.level};
-
-                if(!self.jTools.emptyCheck(retResponse.additional_phrases)) {
-                    returnObj.additional_phrases = retResponse.additional_phrases;
-                }
-                return returnObj;
-            }
-            else {
-                return self.getSubActionResponse(retResponse.subactions, self.chopPhrase(retResponse.action, phraseSplit));
-            }
-        }
-        else {
-            return null;
-        }
-    }
+    catch(ex){
+        log.error("chopping phrase: " + ex);
+        return "";
+    }    
 }
 
-module.exports = JLANGUAGE;
-
+function emptyCheck(val) {
+    return (val == undefined || val == '' || val == null);
+}
