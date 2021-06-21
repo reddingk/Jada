@@ -27,10 +27,6 @@ node jadacmd.js [Phrase]
   {date}
       : Get the server machine date
 
-/*SPORTS SCHEDULE*/
- **** {schedule} for [week] ****
-      : Get sport schedule for a specific week number
-
 /*MEDIA*/
   [number] {media, books, movies, music, authors, shows, games} [similar] [to] ****
       : Get similar media items to a specific media item
@@ -64,10 +60,6 @@ node jadacmd.js [Phrase]
   [system] {memory}
       : Get the amount of free memory space
 
-/*TRANSLATION*/
-  {translate} [from] **** [to] **** [**phrase to translate**]
-      : Translates phrase from one language to another
-
 /*DIRECTIONS*/
   [type] {directions} [from] **** [to] ****
       : Get google directions from one location to another
@@ -95,43 +87,14 @@ node jadacmd.js [Phrase]
   {replace}
       : Replacement action on last request the current list is
         -- Remember Location
-/* MAPS */
+
+/*MAPS*/
   {capital} [of] ****
       : Get the capital of specific place
   [state] {capitals} [of] ****
       : Get all of the state capitals of specific location
   {contries} [in] ****
       : Get countries in specific continent
-
-/*Marvel Search*/
-  {marvel} {characters} for ****
-      : Search the marvel database for specific information regarding a character
-
-/* Film & TV */
-   {search} [movie] [named] *****
-      : Search for all movies with search title
-   -- --
-      : Get Movie Information
-   {compare} [movies] ***** 
-      : Get List of cast & crew that participated in the list of movie titles
-   {search} [show] [named] *****
-      : Search for all shows with search title
-   -- -- 
-      : Get TV show information
-   {compare} [shows] *****
-      : Get List of cast & crew that participated in the list of show titles
-   {search} [actor|crew|actress|cast] [named] *****
-      : Search for all film & TV people with that name
-   -- --
-      : Get Cast & Crew Information
-   {compare} [actor|crew|actress|cast] *****
-      : Get List of movies & shows that the list of people participated in with each other
-   {list} [movies] [now playing]
-      : Get Movies Now Playing
-   {list} [movies] [coming soon]
-      : Get Movies Coming Soon
-   {list} [popular] [actors|crew|actresses|cast] 
-      : Get Popular Actors & Actresses
 
 
 /*Easter Eggs*/

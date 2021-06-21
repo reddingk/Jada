@@ -6,6 +6,7 @@
 
 const log = require('../server/services/log.service');
 const request = require('request');
+const os = require('os');
 const Tools = require('./jtools.js');
 
 const locationdb = require(process.env.CONFIG_LOC + "/locationdb.json");
@@ -16,6 +17,7 @@ class JCELL {
         this.jtools = new Tools();
     }
 
+    /* Get Local Date & Time */
     getLocalDateTime(items, userInfo, callback){
         var date = new Date(), self = this;
         var response = {"error":null, "results":null};
@@ -183,6 +185,87 @@ class JCELL {
             callback(response);
         }        
     } 
+
+    /* Weather Info using open weather map API */
+    weatherInfo(items, userInfo, callback){
+        var response = {"error":null, "results":null};
+        try {
+            var api = getApiItem("openWeather");
+            saveLastAction("weatherInfo", userInfo, items);
+            
+            if(api != null){                
+                if(!checkParameterList(["type", "location"], items)){
+                    response.error = "Missing Parameter";
+                    callback(response);
+                }
+                else {                    
+                    var url = this.jtools.stringFormat("{0}{1}?q={2}&appid={3}&units=imperial", [api.link, items.type, items.location.replace(" ", "+"), process.env.OPENWEATHER_KEY]);
+                    request({ url: url, json: true}, function (error, res, body){
+                        if(!error && res.statusCode === 200){
+                            response.results = body; callback(response);
+                        }
+                        else { 
+                            var err = (res.statusCode != 200 && body && body.message ? body.message : error);
+                            log.error("weather info (E2): " + err);
+                            response.error = err; callback(response);
+                        }
+                    });
+                }                
+            }
+            else {
+                response.error = "Unable to retrieve API data";
+                log.error(response.error); callback(response);
+            }
+        }
+        catch(ex){
+            response.error = "Issue With Weather Info";
+            log.error(response.error); callback(response);
+        }
+    }
+
+    /* getserver Operating System Info */
+    getOSInfo(items, userInfo, callback){
+        var response = {"error":null, "results":null};
+        
+        try {
+            saveLastAction("getOSInfo", userInfo, items);
+
+            if(!checkParameterList(["type"], items)){
+                response.error = "Missing Parameter";
+            }
+            else {
+                switch(items.type){
+                    case "arch":                      
+                      response.results = os.arch();
+                      break;                    
+                    case "info":                      
+                      response.results = os.cpus();
+                      break;
+                    case "hostname":                      
+                      response.results = os.hostname();
+                      break;
+                    case "networkinterface":                      
+                      response.results = os.networkInterfaces();
+                      break;
+                    case "systemrelease":                      
+                      response.results = os.release();
+                      break;
+                    case "systemmemory":                      
+                      response.results = os.totalmem();
+                      break;                    
+                    default:
+                        break;
+                }
+            }
+        }
+        catch(ex){
+            response.error = "Error retrieving OS data";
+            log.error(response.error);
+        }
+        
+        callback(response);
+    }
+
 }
 
 module.exports = JCELL;

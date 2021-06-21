@@ -248,6 +248,361 @@ class JNERVESYSTEM {
             callback({"jresponse":"Issue with Getting Tastekid Results, sorry"});
         }
     }
+
+    /* Get Current Weather */
+    getWeatherCurrent(response, callback){
+        var self = this, finalResponse = null;
+        try {
+            var apiResponse = null, dataObj = {"type":"find"};
+
+            var tmpPhrase = response.fullPhrase.split(" ");
+            var postPhrase = tmpPhrase.slice(tmpPhrase.indexOf("weather"));
+            var forIndex = additionalPhraseSlicers(postPhrase, ["for", "in"]);        
+
+            if(forIndex >= 0){
+                dataObj.location = postPhrase.slice(forIndex+1).join(" ");
+                
+                self.jcell.weatherInfo(dataObj, response.userInfo, function(res){                 
+                    if(res.error == null && res.results != null){
+                        if(res.results.count > 0) {
+                            finalResponse = self.jtools.stringFormat("The current weather accourding to OpenWeather.com for {0} is: Tempurature of {1}, Humidity of {2}%, with a description of '{3}'", [res.results.list[0].name, res.results.list[0].main.temp, res.results.list[0].main.humidity, res.results.list[0].weather[0].description ]);
+                            apiResponse = { resultList: [res.results.list[0]]};                        
+                        }
+                        else {
+                            finalResponse = self.jtools.stringFormat("Sorry we could not find the current weather for: {0}", [dataObj.location]);
+                        }
+                    }
+                    else {
+                        finalResponse = "There was an error while retrieving current weather data: " + res.error;
+                    }
+                    callback({"jresponse": finalResponse, "jtype":"weather", "jdata":apiResponse });
+                });
+            }
+            else {
+                finalResponse = "Im not sure where you would like me to look";
+                callback({"jresponse": finalResponse, "jtype":"weather", "jdata":apiResponse});
+            }
+        }
+        catch(ex){
+            log.error("in getWeatherCurrent: " + ex);
+            callback({"jresponse":"Issue with getWeatherCurrent, sorry"});
+        }
+    }
+
+    /* Get Weather Forecast */
+    getWeatherForecast(response, callback){
+        var self = this, finalResponse = null;
+        try {
+            var apiResponse = {}, dataObj = {"type":"forecast"};
+
+            var tmpPhrase = response.fullPhrase.split(" ");
+            var postPhrase = tmpPhrase.slice(tmpPhrase.indexOf("forecast"));
+            var forIndex = additionalPhraseSlicers(postPhrase, ["for", "in"]);
+
+            if(forIndex >= 0){
+                dataObj.location = postPhrase.slice(forIndex+1).join(" ");
+                
+                self.jcell.weatherInfo(dataObj, response.userInfo, function(res){                 
+                    if(res.error == null && res.results != null){                   
+                        if(res.results.list.length > 0) {                        
+                            // Set initial parameters
+                            var dateString = (new Date(res.results.list[0].dt_txt)).toDateString();
+                            var dateNum = 0, avgTemp = 0, avgStatus = {}; 
+                            var dateList = [], displayList = [], tmpData = {};
+    
+                            for(var i =0; i < res.results.list.length; i++){
+                                var item = res.results.list[i];
+                                var newDate = (new Date(item.dt_txt)).toDateString();                 
+                                if(newDate != dateString ) {
+                                    var dateStatus = {"data":null, "num": 0};     
+                                    var lrgObj = Object.keys(avgStatus).reduce(function(a, b){ return avgStatus[a].num > avgStatus[b].num ? a : b });
+                                    
+                                    if(lrgObj != null){
+                                        dateStatus = avgStatus[lrgObj];
+                                    }
+                                    // Set Days Data
+                                    tmpData = {dt_txt:dateString, main:{temp:(avgTemp / dateNum).toFixed(2)}, weather:[dateStatus.data]};
+                                    
+                                    // Store Days Data
+                                    displayList.push(self.jtools.stringFormat("{0} : {1} degrees and '{2}'", [dateString, (avgTemp / dateNum).toFixed(2), dateStatus.data.main]));
+                                    dateList.push(tmpData);
+    
+                                    // Reset Data
+                                    tmpData = {dt_txt:"", main:{temp:0}, weather:[]};
+                                    //Reset tmp Values
+                                    dateString = newDate; avgTemp = 0;                                
+                                    dateNum = 0; avgStatus = {};
+                                }
+                                else {
+                                    dateNum +=1.0;
+                                    avgTemp += parseFloat(item.main.temp_max);
+                                    if(item.weather[0].main in avgStatus){
+                                        avgStatus[item.weather[0].main].num += 1;
+                                    }
+                                    else {
+                                        avgStatus[item.weather[0].main] = {data:item.weather[0], num:1};
+                                    }
+                                }
+                            } 
+                            
+                            finalResponse = self.jtools.stringFormat("The weather forecast for the next few days according to OpenWeather.com for {0}: \n {1}",[res.results.city.name, displayList.join("\n | ")]);
+                            apiResponse = { dateList: dateList, resultList: res.results.list };
+                        }
+                        else {
+                            finalResponse = self.jtools.stringFormat("Sorry we could not find the weather forecast for: {0}", [dataObj.location]);
+                        }
+                    }
+                    else {
+                        finalResponse = "There was an error while retrieving current weather data: " + res.error;
+                    }
+                    callback({"jresponse": finalResponse, "jtype":"weather", "jdata":apiResponse});
+                });
+            }
+            else {
+                finalResponse = "Im not sure where you would like me to look";
+                callback({"jresponse": finalResponse, "jtype":"weather", "jdata":apiResponse});
+            }
+        }
+        catch(ex){
+            log.error("in getWeatherForecast: " + ex);
+            callback({"jresponse":"Issue with getWeatherForecast, sorry"});
+        }
+    }
+
+    /* Get Detailed Weather Forecast */
+    getWeatherDetailedForecast(response, callback){
+        var self = this, finalResponse = null;
+        try {
+            var apiResponse = null, dataObj = {"type":"forecast"};
+            var tmpPhrase = response.fullPhrase.split(" ");
+            var postPhrase = tmpPhrase.slice(tmpPhrase.indexOf("details"));
+            var forIndex = additionalPhraseSlicers(postPhrase, ["for", "in"]); 
+
+            if(forIndex >= 0){
+                dataObj.location = postPhrase.slice(forIndex+1).join(" ");
+                
+                self.jcell.weatherInfo(dataObj, response.userInfo, function(res){                 
+                    if(res.error == null && res.results != null){                   
+                        if(res.results.list.length > 0) {  
+                            var dateString = "";
+                            finalResponse = self.jtools.stringFormat("The weather forecast for the next few days accourding to OpenWeather.com for {0}: ",[res.results.city.name]);
+                            apiResponse = { resultList: res.results.list };
+
+                            for(var i =0; i < res.results.list.length; i++){
+                                var item = res.results.list[i];
+                                var newDate = new Date(item.dt_txt);
+                                if(newDate.toDateString() != dateString ){
+                                    dateString = newDate.toDateString();
+                                    finalResponse += self.jtools.stringFormat("\n\n|{0}\n [{1}]: {2} degrees and '{3}' ", [dateString, newDate.toLocaleTimeString(), item.main.temp_max, item.weather[0].description]);
+                                }
+                                else {
+                                    finalResponse += self.jtools.stringFormat("\n [{0}]: {1} degrees and '{2}' ", [newDate.toLocaleTimeString(), item.main.temp_max, item.weather[0].description]);
+                                }
+                            }
+                            finalResponse += "\n";
+                        }
+                        else {
+                            finalResponse = self.jtools.stringFormat("Sorry we could not find: {0} maybe you spelled it wrong?", [dataObj.location]);
+                        }
+                    }
+                    else {
+                        finalResponse = "There was an error while retrieving current weather data: " + res.error;
+                    }
+                    callback({"jresponse": finalResponse, "jtype":"weather", "jdata":apiResponse});
+                });
+            }
+            else {
+                finalResponse = "Im not sure where you would like me to look";
+                callback({"jresponse": finalResponse, "jtype":"weather", "jdata":apiResponse});
+            }
+        }
+        catch(ex){
+            log.error("in getWeatherDetailedForecast: " + ex);
+            callback({"jresponse":"Issue with getWeatherDetailedForecast, sorry"});
+        }
+    }
+
+    /* Get Server CPU Arch */
+    getCpuArch(response, callback){
+        var self = this, finalResponse = null, dataObj = {"type":"arch"};
+        try {
+            this.jcell.getOSInfo(dataObj, response.userInfo, function(res){  
+                if(res.error == null && res.results != null){
+                    finalResponse = self.jtools.stringFormat("the cpu architecture is {0}",[res.results]);
+                }
+                else {
+                    finalResponse = self.jtools.stringFormat("Error retrieving CPU ARCH: {0}", [res.error]);
+                }
+                callback({"jresponse": finalResponse, "jdata": res.results});
+            });      
+        }
+        catch(ex){
+            log.error("in getCpuArch: " + ex);
+            callback({"jresponse":"Issue with getCpuArch, sorry"});
+        }
+    }
+
+    /* Get Server CPU Info */
+    getCpuInfo(response, callback){
+        var self = this, finalResponse = null, dataObj = {"type":"info"};
+        try {
+            this.jcell.getOSInfo(dataObj, response.userInfo, function(res){  
+                if(res.error == null && res.results != null){
+                    var cores = res.results;
+
+                    finalResponse = self.jtools.stringFormat("You have {0} cores on this machine, they are the following: ", [cores.length]);
+                    for(var i =0; i < cores.length; i++){ 
+                        finalResponse += self.jtools.stringFormat("\n core {0}: {1}", [i, cores[i].model]);  
+                    }                    
+                }
+                else {
+                    finalResponse = self.jtools.stringFormat("Error retrieving CPU INFO: {0}", [res.error]);
+                }
+                callback({"jresponse": finalResponse, "jdata":res.results});
+            });      
+        }
+        catch(ex){
+            log.error("in getCpuInfo: " + ex);
+            callback({"jresponse":"Issue with getCpuInfo, sorry"});
+        }
+    }
+
+    /* Get Server Computer Hostname */
+    getComputerHostname(response, callback){
+        var self = this, finalResponse = null, dataObj = {"type":"hostname"};
+        try {
+            this.jcell.getOSInfo(dataObj, response.userInfo, function(res){  
+                if(res.error == null && res.results != null){
+                    finalResponse = self.jtools.stringFormat("The computers hostname is {0}",[res.results]);
+                }
+                else {
+                    finalResponse = self.jtools.stringFormat("Error Retrieving Computer Hostname: {0}", [res.error]);
+                }
+                callback({"jresponse": finalResponse, "jdata":res.results});
+            });      
+        }
+        catch(ex){
+            log.error("in getComputerHostname: " + ex);
+            callback({"jresponse":"Issue with getComputerHostname, sorry"});
+        }
+    }
+
+    /* Get Server Network Interface */
+    getNetworkInterface(response, callback){
+        var self = this, finalResponse = null, dataObj = {"type":"networkinterface"};
+        try {
+            this.jcell.getOSInfo(dataObj, response.userInfo, function(res){  
+                if(res.error == null && res.results != null){
+                    var network = res.results;
+                    var info = null;  
+                    for(var i in network) {
+                        for(var j in network[i]){
+                            var iface = network[i][j];
+                            if(iface.family == "IPv4" && !iface.internal) {
+                                info = iface; break;
+                            }
+                        }
+                    }
+
+                    finalResponse = (info != null ? self.jtools.stringFormat("network information address: {0}, netmask: {1}, mac: {2}", [info.address, info.netmask, info.mac]) : "Sorry no network information");
+                }
+                else {
+                    finalResponse = self.jtools.stringFormat("Error retrieving network information: {0}", [res.error]);
+                }
+                callback({"jresponse": finalResponse, "jdata":res.results});
+            });      
+        }
+        catch(ex){
+            log.error("in getNetworkInterface: " + ex);
+            callback({"jresponse":"Issue with getNetworkInterface, sorry"});
+        }
+    }
+
+    /* Get Server System Release */
+    getSystemRelease(response, callback){
+        var self = this, finalResponse = null, dataObj = {"type":"systemrelease"};
+        try {
+            this.jcell.getOSInfo(dataObj, response.userInfo, function(res){  
+                if(res.error == null && res.results != null){
+                    finalResponse = self.jtools.stringFormat("The operating system release is {0}",[res.results]);
+                }
+                else {
+                    finalResponse = self.jtools.stringFormat("Error retrieving system release: {0}", [res.error]);
+                }
+                callback({"jresponse": finalResponse, "jdata":res.results});
+            });      
+        }
+        catch(ex){
+            log.error("in getSystemRelease: " + ex);
+            callback({"jresponse":"Issue with getSystemRelease, sorry"});
+        }
+    }
+
+    /* Get Server System Memory */
+    getSystemMemory(response, callback){
+        var self = this, finalResponse = null, dataObj = {"type":"systemmemory"};
+        try {
+            this.jcell.getOSInfo(dataObj, response.userInfo, function(res){  
+                if(res.error == null && res.results != null){
+                    var memory = res.results, memPhrase = "";
+                    if(memory > 1073741824) { memPhrase = self.jtools.stringFormat("{0} GB", [(memory/1073741824).toFixed(3) ]); }
+                    else if(memory > 1048576) { memPhrase = self.jtools.stringFormat("{0} MB", [(memory/1048576).toFixed(3) ]);  }
+                    else if(memory > 1024) { memPhrase = self.jtools.stringFormat("{0} KB", [(memory/1024).toFixed(3) ]); }
+                    else { memPhrase = self.jtools.stringFormat("{0} B",[memory]); }
+
+                    finalResponse = self.jtools.stringFormat("The amount of avaliable memory for the system is {0}",[memPhrase]);
+                }
+                else {
+                    finalResponse = self.jtools.stringFormat("Error retrieving system memory: {0}", [res.error]);
+                }
+                callback({"jresponse": finalResponse, "jdata":res.results});
+            });      
+        }
+        catch(ex){
+            log.error("in getSystemMemory: " + ex);
+            callback({"jresponse":"Issue with getSystemMemory, sorry"});
+        }
+    }
+
+    /* Easter Eggs */
+    easterEggs(reponse, callback){
+        var finalResponse = null;
+
+        try {
+            switch(reponse.action){
+                case "do you know the muffin man":
+                  finalResponse = "yes, he lives in mulbery lane";                  
+                  break;
+                case "how are you":
+                  // TODO: perform system diagnostic
+                  finalResponse = "great thanks for asking";                  
+                  break;
+                default:                  
+                  break;
+              }              
+        }
+        catch(ex){
+            finalResponse = "(-_-)";
+            log.error(finalResponse);
+        }
+        callback({"jresponse": finalResponse});
+    }
 }
 
 module.exports = JNERVESYSTEM;
+
+/* Private Functions */
+function additionalPhraseSlicers(phrase, splicers) {
+    var indexOf = -1;
+    try {
+        for(var i=0; i < splicers.length; i++){
+            indexOf = phrase.indexOf(splicers[i]);
+            if(indexOf >= 0) { break;}
+        }
+    }
+    catch(ex){
+        log.error("With Add Phrase Slicers: ", ex);
+    }
+    return indexOf;
+}
+
