@@ -587,6 +587,56 @@ class JNERVESYSTEM {
         }
         callback({"jresponse": finalResponse});
     }
+
+    /* Get directions */
+    getDirections(response, callback){
+        var self = this, finalResponse = null, apiResponse = null, dataObj = {};
+        try {
+            var tmpPhrase = response.fullPhrase.split(" ");
+            var dircIndex = tmpPhrase.indexOf("directions");
+            dataObj.type = ( dircIndex > 0 ? tmpPhrase[dircIndex - 1] : "driving");
+
+            var postPhrase = tmpPhrase.slice(dircIndex);
+            var fromIndex = postPhrase.indexOf("from") + 1;
+            var toIndex = postPhrase.indexOf("to") + 1;
+            
+            if(fromIndex > -1 && toIndex > -1){
+                var tmpFrom = (fromIndex < toIndex ? postPhrase.slice(fromIndex, toIndex-1) : postPhrase.slice(fromIndex));
+                var tmpTo = (fromIndex < toIndex ? postPhrase.slice(toIndex) : postPhrase.slice(toIndex, fromIndex-1));
+
+                dataObj.fromLoc = tmpFrom.join(" ");
+                dataObj.toLoc = tmpTo.join(" ");                
+                dataObj.type = (dataObj.type == "transit" ? "transit" :"driving");                
+
+                self.jcell.getDirections(dataObj, response.userInfo, function(res){
+                    if(res.error != null || res.results == null){
+                        finalResponse = self.jtools.stringFormat("Error Retrieving Directions: {0}", [res.error]);
+                    }
+                    else {
+                        var resultList = [];
+                        apiResponse = res.results;
+
+                        resultList.push(self.jtools.stringFormat("It will take approximately {0} mins and {1} miles from '{2}': ", [res.results.time.toFixed(2), res.results.distance.toFixed(2), res.results.destTitle]));
+                        
+                        res.results.directions.forEach(function(dir){
+                            resultList.push(self.jtools.stringFormat("{0} ({1} miles)", [dir.attributes.text, dir.attributes.length.toFixed(2)]));
+                        }); 
+
+                        finalResponse = resultList.join("\n\n");
+                    }
+                    callback({"jresponse": finalResponse, "jdata":apiResponse});
+                });
+            }
+            else {
+                finalResponse = "Sorry I was not able to get the directions for you";
+                callback({"jresponse": finalResponse, "jdata":apiResponse});
+            }
+        }
+        catch(ex){
+            log.error("in getDirections: " + ex);
+            callback({"jresponse":"Issue with getDirections, sorry"});
+        }
+    }
 }
 
 module.exports = JNERVESYSTEM;

@@ -5,7 +5,7 @@
  */
 
 const log = require('../server/services/log.service');
-const request = require('request');
+const axios = require('axios');
 const os = require('os');
 const Tools = require('./jtools.js');
 
@@ -166,10 +166,14 @@ class JCELL {
                 }
                 else {                    
                     var url = self.jtools.stringFormat("{0}similar?q={1}&k={2}&type={3}&info={4}&limit={5}",[api.link, items.query.replace(" ", "+"), process.env.TASTEKID_KEY, items.type, items.info, items.limit]);
-                    request({ url: url, json: true}, function (error, res, body){
-                        if(!error && res.statusCode === 200){
-                            response.results = body; callback(response);
-                        }
+                    axios.get(url).then(function(dataRet){
+                        if(dataRet.status == 200){ response.results = dataRet.data; }
+                        else { response.error = "Error Retrieving Tastekid data";  } 
+                        callback(response);                       
+                    }).catch(function(error){
+                        response.error = "Issue Retrieving Tastekid data (L1): " + error;
+                        log.error(response.error);
+                        callback(response);
                     });
                 }
             }
@@ -200,15 +204,20 @@ class JCELL {
                 }
                 else {                    
                     var url = this.jtools.stringFormat("{0}{1}?q={2}&appid={3}&units=imperial", [api.link, items.type, items.location.replace(" ", "+"), process.env.OPENWEATHER_KEY]);
-                    request({ url: url, json: true}, function (error, res, body){
-                        if(!error && res.statusCode === 200){
-                            response.results = body; callback(response);
+                    console.log(url);
+                    axios.get(url).then(function(dataRet){
+                        if(dataRet.status == 200){
+                            response.results = dataRet.data; 
                         }
                         else { 
-                            var err = (res.statusCode != 200 && body && body.message ? body.message : error);
-                            log.error("weather info (E2): " + err);
-                            response.error = err; callback(response);
+                            response.error = "Issue retrieving weather data";
+                            log.error("weather info (E2): " + response.error);                             
                         }
+                        callback(response);
+                    }).catch(function(error){
+                        response.error = "Issue Retrieving Weather data (E1): " + error;
+                        log.error(response.error);
+                        callback(response);
                     });
                 }                
             }
@@ -266,6 +275,34 @@ class JCELL {
         callback(response);
     }
 
+    /* get Directions */
+    getDirections(items, userInfo, callback){
+        var self = this, response = {"error":null, "results":null};
+        try {
+            saveLastAction("getDirections", userInfo, items);
+            if(!checkParameterList(["toLoc","fromLoc","type"], items)){
+                response.error = "Missing Parameter";
+                callback(response);
+            }
+            else {
+                var url = self.jtools.stringFormat("{0}/fillmore/location/directions",[process.env.BASE_PATH]);
+                var getHeaders = { 'Content-Type': 'application/json', 'Authorization': userInfo.token };
+                var postData = { "locationFrom":items.fromLoc, "locationTo":items.toLoc };
+                
+                axios.post(url, postData, { headers: getHeaders })
+                .then(function(dataRes) { callback(dataRes.data); console.log(dataRes); })
+                .catch(function(error){
+                    response.error = "Issue retrieving directions (L1): " + error;
+                    log.error(response.error); callback(response);
+                });
+            }
+        }
+        catch(ex){
+            response.error = "Error retrieving directions";
+            log.error(response.error);
+            callback(response);
+        }
+    }
 }
 
 module.exports = JCELL;
