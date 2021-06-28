@@ -637,6 +637,85 @@ class JNERVESYSTEM {
             callback({"jresponse":"Issue with getDirections, sorry"});
         }
     }
+
+    /* Get Movies Coming Soon */
+    getMoviesComingSoon(response, callback){
+        var self = this, finalResponse = null, apiResponse = {}, dataObj = {type: "upcoming", page:1};
+        try {
+            self.jcell.getTMDBLists(dataObj, response.userInfo, function(res){
+                if(res.error != null || res.results == null){
+                    finalResponse = self.jtools.stringFormat("Error Retrieving Upcoming Movie List: {0}", [res.error]);
+                }
+                else {
+                    apiResponse = res.results;
+
+                    finalResponse = self.jtools.stringFormat("The movies that are set to release from {0} to {1} are: ",[res.results.dates.minimum, res.results.dates.maximum]);
+
+                    res.results.results.forEach(function(retMovie) {
+                        finalResponse += self.jtools.stringFormat("\n\n|{0} ({1})",[retMovie.title, retMovie.release_date]);
+                    });
+                }
+                callback({"jresponse": finalResponse, "jdata":apiResponse});
+            });
+        }
+        catch(ex){
+            log.error("in getMoviesComingSoon: " + ex);
+            callback({"jresponse":"Issue with getMoviesComingSoon, sorry"});
+        }
+    }
+
+    /* Get Movies Now Playing */
+    getMoviesPlayingNow(response, callback){
+        var self = this, finalResponse = null, apiResponse = {}, dataObj = {type: "now_playing", page:1};
+
+        try {
+            self.jcell.getTMDBLists(dataObj, response.userInfo, function(res){
+                if(res.error != null || res.results == null){
+                    finalResponse = self.jtools.stringFormat("Error Retrieving Now Playing Movie List: {0}", [res.error]);
+                }
+                else {
+                    apiResponse = res.results;
+
+                    finalResponse = self.jtools.stringFormat("The movies that are currently playing {0} to {1} are: ",[res.results.dates.minimum, res.results.dates.maximum]);
+
+                    res.results.results.forEach(function(retMovie) {
+                        finalResponse += self.jtools.stringFormat("\n\n|{0} ({1})",[retMovie.title, retMovie.release_date]);
+                    });
+                }
+                callback({"jresponse": finalResponse, "jdata":apiResponse});
+            });
+        }
+        catch(ex){
+            log.error("in getMoviesPlayingNow: " + ex);
+            callback({"jresponse":"Issue with getMoviesPlayingNow, sorry"});
+        }
+    }
+
+    /* Get TV Shows Airing Today */
+    getShowsAiringToday(response, callback){
+        var self = this, finalResponse = null, apiResponse = {}, dataObj = {type: "tv_airing_today", page:1};
+        try {
+            self.jcell.getTMDBLists(dataObj, response.userInfo, function(res){
+                if(res.error != null || res.results == null){
+                    finalResponse = self.jtools.stringFormat("Error Retrieving List of shows playing today: {0}", [res.error]);
+                }
+                else {
+                    apiResponse = res.results;
+
+                    finalResponse = self.jtools.stringFormat("The tv shows that are playing today are: ",[]);
+
+                    res.results.results.forEach(function(retShow) {
+                        finalResponse += self.jtools.stringFormat("\n\n|{0}",[retShow.original_name]);
+                    });
+                }
+                callback({"jresponse": finalResponse, "jdata":apiResponse});
+            });
+        }
+        catch(ex){
+            log.error("in getMoviesComingSoon: " + ex);
+            callback({"jresponse":"Issue with getShowsAiringToday, sorry"});
+        }
+    }
 }
 
 module.exports = JNERVESYSTEM;

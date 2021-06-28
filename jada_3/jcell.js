@@ -204,7 +204,7 @@ class JCELL {
                 }
                 else {                    
                     var url = this.jtools.stringFormat("{0}{1}?q={2}&appid={3}&units=imperial", [api.link, items.type, items.location.replace(" ", "+"), process.env.OPENWEATHER_KEY]);
-                    console.log(url);
+                    
                     axios.get(url).then(function(dataRet){
                         if(dataRet.status == 200){
                             response.results = dataRet.data; 
@@ -299,6 +299,62 @@ class JCELL {
         }
         catch(ex){
             response.error = "Error retrieving directions";
+            log.error(response.error);
+            callback(response);
+        }
+    }
+
+    /* get TMDB list info */
+    getTMDBLists(items, userInfo, callback){
+        var self = this, response = {"error":null, "results":null};
+        try {
+            saveLastAction("getTMDBLists", userInfo, items);
+            if(!checkParameterList(["type", "page"], items)){
+                response.error = "Missing Parameter";
+                callback(response);
+            }
+            else {
+                var api = getApiItem("movieDb"), url = null;
+
+                switch(items.type){
+                    case "now_playing":
+                        url = self.jtools.stringFormat("{0}movie/now_playing?api_key={1}&page={2}",[api.link, process.env.MOVIEDB_KEY, items.page]);
+                        break;
+                    case "upcoming":
+                        url = self.jtools.stringFormat("{0}movie/upcoming?api_key={1}&page={2}",[api.link, process.env.MOVIEDB_KEY, items.page]);
+                        break;
+                    case "tv_airing_today":
+                        url = self.jtools.stringFormat("{0}tv/airing_today?api_key={1}&page={2}",[api.link, process.env.MOVIEDB_KEY, items.page]);
+                        break;
+                    default:
+                        break;
+                }
+
+                if(api != null && url != null) {
+                    console.log(url);
+
+                    axios.get(url).then(function(dataRet){
+                        if(dataRet.status == 200){
+                            response.results = dataRet.data; 
+                        }
+                        else { 
+                            response.error = "Issue retrieving tmdb list data";
+                            log.error("tmdb list (E2): " + response.error);                             
+                        }
+                        callback(response);
+                    }).catch(function(error){
+                        response.error = "Issue Retrieving TMDB data (E1): " + error;
+                        log.error(response.error); callback(response);
+                    });
+                }
+                else {
+                    response.error = "Unable to retrieve API data";
+                    log.error(response.error); callback(response);
+                }
+            }
+        }
+        catch(ex){
+            response.error = "Error retrieving the movie DB List";
             log.error(response.error);
             callback(response);
         }

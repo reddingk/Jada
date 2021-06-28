@@ -31,6 +31,15 @@ node jadacmd.js [Phrase]
   [number] {media, books, movies, music, authors, shows, games} [similar] [to] ****
       : Get similar media items to a specific media item
 
+  {movies} [coming] soon
+      : Get movies coming soon
+
+  {movies} now [playing]
+      : Get movies playing now
+
+  {shows} on [today]
+      : Tv shows airing today
+
 /*WEATHER*/
   {weather} [for] ****
       : Get weather for specific location
