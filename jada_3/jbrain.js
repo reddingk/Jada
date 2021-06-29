@@ -2,7 +2,7 @@
 
 const Language = require('./jlanguage.js');
 const log = require('../server/services/log.service');
-
+const dbauth = require('../server/services/auth.service');
 
 class JBRAIN {
     constructor() {
@@ -33,6 +33,33 @@ class JBRAIN {
             callback({"jresponse":" [Error] during jbrain convo"});
         }
     }
+
+    /* Direct Access to Functions */
+    directData(userToken, functionName, items, callback) {
+        var self = this, response = {};
+        try {
+            dbauth.authenticateJWTUser(userToken, function(ret){
+                if(ret.error){
+                    log.error("Authenticating Users: " + ret.error); socket.disconnect(true);
+                    callback({ error:"Error Authenticating Users: " + ret.error });
+                }
+                else if(!ret.status){
+                    log.warning("User Not Valid "); socket.disconnect(true);
+                    callback({ error:"User Not Valid" });
+                }
+                else if(functionName in self.jCells){
+                    self.jCells[functionName](items, ret.results, function(res){ callback(res); });
+                }
+                else {
+                    callback({ error:"Invalid Function Name" });
+                }   
+            });     
+        }
+        catch(ex){
+          response.error = "Error calling directData function: "+ ex;
+          log.error(response.error); callback(response);
+        }
+      }
 }
 
 module.exports = JBRAIN;

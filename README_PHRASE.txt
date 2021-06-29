@@ -37,7 +37,7 @@ node jadacmd.js [Phrase]
   {movies} now [playing]
       : Get movies playing now
 
-  {shows} on [today]
+  tv {shows} on [today]
       : Tv shows airing today
 
 /*WEATHER*/

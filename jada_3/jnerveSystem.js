@@ -433,7 +433,7 @@ class JNERVESYSTEM {
                 else {
                     finalResponse = self.jtools.stringFormat("Error retrieving CPU ARCH: {0}", [res.error]);
                 }
-                callback({"jresponse": finalResponse, "jdata": res.results});
+                callback({"jresponse": finalResponse, "jtype":"cpu-arch", "jdata": res.results});
             });      
         }
         catch(ex){
@@ -458,7 +458,7 @@ class JNERVESYSTEM {
                 else {
                     finalResponse = self.jtools.stringFormat("Error retrieving CPU INFO: {0}", [res.error]);
                 }
-                callback({"jresponse": finalResponse, "jdata":res.results});
+                callback({"jresponse": finalResponse, "jtype":"cpu", "jdata":res.results});
             });      
         }
         catch(ex){
@@ -478,7 +478,7 @@ class JNERVESYSTEM {
                 else {
                     finalResponse = self.jtools.stringFormat("Error Retrieving Computer Hostname: {0}", [res.error]);
                 }
-                callback({"jresponse": finalResponse, "jdata":res.results});
+                callback({"jresponse": finalResponse, "jtype":"hostname", "jdata":res.results});
             });      
         }
         catch(ex){
@@ -509,7 +509,7 @@ class JNERVESYSTEM {
                 else {
                     finalResponse = self.jtools.stringFormat("Error retrieving network information: {0}", [res.error]);
                 }
-                callback({"jresponse": finalResponse, "jdata":res.results});
+                callback({"jresponse": finalResponse, "jtype":"network-iface", "jdata":res.results});
             });      
         }
         catch(ex){
@@ -529,7 +529,7 @@ class JNERVESYSTEM {
                 else {
                     finalResponse = self.jtools.stringFormat("Error retrieving system release: {0}", [res.error]);
                 }
-                callback({"jresponse": finalResponse, "jdata":res.results});
+                callback({"jresponse": finalResponse, "jtype":"sys-release", "jdata":res.results});
             });      
         }
         catch(ex){
@@ -555,7 +555,7 @@ class JNERVESYSTEM {
                 else {
                     finalResponse = self.jtools.stringFormat("Error retrieving system memory: {0}", [res.error]);
                 }
-                callback({"jresponse": finalResponse, "jdata":res.results});
+                callback({"jresponse": finalResponse, "jtype":"sys-memory", "jdata":res.results});
             });      
         }
         catch(ex){
@@ -577,6 +577,9 @@ class JNERVESYSTEM {
                   // TODO: perform system diagnostic
                   finalResponse = "great thanks for asking";                  
                   break;
+                case "god is good":
+                  finalResponse = "all the time";                  
+                  break;
                 default:                  
                   break;
               }              
@@ -585,7 +588,7 @@ class JNERVESYSTEM {
             finalResponse = "(-_-)";
             log.error(finalResponse);
         }
-        callback({"jresponse": finalResponse});
+        callback({"jresponse": finalResponse, "jtype":"easter-eggs"});
     }
 
     /* Get directions */
@@ -624,7 +627,7 @@ class JNERVESYSTEM {
 
                         finalResponse = resultList.join("\n\n");
                     }
-                    callback({"jresponse": finalResponse, "jdata":apiResponse});
+                    callback({"jresponse": finalResponse, "jtype":"directions", "jdata":apiResponse});
                 });
             }
             else {
@@ -655,7 +658,7 @@ class JNERVESYSTEM {
                         finalResponse += self.jtools.stringFormat("\n\n|{0} ({1})",[retMovie.title, retMovie.release_date]);
                     });
                 }
-                callback({"jresponse": finalResponse, "jdata":apiResponse});
+                callback({"jresponse": finalResponse, "jtype":"tmdb-movie", "jdata":apiResponse});
             });
         }
         catch(ex){
@@ -682,7 +685,7 @@ class JNERVESYSTEM {
                         finalResponse += self.jtools.stringFormat("\n\n|{0} ({1})",[retMovie.title, retMovie.release_date]);
                     });
                 }
-                callback({"jresponse": finalResponse, "jdata":apiResponse});
+                callback({"jresponse": finalResponse, "jtype":"tmdb-movie", "jdata":apiResponse});
             });
         }
         catch(ex){
@@ -708,7 +711,7 @@ class JNERVESYSTEM {
                         finalResponse += self.jtools.stringFormat("\n\n|{0}",[retShow.original_name]);
                     });
                 }
-                callback({"jresponse": finalResponse, "jdata":apiResponse});
+                callback({"jresponse": finalResponse, "jtype":"tmdb-tv", "jdata":apiResponse});
             });
         }
         catch(ex){

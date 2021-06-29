@@ -290,7 +290,7 @@ class JCELL {
                 var postData = { "locationFrom":items.fromLoc, "locationTo":items.toLoc };
                 
                 axios.post(url, postData, { headers: getHeaders })
-                .then(function(dataRes) { callback(dataRes.data); console.log(dataRes); })
+                .then(function(dataRes) { callback(dataRes.data); })
                 .catch(function(error){
                     response.error = "Issue retrieving directions (L1): " + error;
                     log.error(response.error); callback(response);
@@ -331,8 +331,6 @@ class JCELL {
                 }
 
                 if(api != null && url != null) {
-                    console.log(url);
-
                     axios.get(url).then(function(dataRet){
                         if(dataRet.status == 200){
                             response.results = dataRet.data; 
